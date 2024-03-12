@@ -1,0 +1,89 @@
+syntax = "proto3";
+
+import "designSystem/atoms/buttonAction.proto";
+import "designSystem/atoms/tickerAtm.proto";
+import "designSystem/organisms/listItemGroupOrg.proto";
+import "designSystem/organisms/topGroupOrg.proto";
+import "designSystem/organisms/docHeadingOrg.proto";
+import "designSystem/organisms/tableBlockOrg.proto";
+import "designSystem/molecules/attentionMessageMlc.proto";
+import "designSystem/molecules/stubMessageMlc.proto";
+import "documents/documentInstance.proto";
+import "designSystem/item.proto";
+
+package ua.gov.diia.myinfo;
+option java_multiple_files = true;
+option java_package = "ua.gov.diia.myinfo";
+
+enum DefaultImage {
+  userFemale = 0;
+  userMale = 1;
+}
+
+enum ActRecordRequestType {
+  birth_certificate = 0;
+  marriage_record = 1;
+  divorce_record = 2;
+  change_name_record = 3;
+}
+
+message GetMyInfoReq {}
+
+message GetMyInfoRes {
+  repeated ua.gov.diia.types.ds.item.DSTopGroupItem topGroup = 1;
+  repeated ua.gov.diia.types.ds.item.DSBodyItem body = 2;
+  optional int32 processCode = 3;
+}
+
+message GetFamilyReq {}
+
+message GetFamilyRes {
+  repeated ua.gov.diia.types.ds.item.DSTopGroupItem topGroup = 1;
+  repeated ua.gov.diia.types.ds.item.DSBodyItem body = 2;
+}
+
+message GetUserBirthRecordReq { optional string eTag = 1; }
+
+message GetUserBirthRecordRes {
+  optional DocumentItem userBirthRecord = 1;
+  optional int32 processCode = 2;
+}
+
+message GetActRecordsReq {
+  ActRecordRequestType recordType = 1;
+  optional string eTag = 2;
+  optional bool forceUpdate = 3;
+}
+
+message GetActRecordsRes {
+  repeated ua.gov.diia.types.ds.item.DSTopGroupItem topGroup = 1;
+  repeated ua.gov.diia.types.ds.item.DSBodyItem body = 2;
+  repeated ua.gov.diia.types.ds.item.DSBottomGroupItem bottomGroup = 3;
+  optional ActRecordsData data = 4;
+  optional int32 processCode = 5;
+}
+
+message ActRecordsData {
+  optional DocumentItem marriageRecord = 1;
+  optional DocumentItem divorceRecord = 2;
+  optional DocumentItem birthCertificate = 3;
+  optional DocumentItem changeNameRecord = 4;
+}
+
+message DocumentItem {
+  int32 status = 1;
+  repeated ua.gov.diia.types.documents.DocumentInstance data = 3;
+  string eTag = 4;
+}
+
+message HideActRecordReq {
+  string id = 1;
+  ActRecordRequestType recordType = 2;
+  optional bool force = 3;
+}
+
+message HideActRecordRes { optional int32 processCode = 1; }
+
+message UnhideActRecordsReq { ActRecordRequestType recordType = 1; }
+
+message UnhideActRecordsRes { optional int32 processCode = 1; }

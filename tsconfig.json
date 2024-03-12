@@ -1,0 +1,23 @@
+{
+    "extends": "@diia-inhouse/configs/tsconfig",
+    "compilerOptions": {
+        "plugins": [{ "transform": "@diia-inhouse/diia-app/dist/plugins/openapi" }],
+        "outDir": "dist",
+        "declarationDir": "dist/types",
+        "baseUrl": "./",
+        "strict": true,
+        "paths": {
+            "@services/*": ["src/services/*"],
+            "@providers/*": ["src/providers/*"],
+            "@interfaces/*": ["src/interfaces/*"],
+            "@models/*": ["src/models/*"],
+            "@dataMappers/*": ["src/dataMappers/*"],
+            "@actions/*": ["src/actions/*"],
+            "@src/*": ["src/*"],
+            "@tests/*": ["tests/*"],
+            "@mocks/*": ["tests/mocks/*"]
+        },
+        "lib": ["DOM"]
+    },
+    "include": ["src/**/*", "tests/jest.d.ts"]
+}

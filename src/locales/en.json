@@ -1,0 +1,16 @@
+{
+    "diiaId": {
+        "getIdentifier": {
+            "v2": {
+                "activated": {
+                    "noDocumentWasSigned": "You have not signed any document in the application yet."
+                },
+                "notActivated": {
+                    "description": "Verify your identity and create a PIN for your e-Signature to activate it.",
+                    "text": "Before activating, please read the {link1}",
+                    "link1Name": "Application for Accession to the Agreement on the Provision of Qualified Electronic Trust Signatures."
+                }
+            }
+        }
+    }
+}

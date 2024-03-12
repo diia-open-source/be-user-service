@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+import "documents/documentData.proto";
+
+package ua.gov.diia.user.userdocuments;
+option java_multiple_files = true;
+option java_package = "ua.gov.diia.user.userdocuments";
+
+message HasDocumentsFilter {
+  repeated DocumentFilter oneOf = 1;
+}
+
+message HasDocumentsRequest {
+  string userIdentifier = 1;
+  repeated HasDocumentsFilter filters = 2;
+}
+
+message HasDocumentsResponse {
+  bool hasDocuments = 1;
+  repeated string missingDocuments = 2; // see DocumentType enum
+}
+
+message GetUserDocumentsRequest {
+  string userIdentifier = 1;
+  repeated DocumentFilter filters = 2;
+}
+
+message GetUserDocumentsResponse { repeated UserDocument documents = 1; }
+
+message DocumentFilter {
+  string documentType = 1; // see DocumentType enum
+  optional string documentIdentifier = 2;
+  optional ua.gov.diia.types.documents.OwnerType ownerType = 3;
+  repeated int32 docStatus = 4; // optional // see DocStatus enum
+  optional string docId = 5;
+}
+
+message UserDocumentData {
+  string brand = 1;
+  string model = 2;
+  string licensePlate = 3;
+}
+
+message UserDocument {
+  string userIdentifier = 1;
+  string documentType = 2;
+  string documentIdentifier = 3;
+  ua.gov.diia.types.documents.OwnerType ownerType = 4;
+  map<string, google.protobuf.Timestamp> notifications = 5;
+  optional string docId = 6;
+  optional int32 docStatus = 7;
+  optional string mobileUid = 8;
+  optional string fullNameHash = 9;
+  optional string normalizedDocumentIdentifier = 10;
+  optional string documentSubType = 11;
+  optional google.protobuf.Timestamp registrationDate = 12;
+  optional google.protobuf.Timestamp expirationDate = 13;
+  optional ComparedTo comparedTo = 14;
+  optional UserDocumentData documentData = 15;
+  optional UserCompoundDocument compoundDocument = 16;
+}
+
+message ComparedTo {
+  string documentType = 1;
+  string fullNameHash = 2;
+}
+
+message UserCompoundDocument {
+  string documentType = 1;
+  string documentIdentifier = 2;
+}

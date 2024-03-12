@@ -1,0 +1,115 @@
+{
+    "name": "user-service",
+    "version": "1.29.0",
+    "main": "dist/index.js",
+    "repository": "https://github.com/diia-open-source/be-user-service.git",
+    "author": "Diia",
+    "license": "SEE LICENSE IN LICENSE.md",
+    "engines": {
+        "node": ">=18"
+    },
+    "scripts": {
+        "prepare": "ts-patch install -s",
+        "build": "rimraf dist/ && mkdir dist && npm run genproto && npx tsc",
+        "start": "node dist/index.js",
+        "dev": "tsc-watch --skipLibCheck --onSuccess 'node dist/index.js' | pino-pretty -S",
+        "semantic-release": "semantic-release",
+        "lint": "eslint --ext .ts . && prettier --check .",
+        "lint-fix": "eslint '*/**/*.{js,ts}' --fix && prettier --write .",
+        "lint:lockfile": "lockfile-lint --path package-lock.json --allowed-hosts registry.npmjs.org --validate-https",
+        "migrate-deploy": "npm run migrate up",
+        "migrate-ci": "npm run migrate up",
+        "migrate-test": "NODE_ENV=test npm run migrate up",
+        "migrate": "sh -c 'ts-node --project migrations/tsconfig.json node_modules/.bin/migrate-mongo $0 $1 -f migrate-mongo-config.ts'",
+        "test": "jest",
+        "test:unit": "npm run test --selectProjects unit --",
+        "test:unit:coverage": "npm run test --selectProjects unit --coverage --",
+        "test:integration": "npm run test --selectProjects integration --",
+        "indexes:sync": "MONGO_INDEXES_SYNC=true MONGO_INDEXES_EXIT_AFTER_SYNC=true npm run start",
+        "find-circulars": "madge --circular --extensions ts ./",
+        "scaffold": "scaffold",
+        "genproto": "genproto --outputDir src/generated"
+    },
+    "dependencies": {
+        "@diia-inhouse/analytics": "^1.54.0",
+        "@diia-inhouse/auth-service-client": "^1.0.0-104810",
+        "@diia-inhouse/crypto": "^1.7.0",
+        "@diia-inhouse/db": "^3.1.2",
+        "@diia-inhouse/diia-app": "^12.2.0",
+        "@diia-inhouse/diia-crypto-client": "^1.0.0-94617",
+        "@diia-inhouse/diia-logger": "^2.10.0",
+        "@diia-inhouse/diia-metrics": "^3.6.0",
+        "@diia-inhouse/diia-queue": "^5.10.2",
+        "@diia-inhouse/env": "^1.5.0",
+        "@diia-inhouse/errors": "^1.6.1",
+        "@diia-inhouse/healthcheck": "^1.6.0",
+        "@diia-inhouse/http": "^1.5.3",
+        "@diia-inhouse/i18n": "^2.0.1",
+        "@diia-inhouse/notification-service-client": "^1.0.0-121722",
+        "@diia-inhouse/redis": "^2.4.0",
+        "@diia-inhouse/types": "^5.1.0",
+        "@diia-inhouse/utils": "^2.36.1",
+        "@diia-inhouse/validators": "^1.13.1",
+        "compare-versions": "6.1.0",
+        "got": "11.8.3",
+        "lodash": "4.17.21",
+        "migrate-mongo": "11.0.0",
+        "module-alias": "2.2.3",
+        "moment": "2.29.4",
+        "stream-json": "1.7.5",
+        "uuid": "9.0.1"
+    },
+    "devDependencies": {
+        "@diia-inhouse/configs": "^1.27.1",
+        "@diia-inhouse/eslint-config": "^3.5.0",
+        "@diia-inhouse/genproto": "^1.10.0",
+        "@diia-inhouse/scaffold": "^2.8.0",
+        "@diia-inhouse/test": "^5.1.2",
+        "@types/jest": "29.5.5",
+        "@types/lodash": "4.14.202",
+        "@types/node": "20.8.7",
+        "@types/stream-json": "1.7.3",
+        "@types/uuid": "9.0.7",
+        "eslint": "8.53.0",
+        "jest": "29.5.0",
+        "lockfile-lint": "4.12.1",
+        "madge": "6.1.0",
+        "nock": "13.3.6",
+        "prettier": "3.0.3",
+        "rimraf": "5.0.5",
+        "semantic-release": "21.1.2",
+        "ts-node": "10.9.2",
+        "ts-patch": "3.1.1",
+        "typescript": "5.2.2",
+        "typescript-transform-paths": "3.4.6"
+    },
+    "_moduleAliases": {
+        "@services": "dist/services",
+        "@providers": "dist/providers",
+        "@interfaces": "dist/interfaces",
+        "@models": "dist/models",
+        "@dataMappers": "dist/dataMappers",
+        "@actions": "dist/actions",
+        "@src": "dist",
+        "@mocks": "tests/mocks"
+    },
+    "overrides": {
+        "mongoose": "8.2.0"
+    },
+    "release": {
+        "extends": "@diia-inhouse/configs/dist/semantic-release/service"
+    },
+    "commitlint": {
+        "extends": "@diia-inhouse/configs/dist/commitlint"
+    },
+    "eslintConfig": {
+        "extends": "@diia-inhouse/eslint-config"
+    },
+    "jest": {
+        "preset": "@diia-inhouse/configs/dist/jest"
+    },
+    "prettier": "@diia-inhouse/eslint-config/prettier",
+    "madge": {
+        "tsConfig": "./tsconfig.json"
+    }
+}

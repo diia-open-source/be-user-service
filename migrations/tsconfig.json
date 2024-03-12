@@ -1,0 +1,21 @@
+{
+    "extends": "../tsconfig",
+    "ts-node": {
+        "files": true
+    },
+    "compilerOptions": {
+        "baseUrl": "..",
+        "paths": {
+            "@services/*": ["dist/types/services/*"],
+            "@interfaces/*": ["dist/types/interfaces/*"],
+            "@models/*": ["dist/types/models/*"],
+            "@dataMappers/*": ["dist/types/dataMappers/*"],
+            "@utils/*": ["dist/types/utils/*"],
+            "@xmlMappings/*": ["dist/types/xmlMappings/*"],
+            "@actions/*": ["dist/types/actions/*"],
+            "@pages/*": ["dist/types/pages/*"],
+            "@src/*": ["dist/types/*"]
+        }
+    },
+    "include": ["./**/*"]
+}

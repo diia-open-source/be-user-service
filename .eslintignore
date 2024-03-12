@@ -1,0 +1,7 @@
+node_modules
+dist
+coverage
+*.js
+jest.config.*
+migrate-mongo-config.ts
+src/generated

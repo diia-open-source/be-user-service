@@ -1,0 +1,132 @@
+syntax = "proto3";
+
+import "google/api/annotations.proto";
+import "google/api/http.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+import "my-info.proto";
+import "user-documents.proto";
+import "token/gender.proto";
+
+package ua.gov.diia.user;
+option java_multiple_files = true;
+option java_package = "ua.gov.diia.user";
+
+service UserService {
+  rpc GetSubscribedSegments(GetSubscribedSegmentsRequest)
+      returns (GetSubscribedSegmentsResponse) {}
+  rpc GetUserDocuments(ua.gov.diia.user.userdocuments.GetUserDocumentsRequest)
+      returns (ua.gov.diia.user.userdocuments.GetUserDocumentsResponse) {}
+  rpc HasDocuments(ua.gov.diia.user.userdocuments.HasDocumentsRequest)
+      returns (ua.gov.diia.user.userdocuments.HasDocumentsResponse) {}
+  rpc GetUserInfoForFilters(GetInfoForFiltersRequest)
+      returns (GetInfoForFiltersReply) {}
+  rpc GetUserProfileFeatures(GetUserProfileFeaturesRequest)
+      returns (GetUserProfileFeaturesResponse) {}
+  rpc GetUserProfiles(GetUserProfilesRequest)
+      returns (GetUserProfilesResponse) {}
+
+  rpc GetMyInfo(ua.gov.diia.myinfo.GetMyInfoReq)
+      returns (ua.gov.diia.myinfo.GetMyInfoRes) {
+    option (google.api.http) = {
+      get : "/api/v1/my-info"
+    };
+  }
+  rpc GetFamily(ua.gov.diia.myinfo.GetFamilyReq)
+      returns (ua.gov.diia.myinfo.GetFamilyRes) {
+    option (google.api.http) = {
+      get : "/api/v1/my-info/family"
+    };
+  }
+  rpc GetUserBirthRecord(ua.gov.diia.myinfo.GetUserBirthRecordReq)
+      returns (ua.gov.diia.myinfo.GetUserBirthRecordRes) {
+    option (google.api.http) = {
+      post : "/api/v1/my-info/user-birth-record"
+    };
+  }
+  rpc GetActRecords(ua.gov.diia.myinfo.GetActRecordsReq)
+      returns (ua.gov.diia.myinfo.GetActRecordsRes) {
+    option (google.api.http) = {
+      post : "/api/v1/my-info/act-records/{recordType}"
+    };
+  }
+  rpc HideActRecord(ua.gov.diia.myinfo.HideActRecordReq)
+      returns (ua.gov.diia.myinfo.HideActRecordRes) {
+    option (google.api.http) = {
+      put : "/api/v1/my-info/act-records/hide/{recordType}/{id}"
+    };
+  }
+  rpc UnhideActRecords(ua.gov.diia.myinfo.UnhideActRecordsReq)
+      returns (ua.gov.diia.myinfo.UnhideActRecordsRes) {
+    option (google.api.http) = {
+      put : "/api/v1/my-info/act-records/unhide/{recordType}"
+    };
+  }
+  rpc UpdateUserSettings(UpdateUserSettingsReq)
+      returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post : "/api/v1/user/settings"
+    };
+  }
+}
+
+message GetSubscribedSegmentsRequest { string userIdentifier = 1; }
+
+message GetSubscribedSegmentsResponse { repeated string segments = 1; }
+
+message GetInfoForFiltersRequest { string userIdentifier = 1; }
+
+message GetInfoForFiltersReply {
+  int32 age = 1;
+  Gender gender = 2;
+  map<string, int32> documents = 3;
+  optional string organizationId = 4;
+}
+
+enum Gender {
+  male = 0;
+  female = 1;
+}
+
+message GetUserProfileFeaturesRequest {
+  string userIdentifier = 1;
+  repeated ProfileFeature features = 2;
+
+  enum ProfileFeature {
+    office = 0;
+    student = 1;
+  }
+}
+
+message GetUserProfileFeaturesResponse {
+  optional DiiaOfficeProfile office = 1;
+}
+
+message GetUserProfilesRequest { repeated string userIdentifiers = 1; }
+
+message GetUserProfilesResponse { repeated UserProfile userProfiles = 1; }
+
+message UserProfile {
+  string identifier = 1;
+  ua.gov.diia.types.token.Gender gender = 2;
+  google.protobuf.Timestamp birthDay = 3;
+}
+
+message DiiaOfficeProfile {
+  string profileId = 1;
+  string organizationId = 2;
+  string unitId = 3;
+  repeated string scopes = 4;
+  bool isOrganizationAdmin = 5;
+  Status status = 6;
+  optional string googleWorkspace = 7;
+
+  enum Status {
+    ACTIVE = 0;
+    SUSPENDED = 1;
+    DISMISSED = 2;
+  }
+}
+
+message UpdateUserSettingsReq { optional bool myInfoUsePassportPhoto = 1; }
