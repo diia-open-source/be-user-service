@@ -1,5 +1,7 @@
 import { Model, Schema, model, models } from 'mongoose'
 
+import { DocumentType, PlatformType } from '@diia-inhouse/types'
+
 import { SignAlgo } from '@interfaces/models/diiaId'
 import {
     SigningHistoryAcquirer,
@@ -56,12 +58,12 @@ const userSigningHistoryItemSchema = new Schema<UserSigningHistoryItem>(
         userIdentifier: { type: String, index: true, required: true },
         sessionId: { type: String, index: true, required: true },
         resourceId: { type: String, required: true },
-        platformType: { type: String },
+        platformType: { type: String, enum: Object.values(PlatformType) },
         platformVersion: { type: String },
         action: { type: String },
         status: { type: String, enum: Object.values(UserHistoryItemStatus), index: true, required: true },
         statusHistory: { type: [statusHistoryItemSchema], required: true },
-        documents: { type: [String], required: true },
+        documents: { type: [String], enum: Object.values(DocumentType), required: true },
         date: { type: Date, required: true },
         acquirer: { type: acquirerSchema },
         offer: { type: offerSchema },
