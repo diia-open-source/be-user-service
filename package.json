@@ -1,6 +1,6 @@
 {
     "name": "user-service",
-    "version": "1.29.0",
+    "version": "1.29.2",
     "main": "dist/index.js",
     "repository": "https://github.com/diia-open-source/be-user-service.git",
     "author": "Diia",

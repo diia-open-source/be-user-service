@@ -26,7 +26,7 @@ This repository contains the service which provides capabilities for user settin
 Example:
 
 ```
-git clone https://github.com/diia-open-source/user-service.git
+git clone https://github.com/diia-open-source/be-user-service.git user-service
 ```
 
 ---
