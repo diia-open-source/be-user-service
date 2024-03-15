@@ -1,6 +1,6 @@
 import { Model, Schema, SchemaDefinition, model, models } from 'mongoose'
 
-import { DocumentType, OwnerType } from '@diia-inhouse/types'
+import { DocStatus, DocumentType, OwnerType, UserDocumentSubtype } from '@diia-inhouse/types'
 
 import { UserDocument, UserDocumentsNotifications } from '@interfaces/models/userDocument'
 import { ComparedTo, UserCompoundDocument } from '@interfaces/services/documents'
@@ -39,12 +39,12 @@ const userDocumentSchema = new Schema<UserDocument>(
         userIdentifier: { type: String, required: true },
         mobileUid: { type: String, index: true },
         documentType: { type: String, enum: Object.values(DocumentType), required: true },
-        documentSubType: { type: String },
+        documentSubType: { type: String, enum: Object.values(UserDocumentSubtype) },
         documentIdentifier: { type: String, required: true, index: true },
         normalizedDocumentIdentifier: { type: String, index: true },
         ownerType: { type: String, enum: Object.values(OwnerType), required: true },
         docId: { type: String },
-        docStatus: { type: Number },
+        docStatus: { type: Number, enum: Object.values(DocStatus) },
         documentData: { type: Object },
         compoundDocument: { type: userCompoundDocumentSchema },
         registrationDate: { type: Date },

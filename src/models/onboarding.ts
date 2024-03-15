@@ -1,6 +1,6 @@
 import { Model, Schema, model, models } from 'mongoose'
 
-import { PlatformType } from '@diia-inhouse/types'
+import { PlatformType, SessionType } from '@diia-inhouse/types'
 
 import { boardSchema } from './schemas/board'
 
@@ -31,7 +31,7 @@ const onboardingSchema = new Schema<Onboarding>(
         platformType: { type: String, enum: Object.values(PlatformType), required: true },
         isVisible: { type: Boolean, required: true },
         data: { type: onboardingDataSchema, required: true },
-        sessionType: { type: String, required: true },
+        sessionType: { type: String, enum: Object.values(SessionType), required: true },
     },
     {
         timestamps: true,
