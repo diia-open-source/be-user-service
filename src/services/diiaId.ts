@@ -75,10 +75,15 @@ export default class DiiaIdService {
     async getIdentifierAvailability(userIdentifier: string, mobileUid: string): Promise<DiiaIdIdentifier[]> {
         await this.checkIfCreationExpiredAndSoftDelete(userIdentifier)
 
-        const diiaIds: DiiaIdModel[] = await diiaIdModel.find({ mobileUid, userIdentifier, isDeleted: false })
+        const diiaIds: DiiaIdModel[] = await diiaIdModel.find({
+            mobileUid,
+            userIdentifier,
+            isDeleted: false,
+            creationDate: { $exists: true },
+            expirationDate: { $exists: true }
+        })
 
         return diiaIds
-            .filter((diiaId) => this.isDiiaIdActive(diiaId))
             .map(({ identifier, signAlgo }) => {
                 return { identifier, signAlgo }
             })
