@@ -1,3 +1,4 @@
+import { randomInt } from 'crypto'
 import { ObjectId } from 'bson'
 import moment from 'moment'
 import { FilterQuery, UpdateQuery } from 'mongoose'
@@ -28,7 +29,7 @@ export default class OtpService {
             throw new AccessDeniedError('Exceeded otps limits per day', undefined, ProcessCode.OtpSendAttemptsExceeded)
         }
 
-        const value: number = Math.floor(1000 + Math.random() * 9000)
+        const value: string = this.generateOtp(4)
 
         await this.notificationService.sendSms(phoneNumber, SmsTemplateCode.Otp, user, headers, value.toString())
 
@@ -105,5 +106,9 @@ export default class OtpService {
                 $lt: new Date(moment.utc().endOf('day').valueOf()),
             },
         })
+    }
+
+    private generateOtp(length: number): string {
+        return Array.from({ length }, () => randomInt(0, 10)).join('')
     }
 }
