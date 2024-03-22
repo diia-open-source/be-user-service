@@ -34,7 +34,7 @@
         "@diia-inhouse/analytics": "^1.54.0",
         "@diia-inhouse/auth-service-client": "^1.0.0-104810",
         "@diia-inhouse/crypto": "^1.7.0",
-        "@diia-inhouse/db": "^3.1.2",
+        "@diia-inhouse/db": "^3.1.1",
         "@diia-inhouse/diia-app": "^12.2.0",
         "@diia-inhouse/diia-crypto-client": "^1.0.0-94617",
         "@diia-inhouse/diia-logger": "^2.10.0",
