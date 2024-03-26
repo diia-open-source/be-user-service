@@ -1,6 +1,6 @@
 import moment from 'moment'
 import { FilterQuery, UpdateQuery } from 'mongoose'
-import { v4 as uuid } from 'uuid'
+import { randomUUID as uuid } from 'node:crypto'
 
 import { IdentifierService } from '@diia-inhouse/crypto'
 import { ExternalCommunicator, ExternalEvent, ExternalEventBus } from '@diia-inhouse/diia-queue'

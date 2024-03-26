@@ -1,5 +1,5 @@
 import nock from 'nock'
-import { v4 as uuid } from 'uuid'
+import { randomUUID as uuid } from 'node:crypto'
 
 import { HttpStatusCode } from '@diia-inhouse/types'
 

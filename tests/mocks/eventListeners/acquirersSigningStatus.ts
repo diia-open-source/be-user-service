@@ -1,5 +1,5 @@
 import { ObjectId } from 'bson'
-import { v4 as uuid } from 'uuid'
+import { randomUUID as uuid } from 'node:crypto'
 
 import { AppUserActionHeaders, UserSession } from '@diia-inhouse/types'
 

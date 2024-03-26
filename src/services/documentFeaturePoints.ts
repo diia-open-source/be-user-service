@@ -1,5 +1,5 @@
 import { FilterQuery, UpdateQuery } from 'mongoose'
-import { v4 as uuid } from 'uuid'
+import { randomUUID as uuid } from 'node:crypto'
 
 import { ExternalCommunicator, ExternalEvent } from '@diia-inhouse/diia-queue'
 import { ModelNotFoundError, ServiceUnavailableError } from '@diia-inhouse/errors'
