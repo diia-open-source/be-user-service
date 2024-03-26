@@ -1,4 +1,4 @@
-import { v4 as uuid } from 'uuid'
+import { randomUUID as uuid } from 'node:crypto'
 
 import { IdentifierService } from '@diia-inhouse/crypto'
 import { ApiError } from '@diia-inhouse/errors'

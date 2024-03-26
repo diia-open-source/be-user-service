@@ -8,7 +8,7 @@ import { FilterQuery, PipelineStage, ProjectionType, UpdateQuery } from 'mongoos
 import { parser } from 'stream-json'
 import { streamArray } from 'stream-json/streamers/StreamArray'
 import Batch from 'stream-json/utils/Batch'
-import { v4 as uuidv4 } from 'uuid'
+import { randomUUID as uuid } from 'node:crypto'
 
 import { AnalyticsActionResult } from '@diia-inhouse/analytics'
 import { IdentifierService } from '@diia-inhouse/crypto'
@@ -441,7 +441,7 @@ export default class UserProfileService {
         }
 
         await this.externalEventBus.publish(ExternalEvent.NotificationTopicSubscribe, {
-            uuid: uuidv4(),
+            uuid: uuid(),
             request: {
                 topic,
                 userIdentifiers,
