@@ -8,6 +8,8 @@ export async function up(db: Db): Promise<void> {
             { 'features.office.officeIdentifier': { $ne: null } },
             { $unset: { 'features.office.officeIdentifier': 1 } },
         )
-        await userprofiles.dropIndex('features.office.officeIdentifier_1')
+        if (await userprofiles.indexExists(`features.office.officeIdentifier_1`)) {
+            await userprofiles.dropIndex('features.office.officeIdentifier_1')
+        }
     }
 }
