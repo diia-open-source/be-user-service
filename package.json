@@ -21,7 +21,7 @@
         "migrate-ci": "npm run migrate up",
         "migrate-test": "NODE_ENV=test npm run migrate up",
         "migrate": "sh -c 'ts-node --project migrations/tsconfig.json node_modules/.bin/migrate-mongo $0 $1 -f migrate-mongo-config.ts'",
-        "test": "jest",
+        "test": "npm run genproto && jest",
         "test:unit": "npm run test --selectProjects unit --",
         "test:unit:coverage": "npm run test --selectProjects unit --coverage --",
         "test:integration": "npm run test --selectProjects integration --",
