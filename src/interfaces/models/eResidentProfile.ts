@@ -1,5 +1,4 @@
-import { Document } from 'mongoose'
-
+import { Document } from '@diia-inhouse/db'
 import { Gender } from '@diia-inhouse/types'
 
 export enum CitizenshipSource {

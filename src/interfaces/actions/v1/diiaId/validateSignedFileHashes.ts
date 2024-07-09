@@ -1,17 +1,9 @@
 import { UserActionArguments } from '@diia-inhouse/types'
 
-import { PublicServiceCode } from '@interfaces/models/subscription'
-import { SigningHistoryRecipient } from '@interfaces/models/userSigningHistoryItem'
-import { SignedFile } from '@interfaces/services/diiaId'
+import { ValidateSignedFileHashesRequest } from '@src/generated'
 
 export interface CustomActionArguments extends UserActionArguments {
-    params: {
-        files: SignedFile[]
-        publicService: PublicServiceCode | string
-        applicationId: string
-        documents: string[]
-        recipient: SigningHistoryRecipient
-    }
+    params: ValidateSignedFileHashesRequest
 }
 
 export type ActionResult = void

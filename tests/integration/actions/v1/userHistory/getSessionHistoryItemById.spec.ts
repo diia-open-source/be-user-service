@@ -1,12 +1,12 @@
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
-import { ObjectId } from 'bson'
-
+import { mongo } from '@diia-inhouse/db'
 import TestKit from '@diia-inhouse/test'
 
 import GetSessionHistoryItemByIdAction from '@src/actions/v1/userHistory/getSessionHistoryItemById'
 
 import AuthService from '@services/auth'
+import DocumentsService from '@services/documents'
 
 import userSharingHistoryItemModel from '@models/userSharingHistoryItem'
 import userSigningHistoryItemModel from '@models/userSigningHistoryItem'
@@ -56,6 +56,9 @@ describe(`Action ${GetSessionHistoryItemByIdAction.name}`, () => {
             platformVersion: '14.4.2',
             appVersion: '3.0.0',
         })
+        jest.spyOn(app.container.resolve<DocumentsService>('documentsService'), 'getDocumentNames').mockResolvedValueOnce([
+            'driver-license-name',
+        ])
 
         const {
             user: { identifier: userIdentifier },
@@ -74,10 +77,10 @@ describe(`Action ${GetSessionHistoryItemByIdAction.name}`, () => {
                 sharingId,
                 status,
                 statusHistory: [{ status, date: new Date() }],
-                documents: [],
+                documents: ['driver-license'],
                 date: new Date(),
                 acquirer: {
-                    id: new ObjectId(),
+                    id: new mongo.ObjectId(),
                     name: 'name',
                     address: 'address',
                 },

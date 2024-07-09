@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
 import TestKit from '@diia-inhouse/test'
 import { PlatformType } from '@diia-inhouse/types'

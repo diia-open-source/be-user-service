@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
 import TestKit from '@diia-inhouse/test'
 
@@ -75,11 +75,13 @@ describe(`Action ${GetHistoryScreenAction.name}`, () => {
                             code: UserHistoryCode.Authorization,
                             count: authorizationCount,
                             label: 'Авторизації',
+                            chipMlc: { code: UserHistoryCode.Authorization, label: 'Авторизації' },
                         },
                         {
                             code: UserHistoryCode.Signing,
                             count: signingCount,
                             label: 'Підписання',
+                            chipMlc: { code: UserHistoryCode.Signing, label: 'Підписання' },
                         },
                     ],
                     preselectedCode: UserHistoryCode.Authorization,

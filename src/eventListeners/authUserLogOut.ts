@@ -1,4 +1,4 @@
-import { EventBusListener, InternalEvent } from '@diia-inhouse/diia-queue'
+import { EventBusListener } from '@diia-inhouse/diia-queue'
 import { ValidationSchema } from '@diia-inhouse/validators'
 
 import DiiaIdService from '@services/diiaId'
@@ -7,6 +7,7 @@ import UserDocumentService from '@services/userDocument'
 import UserDocumentStorageService from '@services/userDocumentStorage'
 
 import { EventPayload } from '@interfaces/eventListeners/authUserLogOut'
+import { InternalEvent } from '@interfaces/queue'
 
 export default class AuthUserLogOutEventListener implements EventBusListener {
     constructor(

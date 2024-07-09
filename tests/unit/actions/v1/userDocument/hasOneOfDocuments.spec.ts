@@ -1,5 +1,4 @@
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocumentType } from '@diia-inhouse/types'
 
 import HasOneOfDocumentsAction from '@actions/v1/userDocument/hasOneOfDocuments'
 
@@ -10,12 +9,12 @@ describe(`Action ${HasOneOfDocumentsAction.name}`, () => {
     const headers = testKit.session.getHeaders()
     const userDocumentServiceMock = mockInstance(UserDocumentService)
 
-    const hasOneOfDocumentsAction = new HasOneOfDocumentsAction(userDocumentServiceMock)
+    const hasOneOfDocumentsAction = new HasOneOfDocumentsAction(userDocumentServiceMock, [])
 
     describe('method `handler`', () => {
         it('should return true if user has one of given documents', async () => {
             const args = {
-                params: { userIdentifier: 'userIdentifier', documentTypes: [DocumentType.TaxpayerCard, DocumentType.DriverLicense] },
+                params: { userIdentifier: 'userIdentifier', documentTypes: ['taxpayer-card', 'driver-license'] },
                 session: testKit.session.getUserSession(),
                 headers,
             }

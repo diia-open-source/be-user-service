@@ -1,8 +1,10 @@
 import DiiaLogger from '@diia-inhouse/diia-logger'
-import { ExternalCommunicator, ExternalEvent, ExternalEventBus } from '@diia-inhouse/diia-queue'
+import { ExternalCommunicator, ExternalEventBus } from '@diia-inhouse/diia-queue'
 import { mockInstance } from '@diia-inhouse/test'
 
 import EResidentDiiaIdConfirmationService from '@services/eResidentDiiaIdConfirmation'
+
+import { ExternalEvent } from '@interfaces/queue'
 
 describe(`Service ${EResidentDiiaIdConfirmationService.name}`, () => {
     const externalEventBusMock = mockInstance(ExternalEventBus)

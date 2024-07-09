@@ -1,6 +1,6 @@
 import { v4 as uuid } from 'uuid'
 
-import { AppAction } from '@diia-inhouse/diia-app'
+import { GrpcAppAction } from '@diia-inhouse/diia-app'
 
 import { IdentifierService } from '@diia-inhouse/crypto'
 import { AccessDeniedError } from '@diia-inhouse/errors'
@@ -16,7 +16,7 @@ import { SignAlgo } from '@interfaces/models/diiaId'
 import { ProcessCode } from '@interfaces/services'
 import { UserHistoryItemStatus } from '@interfaces/services/userHistory'
 
-export default class ValidateHashSignaturesAction implements AppAction {
+export default class ValidateHashSignaturesAction implements GrpcAppAction {
     constructor(
         private readonly diiaIdService: DiiaIdService,
         private readonly userSigningHistoryService: UserSigningHistoryService,
@@ -30,7 +30,7 @@ export default class ValidateHashSignaturesAction implements AppAction {
 
     readonly name: string = 'validateHashSignatures'
 
-    readonly validationRules: ValidationSchema = {
+    readonly validationRules: ValidationSchema<CustomActionArguments['params']> = {
         files: {
             type: 'array',
             items: {

@@ -1,5 +1,4 @@
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocumentType } from '@diia-inhouse/types'
 
 import AddDocumentPhotoEventListener from '@src/eventListeners/addDocumentPhoto'
 
@@ -10,7 +9,7 @@ import { EventPayload } from '@interfaces/eventListeners/addDocumentPhoto'
 describe('AddDocumentPhotoEventListener', () => {
     const testKit = new TestKit()
     const documentFeaturePointsServiceMock = mockInstance(DocumentFeaturePointsService)
-    const addDocumentPhotoEventListener = new AddDocumentPhotoEventListener(documentFeaturePointsServiceMock)
+    const addDocumentPhotoEventListener = new AddDocumentPhotoEventListener(documentFeaturePointsServiceMock, [])
 
     describe('method: `handler`', () => {
         it('should succeed', async () => {
@@ -19,7 +18,7 @@ describe('AddDocumentPhotoEventListener', () => {
             } = testKit.session.getUserSession()
             const message: EventPayload = {
                 documentIdentifier: 'document-identifier',
-                documentType: DocumentType.BirthCertificate,
+                documentType: 'birth-certificate',
                 photo: 'photo-base64',
                 userIdentifier,
             }

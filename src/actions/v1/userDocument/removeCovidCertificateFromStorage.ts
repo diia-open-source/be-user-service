@@ -1,6 +1,6 @@
 import { AppAction } from '@diia-inhouse/diia-app'
 
-import { ActionVersion, DocumentType, SessionType } from '@diia-inhouse/types'
+import { ActionVersion, SessionType } from '@diia-inhouse/types'
 import { ValidationSchema } from '@diia-inhouse/validators'
 
 import UserDocumentStorageService from '@services/userDocumentStorage'
@@ -22,11 +22,7 @@ export default class RemoveCovidCertificateFromStorageAction implements AppActio
         mobileUid: { type: 'string' },
         documentType: {
             type: 'string',
-            enum: [
-                DocumentType.LocalVaccinationCertificate,
-                DocumentType.ChildLocalVaccinationCertificate,
-                DocumentType.InternationalVaccinationCertificate,
-            ],
+            enum: ['local-vaccination-certificate', 'child-local-vaccination-certificate', 'international-vaccination-certificate'],
         },
         types: {
             type: 'array',

@@ -1,7 +1,6 @@
-import { ObjectId } from 'bson'
-
 import { MoleculerService } from '@diia-inhouse/diia-app'
 
+import { mongo } from '@diia-inhouse/db'
 import DiiaLogger from '@diia-inhouse/diia-logger'
 import TestKit, { mockInstance } from '@diia-inhouse/test'
 import { ActionVersion, SessionType } from '@diia-inhouse/types'
@@ -32,7 +31,7 @@ describe(`Service ${NotificationService.name}`, () => {
 
     describe('method: `isMessageExists`', () => {
         it('should return true if message exists', async () => {
-            const messageId = new ObjectId()
+            const messageId = new mongo.ObjectId()
 
             jest.spyOn(mockMoleculerService, 'act').mockResolvedValueOnce(true)
 

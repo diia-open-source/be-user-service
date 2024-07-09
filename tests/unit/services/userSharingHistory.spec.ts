@@ -1,7 +1,4 @@
-import { randomUUID } from 'crypto'
-
-import { ObjectId } from 'bson'
-import { FilterQuery, UpdateQuery } from 'mongoose'
+import { randomUUID } from 'node:crypto'
 
 const userSharingHistoryItemModel = {
     find: jest.fn(),
@@ -16,9 +13,10 @@ const userSharingHistoryItemModel = {
 
 jest.mock('@models/userSharingHistoryItem', () => userSharingHistoryItemModel)
 
-import TestKit from '@diia-inhouse/test'
-import { DocumentType } from '@diia-inhouse/types'
+import { FilterQuery, UpdateQuery, mongo } from '@diia-inhouse/db'
+import TestKit, { mockInstance } from '@diia-inhouse/test'
 
+import DocumentsService from '@services/documents'
 import UserSharingHistoryService from '@services/userSharingHistory'
 
 import UserHistoryDataMapper from '@dataMappers/userHistoryDataMapper'
@@ -31,8 +29,13 @@ describe(`Service ${UserSharingHistoryService.name}`, () => {
     const testKit = new TestKit()
 
     const userSharingHistoryDataMapper = new UserSharingHistoryDataMapper(<UserHistoryDataMapper>{})
+    const mockedDocumentsService = mockInstance(DocumentsService)
 
-    const userSharingHistoryService = new UserSharingHistoryService(userSharingHistoryDataMapper, <UserHistoryDataMapper>{})
+    const userSharingHistoryService = new UserSharingHistoryService(
+        mockedDocumentsService,
+        userSharingHistoryDataMapper,
+        <UserHistoryDataMapper>{},
+    )
 
     const user = testKit.session.getUserSession().user
     const sessionId = randomUUID()
@@ -42,10 +45,10 @@ describe(`Service ${UserSharingHistoryService.name}`, () => {
         sessionId,
         sharingId: randomUUID(),
         status: UserHistoryItemStatus.Processing,
-        documents: [DocumentType.DriverLicense],
+        documents: ['driver-license'],
         date: new Date(),
         acquirer: {
-            id: new ObjectId(),
+            id: new mongo.ObjectId(),
             name: 'acquirer',
             address: 'address',
         },
@@ -93,18 +96,18 @@ describe(`Service ${UserSharingHistoryService.name}`, () => {
                 id: userSharingHistoryItem.sharingId,
                 status: UserHistoryItemStatus.Processing,
                 date: userSharingHistoryItem.date.toString(),
-                documents: [DocumentType.DriverLicense],
+                documents: ['driver-license'],
                 recipient: { name: userSharingHistoryItem.acquirer.name, address: userSharingHistoryItem.acquirer.address },
                 purpose: 'purpose',
             }
 
+            jest.spyOn(mockedDocumentsService, 'getDocumentNames').mockResolvedValueOnce(['driver-license-name'])
             jest.spyOn(userSharingHistoryDataMapper, 'toEntity').mockReturnValueOnce(mappedHistory)
-
             const result = { history: [mappedHistory], total: 1 }
 
             expect(await userSharingHistoryService.getHistory(user.identifier, sessionId, 1, 10)).toMatchObject(result)
             expect(userSharingHistoryItemModel.countDocuments).toHaveBeenCalledWith({ ...query, sessionId })
-            expect(userSharingHistoryDataMapper.toEntity).toHaveBeenCalledWith(values[0])
+            expect(userSharingHistoryDataMapper.toEntity).toHaveBeenCalledWith(values[0], ['driver-license-name'])
         })
     })
 

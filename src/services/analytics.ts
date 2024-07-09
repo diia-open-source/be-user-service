@@ -1,9 +1,10 @@
 import { MoleculerService } from '@diia-inhouse/diia-app'
 
 import { AnalyticsActionResult, GetRatingFormParams, GetRatingFormResponse, RateServiceEventPayload } from '@diia-inhouse/analytics'
-import { EventBus, InternalEvent } from '@diia-inhouse/diia-queue'
+import { EventBus } from '@diia-inhouse/diia-queue'
 import { ActionVersion, Logger, PlatformType } from '@diia-inhouse/types'
 
+import { InternalEvent } from '@interfaces/queue'
 import {
     AnalyticsActionType,
     AnalyticsCategory,

@@ -1,6 +1,4 @@
-import { Model, Schema, model, models } from 'mongoose'
-
-import { DocumentType } from '@diia-inhouse/types'
+import { Model, Schema, model, models } from '@diia-inhouse/db'
 
 import {
     SharingHistoryAcquirer,
@@ -48,7 +46,7 @@ const userSharingHistoryItemSchema = new Schema<UserSharingHistoryItem>(
         sharingId: { type: String, unique: true, required: true },
         status: { type: String, enum: Object.values(UserHistoryItemStatus), index: true, required: true },
         statusHistory: { type: [statusHistoryItemSchema], required: true },
-        documents: { type: [String], enum: Object.values(DocumentType), required: true },
+        documents: { type: [String], required: true },
         date: { type: Date, required: true },
         acquirer: { type: acquirerSchema, required: true },
         offer: { type: offerSchema },

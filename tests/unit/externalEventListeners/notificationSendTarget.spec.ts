@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
 import { mockInstance } from '@diia-inhouse/test'
 
@@ -10,7 +10,7 @@ import { MessageTemplateCode } from '@interfaces/services/notification'
 
 describe('NotificationSendTargetEventListener', () => {
     const userProfileServiceMock = mockInstance(UserProfileService)
-    const notificationSendTargetEventListener = new NotificationSendTargetEventListener(userProfileServiceMock)
+    const notificationSendTargetEventListener = new NotificationSendTargetEventListener(userProfileServiceMock, [])
 
     describe('method: `handler`', () => {
         it('should successfully invoke notify users process', async () => {

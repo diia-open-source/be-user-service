@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
 import { MoleculerService } from '@diia-inhouse/diia-app'
 

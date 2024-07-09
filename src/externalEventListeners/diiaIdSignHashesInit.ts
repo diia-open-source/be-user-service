@@ -1,8 +1,9 @@
-import { EventBusListener, ExternalEvent } from '@diia-inhouse/diia-queue'
+import { EventBusListener } from '@diia-inhouse/diia-queue'
 import { Logger } from '@diia-inhouse/types'
 import { ValidationSchema } from '@diia-inhouse/validators'
 
 import { EventPayload } from '@interfaces/externalEventListeners/diiaIdSignHashesInit'
+import { ExternalEvent } from '@interfaces/queue'
 
 export default class DiiaIdSignHashesInitEventListener implements EventBusListener {
     constructor(private readonly logger: Logger) {}

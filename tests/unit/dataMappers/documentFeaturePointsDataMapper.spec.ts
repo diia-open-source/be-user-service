@@ -1,7 +1,6 @@
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
 import TestKit from '@diia-inhouse/test'
-import { DocumentType } from '@diia-inhouse/types'
 
 import documentFeaturePointsModel from '@models/documentFeaturePoints'
 
@@ -13,7 +12,7 @@ describe(`Data Mapper ${DocumentFeaturePointsDataMapper.name}`, () => {
 
     describe(`method ${dataMapper.toCheckResult.name}`, () => {
         it('should return check points result when feature points model passed', () => {
-            const documentType = DocumentType.InternalPassport
+            const documentType = 'internal-passport'
             const documentIdentifier = randomUUID()
             const model = new documentFeaturePointsModel({
                 userIdentifier: randomUUID(),
@@ -30,9 +29,9 @@ describe(`Data Mapper ${DocumentFeaturePointsDataMapper.name}`, () => {
 
     describe(`method ${dataMapper.toGetResult.name}`, () => {
         it('should return feature points result when feature points model passed', () => {
-            const documentType = DocumentType.InternalPassport
+            const documentType = 'internal-passport'
             const documentIdentifier = randomUUID()
-            const points = [...Array(testKit.random.getRandomInt(0, 100))].map(() => testKit.random.getRandomInt(0, 100))
+            const points = Array.from({ length: testKit.random.getRandomInt(0, 100) }).map(() => testKit.random.getRandomInt(0, 100))
             const model = new documentFeaturePointsModel({
                 userIdentifier: randomUUID(),
                 documentType,

@@ -2,7 +2,6 @@ import { CryptoService } from '@diia-inhouse/crypto'
 import DiiaLogger from '@diia-inhouse/diia-logger'
 import { BadRequestError } from '@diia-inhouse/errors'
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocumentType } from '@diia-inhouse/types'
 
 const userDocumentStorageModel = {
     create: jest.fn(),
@@ -35,11 +34,12 @@ describe(`Service ${UserDocumentStorageService.name}`, () => {
             const input = {
                 userIdentifier: user.identifier,
                 hashData: 'hashData',
-                documentType: DocumentType.DriverLicense,
+                documentType: 'driver-license',
                 encryptedData: 'encryptedData',
             }
+            const undefinedValue = undefined
 
-            jest.spyOn(userDocumentStorageModel, 'findOne').mockResolvedValueOnce(undefined)
+            jest.spyOn(userDocumentStorageModel, 'findOne').mockResolvedValueOnce(undefinedValue)
             jest.spyOn(userDocumentStorageModel, 'create').mockResolvedValueOnce(input)
 
             expect(
@@ -67,7 +67,7 @@ describe(`Service ${UserDocumentStorageService.name}`, () => {
             const model = {
                 userIdentifier: user.identifier,
                 hashData: 'hashData',
-                documentType: DocumentType.DriverLicense,
+                documentType: 'driver-license',
                 encryptedData: 'encryptedData',
             }
 
@@ -87,7 +87,7 @@ describe(`Service ${UserDocumentStorageService.name}`, () => {
             const model = {
                 userIdentifier: user.identifier,
                 hashData: 'hashData',
-                documentType: DocumentType.DriverLicense,
+                documentType: 'driver-license',
                 encryptedData: 'encryptedData',
                 save: jest.fn(),
             }
@@ -111,7 +111,7 @@ describe(`Service ${UserDocumentStorageService.name}`, () => {
             const foundModel = {
                 userIdentifier: user.identifier,
                 hashData: 'prevHashData',
-                documentType: DocumentType.DriverLicense,
+                documentType: 'driver-license',
                 encryptedData: 'encryptedData',
             }
 
@@ -149,13 +149,13 @@ describe(`Service ${UserDocumentStorageService.name}`, () => {
                 {
                     userIdentifier: user.identifier,
                     hashData: 'hashData',
-                    documentType: DocumentType.BirthCertificate,
+                    documentType: 'birth-certificate',
                     encryptedData: 'encryptedData',
                 },
                 {
                     userIdentifier: user.identifier,
                     hashData: 'hashData',
-                    documentType: DocumentType.VehicleLicense,
+                    documentType: 'vehicle-license',
                     encryptedData: 'encryptedData',
                 },
             ]
@@ -168,10 +168,7 @@ describe(`Service ${UserDocumentStorageService.name}`, () => {
             jest.spyOn(userDocumentStorageModel, 'find').mockResolvedValueOnce(foundModels)
 
             expect(
-                await service.getEncryptedDataFromStorage(user.identifier, headers.mobileUid, [
-                    DocumentType.DriverLicense,
-                    DocumentType.InternalPassport,
-                ]),
+                await service.getEncryptedDataFromStorage(user.identifier, headers.mobileUid, ['driver-license', 'internal-passport']),
             ).toMatchObject(result)
         })
     })
@@ -182,7 +179,7 @@ describe(`Service ${UserDocumentStorageService.name}`, () => {
                 {
                     userIdentifier: user.identifier,
                     hashData: 'hashData',
-                    documentType: DocumentType.BirthCertificate,
+                    documentType: 'birth-certificate',
                     encryptedData: 'encryptedData',
                     encryptedPhoto: 'encryptedPhoto',
                     encryptedDocPhoto: 'encryptedDocPhoto',
@@ -202,25 +199,20 @@ describe(`Service ${UserDocumentStorageService.name}`, () => {
             expect(
                 await service.getDecryptedDataFromStorage(user.identifier, {
                     mobileUid: headers.mobileUid,
-                    documentTypes: [DocumentType.BirthCertificate],
+                    documentTypes: ['birth-certificate'],
                 }),
             ).toMatchObject(result)
         })
     })
 
     describe(`method ${service.removeFromStorageById.name}`, () => {
-        it('should return undefined if given not appropriate document type', async () => {
-            expect(await service.removeFromStorageById(user.identifier, DocumentType.InternalPassport, 'docId')).toBeUndefined()
-            expect(userDocumentStorageModel.find).toHaveBeenCalledTimes(0)
-        })
-
         it('should successfully delete document from storage', async () => {
             const foundModels = [
                 {
                     _id: 'docId',
                     userIdentifier: user.identifier,
                     hashData: 'hashData',
-                    documentType: DocumentType.BirthCertificate,
+                    documentType: 'birth-certificate',
                     encryptedData: 'encryptedData',
                     encryptedPhoto: 'encryptedPhoto',
                     encryptedDocPhoto: 'encryptedDocPhoto',
@@ -231,7 +223,7 @@ describe(`Service ${UserDocumentStorageService.name}`, () => {
             jest.spyOn(cryptoService, 'decryptData').mockResolvedValueOnce({ id: 'docId', serie: '12345', number: 10 })
             jest.spyOn(userDocumentStorageModel, 'deleteMany').mockResolvedValueOnce({ deletedCount: 1 })
 
-            expect(await service.removeFromStorageById(user.identifier, DocumentType.BirthCertificate, 'docId')).toBeUndefined()
+            expect(await service.removeFromStorageById(user.identifier, 'birth-certificate', 'docId')).toBeUndefined()
             expect(diiaLoggerService.info).toHaveBeenCalledWith(`Found storage records: ${foundModels.length}`)
             expect(diiaLoggerService.info).toHaveBeenCalledWith(`Found storage records to remove: 1`)
             expect(diiaLoggerService.info).toHaveBeenCalledWith(`Removed storage records: 1`)
@@ -242,10 +234,10 @@ describe(`Service ${UserDocumentStorageService.name}`, () => {
         it('should successfully remove document from storage by hash data', async () => {
             jest.spyOn(userDocumentStorageModel, 'deleteOne').mockResolvedValueOnce({ deletedCount: 1 })
 
-            expect(await service.removeFromStorageByHashData(user.identifier, DocumentType.BirthCertificate, 'hashData')).toBeUndefined()
+            expect(await service.removeFromStorageByHashData(user.identifier, 'birth-certificate', 'hashData')).toBeUndefined()
             expect(diiaLoggerService.info).toHaveBeenCalledWith('Remove user data from storage result', {
                 deletedCount: 1,
-                documentType: DocumentType.BirthCertificate,
+                documentType: 'birth-certificate',
             })
         })
     })
@@ -270,7 +262,7 @@ describe(`Service ${UserDocumentStorageService.name}`, () => {
                 _id: 'id',
                 userIdentifier: user.identifier,
                 hashData: 'hashData',
-                documentType: DocumentType.BirthCertificate,
+                documentType: 'birth-certificate',
                 encryptedData: 'encryptedData',
                 encryptedPhoto: 'encryptedPhoto',
                 encryptedDocPhoto: 'encryptedDocPhoto',
@@ -280,7 +272,7 @@ describe(`Service ${UserDocumentStorageService.name}`, () => {
         it('should successfully delete certificates with vaccination type', async () => {
             const medicalData = {
                 id: 'id',
-                documentType: DocumentType.BirthCertificate,
+                documentType: 'birth-certificate',
                 documentIdentifier: 'certificate-id',
                 vaccinations: ['vaccine'],
             }
@@ -292,7 +284,7 @@ describe(`Service ${UserDocumentStorageService.name}`, () => {
             expect(
                 await service.removeCovidCertificateFromStorage(
                     user.identifier,
-                    DocumentType.BirthCertificate,
+                    'birth-certificate',
                     headers.mobileUid,
                     [VaccinationCertificateType.Vaccination],
                     'certificate-id',
@@ -300,7 +292,7 @@ describe(`Service ${UserDocumentStorageService.name}`, () => {
             ).toBeUndefined()
             expect(diiaLoggerService.info).toHaveBeenCalledWith('Remove user data from storage result', {
                 deletedCount: 1,
-                documentType: DocumentType.BirthCertificate,
+                documentType: 'birth-certificate',
                 types: [VaccinationCertificateType.Vaccination],
             })
         })
@@ -308,7 +300,7 @@ describe(`Service ${UserDocumentStorageService.name}`, () => {
         it('should successfully delete certificates with test type', async () => {
             const medicalData = {
                 id: 'id',
-                documentType: DocumentType.BirthCertificate,
+                documentType: 'birth-certificate',
                 documentIdentifier: 'certificate-id',
                 tests: ['test'],
             }
@@ -320,7 +312,7 @@ describe(`Service ${UserDocumentStorageService.name}`, () => {
             expect(
                 await service.removeCovidCertificateFromStorage(
                     user.identifier,
-                    DocumentType.BirthCertificate,
+                    'birth-certificate',
                     headers.mobileUid,
                     [VaccinationCertificateType.Test],
                     'certificate-id',
@@ -328,7 +320,7 @@ describe(`Service ${UserDocumentStorageService.name}`, () => {
             ).toBeUndefined()
             expect(diiaLoggerService.info).toHaveBeenCalledWith('Remove user data from storage result', {
                 deletedCount: 1,
-                documentType: DocumentType.BirthCertificate,
+                documentType: 'birth-certificate',
                 types: [VaccinationCertificateType.Test],
             })
         })
@@ -336,7 +328,7 @@ describe(`Service ${UserDocumentStorageService.name}`, () => {
         it('should successfully delete certificates with recovery type', async () => {
             const medicalData = {
                 id: 'id',
-                documentType: DocumentType.BirthCertificate,
+                documentType: 'birth-certificate',
                 documentIdentifier: 'certificate-id',
                 recoveries: ['recovery'],
             }
@@ -348,7 +340,7 @@ describe(`Service ${UserDocumentStorageService.name}`, () => {
             expect(
                 await service.removeCovidCertificateFromStorage(
                     user.identifier,
-                    DocumentType.BirthCertificate,
+                    'birth-certificate',
                     headers.mobileUid,
                     [VaccinationCertificateType.Recovery],
                     'certificate-id',
@@ -356,7 +348,7 @@ describe(`Service ${UserDocumentStorageService.name}`, () => {
             ).toBeUndefined()
             expect(diiaLoggerService.info).toHaveBeenCalledWith('Remove user data from storage result', {
                 deletedCount: 1,
-                documentType: DocumentType.BirthCertificate,
+                documentType: 'birth-certificate',
                 types: [VaccinationCertificateType.Recovery],
             })
         })
@@ -364,7 +356,7 @@ describe(`Service ${UserDocumentStorageService.name}`, () => {
         it('should skip if not found document with given birth certificate id', async () => {
             const medicalData = {
                 id: 'id',
-                documentType: DocumentType.BirthCertificate,
+                documentType: 'birth-certificate',
                 documentIdentifier: 'certificate-id',
                 vaccinations: ['vaccine'],
             }
@@ -376,7 +368,7 @@ describe(`Service ${UserDocumentStorageService.name}`, () => {
             expect(
                 await service.removeCovidCertificateFromStorage(
                     user.identifier,
-                    DocumentType.BirthCertificate,
+                    'birth-certificate',
                     headers.mobileUid,
                     [VaccinationCertificateType.Vaccination],
                     'wrong-certificate-id',
@@ -384,7 +376,7 @@ describe(`Service ${UserDocumentStorageService.name}`, () => {
             ).toBeUndefined()
             expect(diiaLoggerService.info).toHaveBeenCalledWith('Remove user data from storage result', {
                 deletedCount: 0,
-                documentType: DocumentType.BirthCertificate,
+                documentType: 'birth-certificate',
                 types: [VaccinationCertificateType.Vaccination],
             })
         })
@@ -392,7 +384,7 @@ describe(`Service ${UserDocumentStorageService.name}`, () => {
         it('should skip if given wrong vaccination certificate type', async () => {
             const medicalData = {
                 id: 'id',
-                documentType: DocumentType.BirthCertificate,
+                documentType: 'birth-certificate',
                 documentIdentifier: 'certificate-id',
                 vaccinations: ['vaccine'],
             }
@@ -404,7 +396,7 @@ describe(`Service ${UserDocumentStorageService.name}`, () => {
             expect(
                 await service.removeCovidCertificateFromStorage(
                     user.identifier,
-                    DocumentType.BirthCertificate,
+                    'birth-certificate',
                     headers.mobileUid,
                     [<VaccinationCertificateType>'wrong-type'],
                     'certificate-id',
@@ -412,7 +404,7 @@ describe(`Service ${UserDocumentStorageService.name}`, () => {
             ).toBeUndefined()
             expect(diiaLoggerService.info).toHaveBeenCalledWith('Remove user data from storage result', {
                 deletedCount: 0,
-                documentType: DocumentType.BirthCertificate,
+                documentType: 'birth-certificate',
                 types: [<VaccinationCertificateType>'wrong-type'],
             })
         })
@@ -425,7 +417,7 @@ describe(`Service ${UserDocumentStorageService.name}`, () => {
                     id: 'doc-id',
                     userIdentifier: user.identifier,
                     hashData: 'hashData',
-                    documentType: DocumentType.BirthCertificate,
+                    documentType: 'birth-certificate',
                     encryptedData: 'encryptedData',
                     encryptedPhoto: 'encryptedPhoto',
                     encryptedDocPhoto: 'encryptedDocPhoto',
@@ -438,24 +430,20 @@ describe(`Service ${UserDocumentStorageService.name}`, () => {
             jest.spyOn(cryptoService, 'decryptData').mockResolvedValueOnce('mocked-photo')
             jest.spyOn(cryptoService, 'decryptData').mockResolvedValueOnce('mocked-docPhoto')
 
-            expect(
-                await service.hasStorageDocument(user.identifier, headers.mobileUid, DocumentType.BirthCertificate, 'doc-id'),
-            ).toBeTruthy()
+            expect(await service.hasStorageDocument(user.identifier, headers.mobileUid, 'birth-certificate', 'doc-id')).toBeTruthy()
             expect(diiaLoggerService.info).toHaveBeenCalledWith('Document already exists in storage', {
                 id: 'doc-id',
-                documentType: DocumentType.BirthCertificate,
+                documentType: 'birth-certificate',
             })
         })
 
         it('should return false if document not found in storage', async () => {
             jest.spyOn(userDocumentStorageModel, 'find').mockResolvedValueOnce([])
 
-            expect(
-                await service.hasStorageDocument(user.identifier, headers.mobileUid, DocumentType.BirthCertificate, 'doc-id'),
-            ).toBeFalsy()
+            expect(await service.hasStorageDocument(user.identifier, headers.mobileUid, 'birth-certificate', 'doc-id')).toBeFalsy()
             expect(diiaLoggerService.info).toHaveBeenCalledWith('Not found document in storage', {
                 id: 'doc-id',
-                documentType: DocumentType.BirthCertificate,
+                documentType: 'birth-certificate',
             })
         })
     })

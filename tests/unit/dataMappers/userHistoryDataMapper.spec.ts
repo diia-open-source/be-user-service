@@ -1,5 +1,4 @@
 import {
-    DocumentType,
     DurationMs,
     MessageBodyItem,
     MessageBodyItemType,
@@ -17,16 +16,6 @@ import { GetHistoryItemBodyPayload, UserHistoryCode, UserHistoryItemStatus } fro
 
 describe(`Data Mapper ${UserHistoryDataMapper.name}`, () => {
     const dataMapper = new UserHistoryDataMapper()
-
-    describe(`method ${dataMapper.getDocumentName.name}`, () => {
-        it('should return document name if document type is passed', () => {
-            const documentType = DocumentType.ForeignPassport
-
-            const result = dataMapper.getDocumentName(documentType)
-
-            expect(result).toBe('Закордонний паспорт')
-        })
-    })
 
     describe(`method ${dataMapper.getStatus.name}`, () => {
         it.each([

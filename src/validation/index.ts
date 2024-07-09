@@ -1,4 +1,4 @@
-import { DocumentType, OwnerType } from '@diia-inhouse/types'
+import { OwnerType } from '@diia-inhouse/types'
 import { ValidationSchema } from '@diia-inhouse/validators'
 
 import { UserProfileDocument } from '@interfaces/services/documents'
@@ -13,7 +13,7 @@ export const userProfileDocumentValidationSchema: ValidationSchema<UserProfileDo
         type: 'object',
         optional: true,
         props: {
-            documentType: { type: 'string', enum: Object.values(DocumentType) },
+            documentType: { type: 'string' },
             documentIdentifier: { type: 'string' },
         },
     },
@@ -26,7 +26,7 @@ export const userProfileDocumentValidationSchema: ValidationSchema<UserProfileDo
         type: 'object',
         optional: true,
         props: {
-            documentType: { type: 'string', enum: Object.values(DocumentType) },
+            documentType: { type: 'string' },
             fullNameHash: { type: 'string' },
         },
     },

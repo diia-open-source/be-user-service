@@ -1,5 +1,5 @@
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocumentType, OwnerType } from '@diia-inhouse/types'
+import { OwnerType } from '@diia-inhouse/types'
 
 import HasDocumentsAction from '@actions/v3/userDocument/hasDocuments'
 
@@ -9,7 +9,7 @@ describe(`Action ${HasDocumentsAction.name}`, () => {
     const testKit = new TestKit()
     const userDocumentService = mockInstance(UserDocumentService)
 
-    const action = new HasDocumentsAction(userDocumentService)
+    const action = new HasDocumentsAction(userDocumentService, [])
 
     describe('Method `handler`', () => {
         it('should return true if user has documents', async () => {
@@ -18,8 +18,8 @@ describe(`Action ${HasDocumentsAction.name}`, () => {
                     userIdentifier: 'userIdentifier',
                     filters: [
                         [
-                            { documentType: DocumentType.InternalPassport, ownerType: OwnerType.owner },
-                            { documentType: DocumentType.DriverLicense, ownerType: OwnerType.owner },
+                            { documentType: 'internal-passport', ownerType: OwnerType.owner },
+                            { documentType: 'driver-license', ownerType: OwnerType.owner },
                         ],
                     ],
                 },

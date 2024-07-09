@@ -1,8 +1,7 @@
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
-import { ObjectId } from 'bson'
-
-import TestKit from '@diia-inhouse/test/*'
+import { mongo } from '@diia-inhouse/db'
+import TestKit from '@diia-inhouse/test'
 import { ButtonState } from '@diia-inhouse/types'
 import { utils } from '@diia-inhouse/utils'
 
@@ -124,6 +123,7 @@ describe(`Action ${GetHistoryByActionAction.name}`, () => {
                             type: userHistoryDataMapper.getHistoryStatusChipTypeByStatus(status),
                         },
                         title: signingHistoryItems[0].recipient!.name,
+                        subtitles: [],
                         description: signingHistoryItems[0].recipient!.address,
                         botLabel: utils.formatDate(signingHistoryItems[0].date, userHistoryDataMapper.dateFormat),
                         btnPrimaryAdditionalAtm: {
@@ -168,7 +168,7 @@ describe(`Action ${GetHistoryByActionAction.name}`, () => {
                 documents: [],
                 date: new Date(),
                 acquirer: {
-                    id: new ObjectId(),
+                    id: new mongo.ObjectId(),
                     name: 'name',
                     address: 'address',
                 },
@@ -199,6 +199,7 @@ describe(`Action ${GetHistoryByActionAction.name}`, () => {
                             type: userHistoryDataMapper.getHistoryStatusChipTypeByStatus(status),
                         },
                         title: sharingHistoryItems[0].acquirer.name,
+                        subtitles: [],
                         description: sharingHistoryItems[0].acquirer.address,
                         botLabel: utils.formatDate(sharingHistoryItems[0].date, userHistoryDataMapper.dateFormat),
                         btnPrimaryAdditionalAtm: {

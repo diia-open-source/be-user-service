@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
 const userSigningHistoryItemModelMock = {
     countDocuments: jest.fn(),
@@ -18,9 +18,8 @@ jest.mock('@models/userSigningHistoryItem', () => ({
     __esModule: true,
 }))
 
-import { ObjectId } from 'bson'
-
 import { DiiaIdServiceCode } from '@diia-inhouse/analytics'
+import { mongo } from '@diia-inhouse/db'
 import { NotFoundError } from '@diia-inhouse/errors'
 import TestKit, { mockInstance } from '@diia-inhouse/test'
 import {
@@ -45,6 +44,8 @@ import { UserSigningHistoryItem, UserSigningHistoryItemModel } from '@interfaces
 import { UserHistoryCode, UserHistoryItemStatus } from '@interfaces/services/userHistory'
 import { UpsertItemParams } from '@interfaces/services/userSigningHistory'
 
+const undefinedValue = undefined
+
 describe(`Service ${UserSigningHistoryService.name}`, () => {
     const testKit = new TestKit()
     const ratingSigningHistoryService = mockInstance(RatingSigningHistoryService)
@@ -66,7 +67,7 @@ describe(`Service ${UserSigningHistoryService.name}`, () => {
                 sessionId: randomUUID(),
                 documents: [randomUUID()],
                 date: new Date(),
-                acquirer: { id: new ObjectId(), name: randomUUID(), address: randomUUID() },
+                acquirer: { id: new mongo.ObjectId(), name: randomUUID(), address: randomUUID() },
                 recipient: { name: randomUUID(), address: randomUUID() },
                 publicService: PublicServiceCode.CreditHistory,
             }
@@ -467,7 +468,7 @@ describe(`Service ${UserSigningHistoryService.name}`, () => {
             const userIdentifier = randomUUID()
             const action = UserHistoryCode.Authorization
 
-            userSigningHistoryItemModelMock.findOne.mockResolvedValueOnce(undefined)
+            userSigningHistoryItemModelMock.findOne.mockResolvedValueOnce(undefinedValue)
 
             await expect(service.getSigningHistoryItemByIdV1(resourceId, userIdentifier, action)).rejects.toThrow(
                 new NotFoundError('Signing history item with provided resourceId not found for current user'),
@@ -494,7 +495,7 @@ describe(`Service ${UserSigningHistoryService.name}`, () => {
     describe(`method: ${service.getItemStatuses.name}`, () => {
         it('should return history item status records', async () => {
             const resourceIdsCount = testKit.random.getRandomInt(1, 100)
-            const resourceIds = [...Array(resourceIdsCount)].map(() => randomUUID())
+            const resourceIds = Array.from({ length: resourceIdsCount }).map(() => randomUUID())
             const historyItems = resourceIds.map((resourceId) => ({
                 status: UserHistoryItemStatus.Done,
                 date: new Date(),
@@ -517,7 +518,7 @@ describe(`Service ${UserSigningHistoryService.name}`, () => {
         })
     })
 
-    describe(`method: ${service.getSigningHistoryByAction}`, () => {
+    describe(`method: ${service.getSigningHistoryByAction.name}`, () => {
         it.each([
             [
                 'authorization',
@@ -537,6 +538,7 @@ describe(`Service ${UserSigningHistoryService.name}`, () => {
                                     type: StatusType.success,
                                 },
                                 title: 'title',
+                                subtitles: [],
                                 description: 'description',
                                 botLabel: 'botLabel',
                                 btnPrimaryAdditionalAtm: {
@@ -571,6 +573,7 @@ describe(`Service ${UserSigningHistoryService.name}`, () => {
                                     type: StatusType.success,
                                 },
                                 title: 'title',
+                                subtitles: [],
                                 description: 'description',
                                 botLabel: 'botLabel',
                                 btnPrimaryAdditionalAtm: {
@@ -606,6 +609,7 @@ describe(`Service ${UserSigningHistoryService.name}`, () => {
                         type: ChipStatusAtmType.success,
                     },
                     title: 'title',
+                    subtitles: [],
                     description: 'description',
                     botLabel: 'botLabel',
                     btnPrimaryAdditionalAtm: {
@@ -634,7 +638,7 @@ describe(`Service ${UserSigningHistoryService.name}`, () => {
 
     describe(`method ${service.getSigningHistoryItemById.name}`, () => {
         it('should throw NotFoundError if signing history item not found for current user', async () => {
-            userSigningHistoryItemModelMock.findOne.mockResolvedValueOnce(undefined)
+            userSigningHistoryItemModelMock.findOne.mockResolvedValueOnce(undefinedValue)
 
             const query = { resourceId: 'resourceId', sessionId: 'sessionId', userIdentifier: user.identifier }
 
@@ -753,7 +757,7 @@ describe(`Service ${UserSigningHistoryService.name}`, () => {
                 ),
             ).toMatchObject(response)
             expect(userSigningHistoryItemModelMock.findOne).toHaveBeenCalledWith(query)
-            expect(userHistoryDataMapper.getHistoryScreenNavigationPanelMlc).toHaveBeenLastCalledWith(undefined)
+            expect(userHistoryDataMapper.getHistoryScreenNavigationPanelMlc).toHaveBeenLastCalledWith(undefinedValue)
             expect(userSigningHistoryDataMapper.getHistoryItem).toHaveBeenCalledWith(signingHistoryItem, UserHistoryCode.Authorization, {
                 platformType: PlatformType.Android,
                 platformVersion: '3.16.0',

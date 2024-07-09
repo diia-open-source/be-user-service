@@ -30,14 +30,14 @@ describe(`Action ${InitHashesSigningAction.name}`, () => {
 
             expect(await initHashesSigningAction.handler(args)).toMatchObject({ success: true })
 
-            expect(diiaIdServiceMock.initHashesSigning).toHaveBeenCalledWith(
-                args.session.user.identifier,
-                args.headers.mobileUid,
-                args.params.signAlgo,
-                args.params.signType,
-                args.params.noSigningTime,
-                args.params.noContentTimestamp,
-            )
+            expect(diiaIdServiceMock.initHashesSigning).toHaveBeenCalledWith({
+                userIdentifier: args.session.user.identifier,
+                mobileUid: args.headers.mobileUid,
+                signAlgo: args.params.signAlgo,
+                signType: args.params.signType,
+                noSigningTime: args.params.noSigningTime,
+                noContentTimestamp: args.params.noContentTimestamp,
+            })
         })
     })
 })

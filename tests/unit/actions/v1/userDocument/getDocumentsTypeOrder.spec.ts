@@ -1,5 +1,4 @@
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocumentTypeCamelCase } from '@diia-inhouse/types'
 
 import GetDocumentsTypeOrderAction from '@actions/v1/userDocument/getDocumentsTypeOrder'
 
@@ -13,7 +12,7 @@ describe(`Action ${GetDocumentsTypeOrderAction.name}`, () => {
     it('should call getDocumentsTypeOrder', async () => {
         const { session, headers } = testKit.session.getUserActionArguments()
         const { identifier: userIdentifier } = session.user
-        const documentsTypeOrder = [DocumentTypeCamelCase.uId, DocumentTypeCamelCase.idCard, DocumentTypeCamelCase.taxpayerCard]
+        const documentsTypeOrder = ['uId', 'idCard', 'taxpayerCard']
 
         jest.spyOn(userDocumentSettingsService, 'getDocumentsTypeOrder').mockResolvedValueOnce(documentsTypeOrder)
 

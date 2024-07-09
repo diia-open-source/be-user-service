@@ -1,15 +1,23 @@
-import { AwilixContainer, Constructor, Lifetime, asClass, asFunction, asValue } from 'awilix'
 import { once } from 'lodash'
 
-import { DepsFactoryFn, DepsResolver, GrpcClientFactory, GrpcService } from '@diia-inhouse/diia-app'
+import {
+    AwilixContainer,
+    BaseDeps,
+    Constructor,
+    DepsFactoryFn,
+    GrpcClientFactory,
+    Lifetime,
+    NameAndRegistrationPair,
+    asClass,
+    asFunction,
+    asValue,
+} from '@diia-inhouse/diia-app'
 
 import { AuthServiceDefinition } from '@diia-inhouse/auth-service-client'
-import { AuthService, CryptoDeps, CryptoService, HashService, IdentifierService } from '@diia-inhouse/crypto'
-import { DatabaseService, DbType } from '@diia-inhouse/db'
+import { CryptoService, HashService } from '@diia-inhouse/crypto'
 import { CryptoDocServiceDefinition } from '@diia-inhouse/diia-crypto-client'
-import DiiaLogger from '@diia-inhouse/diia-logger'
-import { HealthCheck } from '@diia-inhouse/healthcheck'
-import { HttpDeps, HttpService } from '@diia-inhouse/http'
+import { DocumentsServiceDefinition } from '@diia-inhouse/documents-service-client'
+import { HttpService } from '@diia-inhouse/http'
 import { I18nService } from '@diia-inhouse/i18n'
 import { NotificationServiceDefinition } from '@diia-inhouse/notification-service-client'
 import { HttpProtocol } from '@diia-inhouse/types'
@@ -17,62 +25,57 @@ import { HttpProtocol } from '@diia-inhouse/types'
 import UbchMockProvider from '@providers/creditHistory/mock'
 import UbchProvider from '@providers/creditHistory/ubch'
 
-import { AppDeps, GrpcClientsDeps, GrpcServiceName, InternalDeps } from '@interfaces/application'
+import { AppDeps, GrpcClientsDeps, InternalDeps } from '@interfaces/application'
 import { AppConfig } from '@interfaces/config'
 import { CreditHistoryProvider } from '@interfaces/providers/creditHistory'
 
-export default (config: AppConfig): ReturnType<DepsFactoryFn<AppConfig, AppDeps>> => {
-    const { db, healthCheck, auth, identifier, ubch } = config
+export default async (config: AppConfig, baseContainer: AwilixContainer<BaseDeps>): ReturnType<DepsFactoryFn<AppConfig, AppDeps>> => {
+    const {
+        ubch,
+        documents: { types: documentTypesConfig },
+        grpc: { documentsServiceAddress, authServiceAddress, cryptoDocServiceAddress, notificationServiceAddress },
+    } = config
+    const documentsServiceClient = baseContainer
+        .resolve('grpcClientFactory')
+        .createGrpcClient(DocumentsServiceDefinition, documentsServiceAddress)
+    const { documentTypes } = documentTypesConfig
+        ? { documentTypes: documentTypesConfig }
+        : await documentsServiceClient.getDocumentTypes({})
 
     const ubchProvider: Constructor<CreditHistoryProvider> = ubch.isEnabled ? UbchProvider : UbchMockProvider
-    const internalDeps: DepsResolver<InternalDeps> = {
+    const internalDeps: NameAndRegistrationPair<InternalDeps> = {
         lazyUserDocumentService: {
             resolve: (c: AwilixContainer) => once(() => c.resolve('userDocumentService')),
             lifetime: Lifetime.SINGLETON,
         },
         creditHistoryProvider: asClass(ubchProvider).singleton(),
         ubchProvider: asClass(UbchProvider).singleton(),
+        documentTypes: asValue(documentTypes),
     }
 
-    const cryptoDeps: DepsResolver<CryptoDeps> = {
-        auth: asClass(AuthService, { injector: () => ({ authConfig: auth }) }).singleton(),
-        identifier: asClass(IdentifierService, { injector: () => ({ identifierConfig: identifier }) }).singleton(),
-        crypto: asClass(CryptoService).singleton(),
-        hash: asClass(HashService).singleton(),
-    }
-
-    const httpDeps: DepsResolver<HttpDeps> = {
-        httpService: asClass(HttpService, { injector: () => ({ protocol: HttpProtocol.Http }) }).singleton(),
-        httpsService: asClass(HttpService, { injector: () => ({ protocol: HttpProtocol.Https }) }).singleton(),
-    }
-
-    const grpcClientsDeps: DepsResolver<GrpcClientsDeps> = {
+    const grpcClientsDeps: NameAndRegistrationPair<GrpcClientsDeps> = {
         authServiceClient: asFunction((grpcClientFactory: GrpcClientFactory) =>
-            grpcClientFactory.createGrpcClient(AuthServiceDefinition, config.grpc.authServiceAddress, GrpcServiceName.Auth),
+            grpcClientFactory.createGrpcClient(AuthServiceDefinition, authServiceAddress),
         ).singleton(),
         notificationServiceClient: asFunction((grpcClientFactory: GrpcClientFactory) =>
-            grpcClientFactory.createGrpcClient(
-                NotificationServiceDefinition,
-                config.grpc.notificationServiceAddress,
-                GrpcServiceName.Notification,
-            ),
+            grpcClientFactory.createGrpcClient(NotificationServiceDefinition, notificationServiceAddress),
         ).singleton(),
         cryptoDocServiceClient: asFunction((grpcClientFactory: GrpcClientFactory) =>
-            grpcClientFactory.createGrpcClient(CryptoDocServiceDefinition, config.grpc.cryptoDocServiceAddress, GrpcServiceName.Crypto),
+            grpcClientFactory.createGrpcClient(CryptoDocServiceDefinition, cryptoDocServiceAddress),
         ).singleton(),
+        documentsServiceClient: asValue(documentsServiceClient),
     }
+    const { default: pMemoize } = await import('p-memoize')
 
     return {
-        config: asValue(config),
-        logger: asClass(DiiaLogger, { injector: () => ({ options: { logLevel: process.env.LOG_LEVEL } }) }).singleton(),
-        healthCheck: asClass(HealthCheck, { injector: (c) => ({ container: c.cradle, healthCheckConfig: healthCheck }) }).singleton(),
-        database: asClass(DatabaseService, { injector: () => ({ dbConfigs: { [DbType.Main]: db } }) }).singleton(),
         i18n: asClass(I18nService).singleton(),
-        grpcService: asClass(GrpcService, { injector: (c) => ({ container: c }) }).singleton(),
+        hash: asClass(HashService).singleton(),
+        crypto: asClass(CryptoService).singleton(),
+        httpService: asClass(HttpService, { injector: () => ({ protocol: HttpProtocol.Http }) }).singleton(),
+        httpsService: asClass(HttpService, { injector: () => ({ protocol: HttpProtocol.Https }) }).singleton(),
+        pMemoize: asValue(pMemoize),
 
         ...grpcClientsDeps,
         ...internalDeps,
-        ...cryptoDeps,
-        ...httpDeps,
     }
 }

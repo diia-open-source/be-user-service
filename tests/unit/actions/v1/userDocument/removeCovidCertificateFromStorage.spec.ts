@@ -1,5 +1,4 @@
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocumentType } from '@diia-inhouse/types'
 
 import RemoveCovidCertificateFromStorageAction from '@actions/v1/userDocument/removeCovidCertificateFromStorage'
 
@@ -20,7 +19,7 @@ describe(`Action ${RemoveCovidCertificateFromStorageAction.name}`, () => {
                 params: {
                     userIdentifier: 'userIdentifier',
                     mobileUid: headers.mobileUid,
-                    documentType: DocumentType.LocalVaccinationCertificate,
+                    documentType: 'local-vaccination-certificate',
                     types: [VaccinationCertificateType.Vaccination],
                     birthCertificateId: 'birthCertificateId',
                 },

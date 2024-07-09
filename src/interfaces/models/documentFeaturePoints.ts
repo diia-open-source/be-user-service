@@ -1,10 +1,8 @@
-import { Document } from 'mongoose'
-
-import { DocumentType } from '@diia-inhouse/types'
+import { Document } from '@diia-inhouse/db'
 
 export interface DocumentFeaturePoints {
     userIdentifier: string
-    documentType: DocumentType
+    documentType: string
     documentIdentifier: string
     requestId: string
     points?: number[]

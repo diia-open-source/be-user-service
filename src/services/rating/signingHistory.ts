@@ -1,11 +1,12 @@
 import { DateTime } from 'luxon'
 
 import { DiiaIdServiceCode, RateServiceEventPayload, RatingCategory, RatingForm, RatingService } from '@diia-inhouse/analytics'
-import { MessageActionSubtype, MessageActionType, PlatformType, TemplateStub } from '@diia-inhouse/types'
+import { MessageActionSubtype, PlatformType, TemplateStub } from '@diia-inhouse/types'
 
 import AnalyticsService from '@services/analytics'
 
 import { Action, UserSigningHistoryItemModel } from '@interfaces/models/userSigningHistoryItem'
+import { MessageActionType } from '@interfaces/services/notification'
 import { UserHistoryItemStatus } from '@interfaces/services/userHistory'
 
 export default class RatingSigningHistoryService implements RatingService<UserSigningHistoryItemModel> {

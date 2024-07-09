@@ -1,8 +1,8 @@
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
 import { IdentifierService } from '@diia-inhouse/crypto'
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocumentType, ProfileFeature } from '@diia-inhouse/types'
+import { ProfileFeature } from '@diia-inhouse/types'
 
 import OfficeIdentifierRemovedEventListener from '@src/externalEventListeners/officeIdentifierRemoved'
 
@@ -40,7 +40,7 @@ describe('OfficeIdentifierRemovedEventListener', () => {
 
             expect(identifierServiceMock.createIdentifier).toHaveBeenCalledWith(itn)
             expect(userProfileServiceMock.removeProfileFeature).toHaveBeenCalledWith(identifier, ProfileFeature.office)
-            expect(documentsServiceMock.expireDocument).toHaveBeenCalledWith(identifier, DocumentType.OfficialCertificate)
+            expect(documentsServiceMock.expireDocument).toHaveBeenCalledWith(identifier, 'official-certificate')
         })
     })
 })

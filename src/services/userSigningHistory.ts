@@ -1,5 +1,4 @@
-import { FilterQuery, UpdateQuery } from 'mongoose'
-
+import { FilterQuery, UpdateQuery } from '@diia-inhouse/db'
 import { NotFoundError } from '@diia-inhouse/errors'
 
 import RatingSigningHistoryService from '@services/rating/signingHistory'
@@ -74,13 +73,12 @@ export default class UserSigningHistoryService {
     ): Promise<HistoryResponseByCodeV1> {
         const query: FilterQuery<UserSigningHistoryItemModel> = { userIdentifier }
 
-        if (action === UserHistoryCode.Authorization) {
-            query.action = 'authDiiaId'
-        } else {
-            query.action = {
-                $ne: 'authDiiaId',
-            }
-        }
+        query.action =
+            action === UserHistoryCode.Authorization
+                ? 'authDiiaId'
+                : {
+                      $ne: 'authDiiaId',
+                  }
 
         const [items, total]: [UserSigningHistoryItemModel[], number] = await Promise.all([
             userSigningHistoryItemModel.find(query).skip(skip).limit(limit).sort({ _id: -1 }),
@@ -102,13 +100,12 @@ export default class UserSigningHistoryService {
     ): Promise<HistoryResponseByCode> {
         const query: FilterQuery<UserSigningHistoryItemModel> = { userIdentifier }
 
-        if (action === UserHistoryCode.Authorization) {
-            query.action = 'authDiiaId'
-        } else {
-            query.action = {
-                $ne: 'authDiiaId',
-            }
-        }
+        query.action =
+            action === UserHistoryCode.Authorization
+                ? 'authDiiaId'
+                : {
+                      $ne: 'authDiiaId',
+                  }
 
         if (sessionId) {
             query.sessionId = sessionId

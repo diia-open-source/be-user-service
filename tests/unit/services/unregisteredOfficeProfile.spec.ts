@@ -1,4 +1,5 @@
 import TestKit from '@diia-inhouse/test'
+import { DiiaOfficeStatus } from '@diia-inhouse/types'
 
 const unregisteredOfficeProfileMock = {
     deleteOne: jest.fn(),
@@ -11,8 +12,6 @@ jest.mock('@models/unregisteredOfficeProfile', () => unregisteredOfficeProfileMo
 
 import UnregisteredOfficeProfile from '@services/unregisteredOfficeProfile'
 
-import { DiiaOfficeStatus } from '@interfaces/models/userProfile'
-
 describe(`Service ${UnregisteredOfficeProfile.name}`, () => {
     const testKit = new TestKit()
     const unregisteredOfficeProfile = new UnregisteredOfficeProfile()
@@ -24,7 +23,7 @@ describe(`Service ${UnregisteredOfficeProfile.name}`, () => {
         unitId: 'unitId',
         scopes: ['scope1'],
         isOrganizationAdmin: false,
-        status: DiiaOfficeStatus.Active,
+        status: DiiaOfficeStatus.ACTIVE,
     }
 
     describe('method: `addUnregisteredProfile`', () => {

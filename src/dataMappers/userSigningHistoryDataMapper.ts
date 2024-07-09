@@ -63,6 +63,7 @@ export default class UserSigningHistoryDataMapper {
                 type: this.userHistoryDataMapper.getHistoryStatusChipTypeByStatus(status),
             },
             title: recipient.name,
+            subtitles: [],
             description: recipient.address,
             botLabel: utils.formatDate(date, this.userHistoryDataMapper.dateFormat),
             btnPrimaryAdditionalAtm: {

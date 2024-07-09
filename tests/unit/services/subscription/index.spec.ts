@@ -35,15 +35,13 @@ class PublicServiceStrategyServiceMock {
 jest.mock('@services/subscription/strategies/creditHistory', () => CreditHistoryStrategyServiceMock)
 jest.mock('@services/subscription/strategies/publicService', () => PublicServiceStrategyServiceMock)
 
-import { randomUUID } from 'crypto'
-
-import { UpdateWriteOpResult } from 'mongoose'
+import { randomUUID } from 'node:crypto'
 
 import { IdentifierService } from '@diia-inhouse/crypto'
+import { UpdateWriteOpResult } from '@diia-inhouse/db'
 import DiiaLogger from '@diia-inhouse/diia-logger'
 import { BadRequestError, ModelNotFoundError, NotFoundError } from '@diia-inhouse/errors'
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocumentType } from '@diia-inhouse/types'
 
 import SubscriptionService from '@src/services/subscription'
 
@@ -60,6 +58,8 @@ import { AppConfig } from '@interfaces/config'
 import { PublicServiceCode, SubscriptionSubType, SubscriptionType } from '@interfaces/models/subscription'
 import { AnalyticsActionType, AnalyticsCategory } from '@interfaces/services/analytics'
 import { SubscriptionCode } from '@interfaces/services/subscription'
+
+const undefinedValue = undefined
 
 describe('SubscriptionService', () => {
     const testKit = new TestKit()
@@ -204,7 +204,7 @@ describe('SubscriptionService', () => {
             })
 
             jest.spyOn(subscriptionModel, 'findOne').mockResolvedValueOnce(validSubscriptionModel)
-            creditHistoryStrategyServiceStubs.subscribe.mockResolvedValueOnce(undefined)
+            creditHistoryStrategyServiceStubs.subscribe.mockResolvedValueOnce(undefinedValue)
 
             expect(await subscriptionService.subscribe(params)).toBeUndefined()
 
@@ -309,7 +309,7 @@ describe('SubscriptionService', () => {
             })
 
             jest.spyOn(subscriptionModel, 'findOne').mockResolvedValueOnce(validSubscriptionModel)
-            creditHistoryStrategyServiceStubs.unsubscribe.mockResolvedValueOnce(undefined)
+            creditHistoryStrategyServiceStubs.unsubscribe.mockResolvedValueOnce(undefinedValue)
 
             expect(await subscriptionService.unsubscribe(params)).toBeUndefined()
 
@@ -404,7 +404,7 @@ describe('SubscriptionService', () => {
 
     describe('method: `setDocumentsSubscription`', () => {
         const subscriptionType = SubscriptionType.Segment
-        const documentType = DocumentType.BirthCertificate
+        const documentType = 'birth-certificate'
         const documentIdentifier = randomUUID()
         const documentSubscriptionId = randomUUID()
         const {
@@ -480,7 +480,7 @@ describe('SubscriptionService', () => {
             })
 
             jest.spyOn(subscriptionModel, 'findOne').mockResolvedValueOnce(validSubscriptionModel)
-            creditHistoryStrategyServiceStubs.publishSubscription.mockResolvedValueOnce(undefined)
+            creditHistoryStrategyServiceStubs.publishSubscription.mockResolvedValueOnce(undefinedValue)
 
             expect(await subscriptionService.setPublicServiceSubscriptions(userIdentifier, itn)).toBeUndefined()
 
@@ -521,7 +521,7 @@ describe('SubscriptionService', () => {
             jest.spyOn(subscriptionModel, 'findOne').mockResolvedValueOnce(null)
             jest.spyOn(identifierServiceMock, 'createIdentifier').mockReturnValueOnce(debtsIdentifier)
             jest.spyOn(subscriptionModel, 'create').mockResolvedValueOnce(<[]>(<unknown>validSubscriptionModel))
-            creditHistoryStrategyServiceStubs.publishSubscription.mockResolvedValueOnce(undefined)
+            creditHistoryStrategyServiceStubs.publishSubscription.mockResolvedValueOnce(undefinedValue)
 
             expect(await subscriptionService.setPublicServiceSubscriptions(userIdentifier, itn)).toBeUndefined()
 
@@ -551,7 +551,7 @@ describe('SubscriptionService', () => {
                     userIdentifier,
                     [SubscriptionType.Push]: {
                         [SubscriptionSubType.Documents]: {
-                            [DocumentType.BirthCertificate]: {
+                            'birth-certificate': {
                                 [birthCertificateIdentifier]: true,
                             },
                         },
@@ -566,7 +566,7 @@ describe('SubscriptionService', () => {
                         userIdentifier,
                         {
                             subscriptionType: SubscriptionType.Push,
-                            documentType: DocumentType.BirthCertificate,
+                            documentType: 'birth-certificate',
                             documentId: birthCertificateIdentifier,
                         },
                         AnalyticsActionType.RemoveDocumentSubscription,
@@ -576,7 +576,7 @@ describe('SubscriptionService', () => {
                         { userIdentifier },
                         {
                             $unset: {
-                                [`${SubscriptionType.Push}.${SubscriptionSubType.Documents}.${DocumentType.BirthCertificate}.${birthCertificateIdentifier}`]: 1,
+                                [`${SubscriptionType.Push}.${SubscriptionSubType.Documents}.birth-certificate.${birthCertificateIdentifier}`]: 1,
                             },
                         },
                     )
@@ -598,9 +598,7 @@ describe('SubscriptionService', () => {
             jest.spyOn(subscriptionModel, 'findOne').mockResolvedValueOnce(subscription)
             defineSpies()
 
-            expect(
-                await subscriptionService.updateDocumentsSubscriptions(userIdentifier, DocumentType.BirthCertificate, [], headers),
-            ).toBeUndefined()
+            expect(await subscriptionService.updateDocumentsSubscriptions(userIdentifier, 'birth-certificate', [], headers)).toBeUndefined()
 
             expect(subscriptionModel.findOne).toHaveBeenCalledWith({ userIdentifier })
             checkExpectations()
@@ -681,7 +679,7 @@ describe('SubscriptionService', () => {
                     userIdentifier,
                     [SubscriptionType.Push]: {
                         [SubscriptionSubType.Documents]: {
-                            [DocumentType.BirthCertificate]: {
+                            'birth-certificate': {
                                 [birthCertificateIdentifier]: true,
                             },
                         },
@@ -703,9 +701,9 @@ describe('SubscriptionService', () => {
         ])('%s', async (_msg, inputSubscription, expectedResult) => {
             jest.spyOn(subscriptionModel, 'findOne').mockResolvedValueOnce(inputSubscription)
 
-            expect(
-                await subscriptionService.getSubscribedDocuments(userIdentifier, SubscriptionType.Push, DocumentType.BirthCertificate),
-            ).toEqual(expectedResult)
+            expect(await subscriptionService.getSubscribedDocuments(userIdentifier, SubscriptionType.Push, 'birth-certificate')).toEqual(
+                expectedResult,
+            )
 
             expect(subscriptionModel.findOne).toHaveBeenCalledWith({ userIdentifier })
         })
@@ -721,7 +719,7 @@ describe('SubscriptionService', () => {
             const modifier = {
                 [SubscriptionType.Push]: {
                     [SubscriptionSubType.Documents]: {
-                        [DocumentType.BirthCertificate]: {
+                        'birth-certificate': {
                             [randomUUID()]: true,
                         },
                     },
@@ -740,7 +738,7 @@ describe('SubscriptionService', () => {
             const modifier = {
                 [SubscriptionType.Push]: {
                     [SubscriptionSubType.Documents]: {
-                        [DocumentType.BirthCertificate]: {
+                        'birth-certificate': {
                             [randomUUID()]: true,
                         },
                     },

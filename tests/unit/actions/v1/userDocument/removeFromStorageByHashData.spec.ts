@@ -1,5 +1,4 @@
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocumentType } from '@diia-inhouse/types'
 
 import RemoveFromStorageByHashDataAction from '@actions/v1/userDocument/removeFromStorageByHashData'
 
@@ -17,7 +16,7 @@ describe(`Action ${RemoveFromStorageByHashDataAction.name}`, () => {
             const args = {
                 params: {
                     userIdentifier: 'userIdentifier',
-                    documentType: DocumentType.LocalVaccinationCertificate,
+                    documentType: 'local-vaccination-certificate',
                     hashData: 'hashData',
                 },
                 session: testKit.session.getUserSession(),

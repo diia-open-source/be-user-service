@@ -1,31 +1,30 @@
-import { AnyBulkWriteOperation } from 'mongodb'
-
-import { DocStatus, DocumentType, OwnerType } from '@diia-inhouse/types'
+import { AnyBulkWriteOperation } from '@diia-inhouse/db'
+import { DocStatus, OwnerType } from '@diia-inhouse/types'
 
 import { UserDocument } from '@interfaces/models/userDocument'
 
 export interface GetUserDocumentsParams {
     userIdentifier: string
-    documentType?: DocumentType
+    documentType?: string
     mobileUid?: string
     activeOnly?: boolean
 }
 
 export interface DocumentToVerify {
-    documentType: DocumentType
+    documentType: string
     documentIdentifer: string
 }
 
 export interface VerifiedDocument {
-    documentType: DocumentType
+    documentType: string
     documentIdentifer: string
     isOwner: boolean
 }
 
-export type UserDocumentTypesCounts = Partial<Record<DocumentType, number>>
+export type UserDocumentTypesCounts = Record<string, number>
 
 export interface DocumentFilter {
-    documentType: DocumentType
+    documentType: string
     documentIdentifier?: string
     ownerType?: OwnerType
     docStatus?: DocStatus[]
@@ -34,11 +33,11 @@ export interface DocumentFilter {
 
 export type UserDocumentsDistinctItem = Pick<UserDocument, 'documentType' | 'ownerType' | 'docStatus'>
 
-export type AvailableDocumentsMap = Map<DocumentType, [Set<OwnerType>, Set<DocStatus>]>
+export type AvailableDocumentsMap = Map<string, [Set<OwnerType>, Set<DocStatus>]>
 
 export interface HasDocumentsResult {
     hasDocuments: boolean
-    missingDocuments: DocumentType[]
+    missingDocuments: string[]
 }
 
 export type ProcessingStrategy = (

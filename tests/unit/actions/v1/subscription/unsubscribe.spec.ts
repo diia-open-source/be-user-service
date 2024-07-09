@@ -1,5 +1,4 @@
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocumentType } from '@diia-inhouse/types'
 
 import UnsubscribeAction from '@actions/v1/subscription/unsubscribe'
 
@@ -12,14 +11,14 @@ describe(`Action ${UnsubscribeAction.name}`, () => {
     const headers = testKit.session.getHeaders()
     const subscriptionServiceMock = mockInstance(SubscriptionService)
 
-    const unsubscribeAction = new UnsubscribeAction(subscriptionServiceMock)
+    const unsubscribeAction = new UnsubscribeAction(subscriptionServiceMock, [])
 
     describe('method `handler`', () => {
         it('should return true if successfully unsubscribed', async () => {
             const args = {
                 params: {
                     subscriptionType: SubscriptionType.Push,
-                    documentType: DocumentType.EResidentPassport,
+                    documentType: 'e-resident-passport',
                     documentSubscriptionId: 'documentSubscriptionId',
                 },
                 session: testKit.session.getUserSession(),

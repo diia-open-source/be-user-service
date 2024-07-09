@@ -4,16 +4,17 @@ const utilsMock = {
     formatDate: jest.fn(),
 }
 
+// eslint-disable-next-line unicorn/consistent-function-scoping
 jest.mock('moment', () => (): unknown => ({ format: momentFormatStub }))
 
 jest.mock('@diia-inhouse/utils', () => ({
     utils: utilsMock,
 }))
 
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { ButtonState, ChipStatusAtmType, DocumentType } from '@diia-inhouse/types'
+import { ButtonState, ChipStatusAtmType } from '@diia-inhouse/types'
 
 import UserHistoryDataMapper from '@dataMappers/userHistoryDataMapper'
 import UserSigningHistoryDataMapper from '@dataMappers/userSigningHistoryDataMapper'
@@ -29,7 +30,7 @@ describe('UserSigningHistoryDataMapper', () => {
     const resourceId = randomUUID()
     const acquirer = { name: 'acquirer-name', address: 'acquirer-address' }
     const recipient = { name: 'recipient-name', address: 'recipient-address' }
-    const documents = [DocumentType.BirthCertificate]
+    const documents = ['birth-certificate']
     const offer = { name: 'offer-name' }
     const headers = testKit.session.getHeaders()
 
@@ -152,6 +153,7 @@ describe('UserSigningHistoryDataMapper', () => {
                         type: ChipStatusAtmType.success,
                     },
                     title: acquirer.name,
+                    subtitles: [],
                     description: acquirer.address,
                     botLabel: 'date',
                     btnPrimaryAdditionalAtm: {
@@ -180,6 +182,7 @@ describe('UserSigningHistoryDataMapper', () => {
                         type: ChipStatusAtmType.success,
                     },
                     title: recipient.name,
+                    subtitles: [],
                     description: recipient.address,
                     botLabel: 'date',
                     btnPrimaryAdditionalAtm: {

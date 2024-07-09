@@ -98,7 +98,7 @@ export default class UbchRestProvider implements CreditHistoryProvider {
 
         this.logger.error('Ubch provider error', { url, statusCode, responseData, isRetry })
         switch (statusCode) {
-            case <HttpStatusCode>410:
+            case <HttpStatusCode>410: {
                 if (!isRetry) {
                     await this.retrieveSessionId(true)
 
@@ -106,10 +106,12 @@ export default class UbchRestProvider implements CreditHistoryProvider {
                 }
 
                 throw new ServiceUnavailableError('Unauthorized request to the Ubch service')
-            default:
+            }
+            default: {
                 this.logger.fatal('Ubch unknown error', { statusCode, responseData })
 
                 throw new ServiceUnavailableError('Ubch service unknown error')
+            }
         }
     }
 

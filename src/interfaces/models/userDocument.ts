@@ -1,6 +1,5 @@
-import { Document } from 'mongoose'
-
-import { DocStatus, DocumentType, OwnerType, UserDocumentSubtype } from '@diia-inhouse/types'
+import { Document } from '@diia-inhouse/db'
+import { DocStatus, OwnerType } from '@diia-inhouse/types'
 
 import { ComparedTo, UserCompoundDocument, UserDocumentData } from '@interfaces/services/documents'
 import { MessageTemplateCode } from '@interfaces/services/notification'
@@ -10,8 +9,8 @@ export type UserDocumentsNotifications = Partial<Record<MessageTemplateCode, Dat
 export interface UserDocument {
     userIdentifier: string
     mobileUid?: string
-    documentType: DocumentType
-    documentSubType?: UserDocumentSubtype | string
+    documentType: string
+    documentSubType?: string
     documentIdentifier: string
     normalizedDocumentIdentifier?: string
     fullNameHash?: string

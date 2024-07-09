@@ -1,8 +1,8 @@
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
 import { IdentifierService } from '@diia-inhouse/crypto'
 import TestKit from '@diia-inhouse/test'
-import { DocStatus, DocumentType, DurationMs, OwnerType, UserDocumentSubtype } from '@diia-inhouse/types'
+import { DocStatus, DurationMs, OwnerType } from '@diia-inhouse/types'
 
 import UserDocumentService from '@services/userDocument'
 
@@ -13,7 +13,7 @@ import { RandomData } from '@mocks/randomData'
 import { getApp } from '@tests/utils/getApp'
 
 import { UserDocument } from '@interfaces/models/userDocument'
-import { UserDocumentData, UserProfileDocument } from '@interfaces/services/documents'
+import { UserDocumentData, UserDocumentSubtype, UserProfileDocument } from '@interfaces/services/documents'
 
 describe(`Service ${UserDocumentService.name}`, () => {
     const testKit = new TestKit()
@@ -53,14 +53,9 @@ describe(`Service ${UserDocumentService.name}`, () => {
                 docStatus: DocStatus.Ok,
             }
 
-            await Promise.all([
-                userDocumentService.addDocument(userIdentifier, DocumentType.InternalPassport, document, mobileUid, headers),
-            ])
+            await userDocumentService.addDocument(userIdentifier, 'internal-passport', document, mobileUid, headers)
 
-            const hasOneOfDocuemnts = await userDocumentService.hasOneOfDocuments(userIdentifier, [
-                DocumentType.InternalPassport,
-                DocumentType.ForeignPassport,
-            ])
+            const hasOneOfDocuemnts = await userDocumentService.hasOneOfDocuments(userIdentifier, ['internal-passport', 'foreign-passport'])
 
             expect(hasOneOfDocuemnts).toBe(true)
         })
@@ -73,14 +68,9 @@ describe(`Service ${UserDocumentService.name}`, () => {
                 docStatus: DocStatus.NotFound,
             }
 
-            await Promise.all([
-                userDocumentService.addDocument(userIdentifier, DocumentType.InternalPassport, document, mobileUid, headers),
-            ])
+            await userDocumentService.addDocument(userIdentifier, 'internal-passport', document, mobileUid, headers)
 
-            const hasOneOfDocuemnts = await userDocumentService.hasOneOfDocuments(userIdentifier, [
-                DocumentType.InternalPassport,
-                DocumentType.ForeignPassport,
-            ])
+            const hasOneOfDocuemnts = await userDocumentService.hasOneOfDocuments(userIdentifier, ['internal-passport', 'foreign-passport'])
 
             expect(hasOneOfDocuemnts).toBe(false)
         })
@@ -107,7 +97,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
             const ownerDocs: UserDocument[] = [
                 {
                     userIdentifier,
-                    documentType: DocumentType.VehicleLicense,
+                    documentType: 'vehicle-license',
                     documentIdentifier: sharedVehicleIdentifier,
                     ownerType: OwnerType.owner,
                     docId: randomData.generateDocId(),
@@ -120,7 +110,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
             const properUserDocs: UserDocument[] = [
                 {
                     userIdentifier: properUserId,
-                    documentType: DocumentType.VehicleLicense,
+                    documentType: 'vehicle-license',
                     documentIdentifier: randomData.generateDocumentIdentifier(),
                     ownerType: OwnerType.owner,
                     docId: randomData.generateDocId(),
@@ -130,7 +120,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
                 },
                 {
                     userIdentifier: properUserId,
-                    documentType: DocumentType.VehicleLicense,
+                    documentType: 'vehicle-license',
                     documentIdentifier: sharedVehicleIdentifier,
                     ownerType: OwnerType.properUser,
                     docId: randomData.generateDocId(),
@@ -159,7 +149,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
             const ownerDocs: UserDocument[] = [
                 {
                     userIdentifier,
-                    documentType: DocumentType.VehicleLicense,
+                    documentType: 'vehicle-license',
                     documentIdentifier: sharedVehicleIdentifier,
                     ownerType: OwnerType.owner,
                     docId: randomData.generateDocId(),
@@ -172,7 +162,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
             const properUserDocs: UserDocument[] = [
                 {
                     userIdentifier: properUserId,
-                    documentType: DocumentType.VehicleLicense,
+                    documentType: 'vehicle-license',
                     documentIdentifier: randomData.generateDocumentIdentifier(),
                     ownerType: OwnerType.owner,
                     docId: randomData.generateDocId(),
@@ -182,7 +172,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
                 },
                 {
                     userIdentifier: properUserId,
-                    documentType: DocumentType.VehicleLicense,
+                    documentType: 'vehicle-license',
                     documentIdentifier: sharedVehicleIdentifier,
                     ownerType: OwnerType.properUser,
                     docId: randomData.generateDocId(),
@@ -211,7 +201,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
             const ownerDocs: UserDocument[] = [
                 {
                     userIdentifier,
-                    documentType: DocumentType.VehicleLicense,
+                    documentType: 'vehicle-license',
                     documentIdentifier: sharedVehicleIdentifier,
                     ownerType: OwnerType.owner,
                     docId: randomData.generateDocId(),
@@ -224,7 +214,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
             const properUserDocs: UserDocument[] = [
                 {
                     userIdentifier: properUserId,
-                    documentType: DocumentType.VehicleLicense,
+                    documentType: 'vehicle-license',
                     documentIdentifier: randomData.generateDocumentIdentifier(),
                     ownerType: OwnerType.owner,
                     docId: randomData.generateDocId(),
@@ -234,7 +224,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
                 },
                 {
                     userIdentifier: properUserId,
-                    documentType: DocumentType.VehicleLicense,
+                    documentType: 'vehicle-license',
                     documentIdentifier: sharedVehicleIdentifier,
                     ownerType: OwnerType.properUser,
                     docId: randomData.generateDocId(),
@@ -262,7 +252,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
             const ownerDocs: UserDocument[] = [
                 {
                     userIdentifier,
-                    documentType: DocumentType.VehicleLicense,
+                    documentType: 'vehicle-license',
                     documentIdentifier: sharedVehicleIdentifier,
                     ownerType: OwnerType.owner,
                     docId: randomData.generateDocId(),
@@ -275,7 +265,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
             const properUserDocs: UserDocument[] = [
                 {
                     userIdentifier: properUserId,
-                    documentType: DocumentType.VehicleLicense,
+                    documentType: 'vehicle-license',
                     documentIdentifier: randomData.generateDocumentIdentifier(),
                     ownerType: OwnerType.owner,
                     docId: randomData.generateDocId(),
@@ -304,7 +294,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
         })
 
         it('should add new document if it does not exist', async () => {
-            const documentType = DocumentType.DriverLicense
+            const documentType = 'driver-license'
             const document = {
                 docId: randomData.generateDocId(),
                 docStatus: DocStatus.Ok,
@@ -323,7 +313,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
         })
 
         it('should add new device-related document if it does not exist', async () => {
-            const documentType = DocumentType.MilitaryBond
+            const documentType = 'military-bond'
             const document = {
                 docId: randomData.generateDocId(),
                 docStatus: DocStatus.Ok,
@@ -348,7 +338,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
                     docId: randomData.generateDocId(),
                     docStatus: DocStatus.Ok,
                     documentIdentifier: randomData.generateDocumentIdentifier(),
-                    documentType: DocumentType.VehicleLicense,
+                    documentType: 'vehicle-license',
                     ownerType: OwnerType.owner,
                     userIdentifier,
                 },
@@ -361,7 +351,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
                     docId: randomData.generateDocId(),
                     docStatus: DocStatus.Ok,
                     documentIdentifier: randomData.generateDocumentIdentifier(),
-                    documentType: DocumentType.VehicleLicense,
+                    documentType: 'vehicle-license',
                     ownerType: OwnerType.owner,
                     userIdentifier,
                 },
@@ -374,7 +364,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
                     docId: randomData.generateDocId(),
                     docStatus: DocStatus.Ok,
                     documentIdentifier: randomData.generateDocumentIdentifier(),
-                    documentType: DocumentType.DriverLicense,
+                    documentType: 'driver-license',
                     ownerType: OwnerType.owner,
                     registrationDate: new Date(Date.now() - DurationMs.Day),
                     userIdentifier,
@@ -391,7 +381,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
                     docId: randomData.generateDocId(),
                     docStatus: DocStatus.Ok,
                     documentIdentifier: randomData.generateDocumentIdentifier(),
-                    documentType: DocumentType.VehicleLicense,
+                    documentType: 'vehicle-license',
                     ownerType: OwnerType.owner,
                     registrationDate: new Date(Date.now() - DurationMs.Day),
                     userIdentifier,
@@ -405,7 +395,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
                     docId: randomData.generateDocId(),
                     docStatus: DocStatus.Ok,
                     documentIdentifier: randomData.generateDocumentIdentifier(),
-                    documentType: DocumentType.VehicleLicense,
+                    documentType: 'vehicle-license',
                     ownerType: OwnerType.owner,
                     registrationDate: new Date(Date.now() - DurationMs.Day),
                     userIdentifier,
@@ -416,12 +406,12 @@ describe(`Service ${UserDocumentService.name}`, () => {
                 }),
             ],
             [
-                `should set documentSubType for ${DocumentType.StudentIdCard}`,
+                `should set documentSubType for ${'student-id-card'}`,
                 {
                     docId: randomData.generateDocId(),
                     docStatus: DocStatus.Ok,
                     documentIdentifier: randomData.generateDocumentIdentifier(),
-                    documentType: DocumentType.StudentIdCard,
+                    documentType: 'student-id-card',
                     ownerType: OwnerType.owner,
                     registrationDate: new Date(Date.now() - DurationMs.Day),
                     userIdentifier,
@@ -435,7 +425,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
                     docId: randomData.generateDocId(),
                     docStatus: DocStatus.Ok,
                     documentIdentifier: randomData.generateDocumentIdentifier(),
-                    documentType: DocumentType.BirthCertificate,
+                    documentType: 'birth-certificate',
                     ownerType: OwnerType.owner,
                     registrationDate: new Date(Date.now() - DurationMs.Day),
                     userIdentifier,
@@ -457,7 +447,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
         })
 
         it('should remove documents if they are missing in request', async () => {
-            const documentType = DocumentType.DriverLicense
+            const documentType = 'driver-license'
             const document1 = {
                 docId: randomData.generateDocId(),
                 docStatus: DocStatus.Ok,
@@ -506,7 +496,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
         })
 
         it(`should set doc status ${DocStatus.NotFound} for documents that are not present in request`, async () => {
-            const documentType = DocumentType.DriverLicense
+            const documentType = 'driver-license'
             const document1 = {
                 docId: randomData.generateDocId(),
                 docStatus: DocStatus.Ok,

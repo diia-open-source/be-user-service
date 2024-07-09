@@ -2,7 +2,7 @@ const uuidV4Stub = jest.fn()
 
 jest.mock('uuid', () => ({ v4: uuidV4Stub }))
 
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
 import moment from 'moment'
 
@@ -13,7 +13,7 @@ import { EnvService } from '@diia-inhouse/env'
 import { AccessDeniedError, ApiError, InternalServerError, ModelNotFoundError, NotFoundError } from '@diia-inhouse/errors'
 import { I18nService } from '@diia-inhouse/i18n'
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { AppUser, DocumentType, HttpStatusCode, PassportType, SessionType } from '@diia-inhouse/types'
+import { AppUser, HttpStatusCode, SessionType } from '@diia-inhouse/types'
 
 const diiaIdModel = {
     create: jest.fn(),
@@ -38,7 +38,7 @@ import UserSigningHistoryService from '@services/userSigningHistory'
 import { Locales } from '@interfaces/locales'
 import { SignAlgo } from '@interfaces/models/diiaId'
 import { AttentionMessageParameterType, ProcessCode } from '@interfaces/services'
-import { IdentityDocumentType } from '@interfaces/services/documents'
+import { IdentityDocumentType, PassportType } from '@interfaces/services/documents'
 
 describe(`Service ${DiiaIdService.name}`, () => {
     const now = new Date()
@@ -91,6 +91,8 @@ describe(`Service ${DiiaIdService.name}`, () => {
         isDeleted: false,
         signAlgo: SignAlgo.DSTU,
     }
+
+    const undefinedValue = undefined
 
     beforeEach(() => {
         jest.useFakeTimers({ now })
@@ -314,7 +316,7 @@ describe(`Service ${DiiaIdService.name}`, () => {
         const expirationDate = now
 
         it('should throw ModelNotFoundError if model not found', async () => {
-            jest.spyOn(diiaIdModel, 'findOne').mockResolvedValueOnce(undefined)
+            jest.spyOn(diiaIdModel, 'findOne').mockResolvedValueOnce(undefinedValue)
 
             await expect(
                 service.handleCreateCertificateResponse({
@@ -369,7 +371,7 @@ describe(`Service ${DiiaIdService.name}`, () => {
     describe(`method ${service.getIdentifierV1.name}`, () => {
         it('should return if not found diiaId model', async () => {
             jest.spyOn(diiaIdModel, 'find').mockResolvedValueOnce([])
-            jest.spyOn(diiaIdModel, 'findOne').mockResolvedValueOnce(undefined)
+            jest.spyOn(diiaIdModel, 'findOne').mockResolvedValueOnce(undefinedValue)
 
             expect(await service.getIdentifierV1(user, headers.mobileUid, SignAlgo.DSTU)).toBeUndefined()
         })
@@ -692,7 +694,7 @@ describe(`Service ${DiiaIdService.name}`, () => {
         const mobileUidToFilter = 'mobileUidToFilter'
 
         it('should return false if diia model not found', async () => {
-            jest.spyOn(diiaIdModel, 'findOne').mockResolvedValueOnce(undefined)
+            jest.spyOn(diiaIdModel, 'findOne').mockResolvedValueOnce(undefinedValue)
 
             expect(await service.hasIdentifier(user.identifier, mobileUidToFilter)).toBeFalsy()
         })
@@ -771,7 +773,7 @@ describe(`Service ${DiiaIdService.name}`, () => {
 
     describe(`method ${service.hashFilesToSign.name}`, () => {
         it('should throw ModelNotFoundError if diia id not found', async () => {
-            jest.spyOn(diiaIdModel, 'findOne').mockResolvedValueOnce(undefined)
+            jest.spyOn(diiaIdModel, 'findOne').mockResolvedValueOnce(undefinedValue)
 
             await expect(service.hashFilesToSign(user, headers.mobileUid, [], SignAlgo.DSTU)).rejects.toThrow(
                 new ModelNotFoundError(diiaIdModel.modelName, user.identifier),
@@ -798,7 +800,7 @@ describe(`Service ${DiiaIdService.name}`, () => {
 
     describe(`method ${service.getDpsHashFilesToSign.name}`, () => {
         it('should throw ModelNotFoundError if diia id not found', async () => {
-            jest.spyOn(diiaIdModel, 'findOne').mockResolvedValueOnce(undefined)
+            jest.spyOn(diiaIdModel, 'findOne').mockResolvedValueOnce(undefinedValue)
 
             await expect(service.getDpsHashFilesToSign(user.identifier, headers.mobileUid, [], SignAlgo.DSTU)).rejects.toThrow(
                 new ModelNotFoundError(diiaIdModel.modelName, user.identifier),
@@ -825,7 +827,7 @@ describe(`Service ${DiiaIdService.name}`, () => {
 
     describe(`method ${service.getDpsPreparedPackage.name}`, () => {
         it('should throw ModelNotFoundError if diia id not found', async () => {
-            jest.spyOn(diiaIdModel, 'findOne').mockResolvedValueOnce(undefined)
+            jest.spyOn(diiaIdModel, 'findOne').mockResolvedValueOnce(undefinedValue)
 
             await expect(service.getDpsPreparedPackage(user.identifier, headers.mobileUid, SignAlgo.DSTU)).rejects.toThrow(
                 new ModelNotFoundError(diiaIdModel.modelName, user.identifier),
@@ -852,7 +854,7 @@ describe(`Service ${DiiaIdService.name}`, () => {
 
     describe(`method ${service.getDiiaIdByIdentifier.name}`, () => {
         it('should throw ModelNotFoundError if diia id not found', async () => {
-            jest.spyOn(diiaIdModel, 'findOne').mockResolvedValueOnce(undefined)
+            jest.spyOn(diiaIdModel, 'findOne').mockResolvedValueOnce(undefinedValue)
 
             await expect(service.getDiiaIdByIdentifier(user.identifier)).rejects.toThrow(
                 new ModelNotFoundError(diiaIdModel.modelName, user.identifier),
@@ -876,7 +878,7 @@ describe(`Service ${DiiaIdService.name}`, () => {
 
     describe(`method ${service.areSignedFileHashesValid.name}`, () => {
         it('should throw ModelNotFoundError if diia id not found', async () => {
-            jest.spyOn(diiaIdModel, 'findOne').mockResolvedValueOnce(undefined)
+            jest.spyOn(diiaIdModel, 'findOne').mockResolvedValueOnce(undefinedValue)
 
             await expect(
                 service.areSignedFileHashesValid({
@@ -917,11 +919,15 @@ describe(`Service ${DiiaIdService.name}`, () => {
 
     describe(`method ${service.initHashesSigning.name}`, () => {
         it('should throw ModelNotFoundError if diia id not found', async () => {
-            jest.spyOn(diiaIdModel, 'findOne').mockResolvedValueOnce(undefined)
+            jest.spyOn(diiaIdModel, 'findOne').mockResolvedValueOnce(undefinedValue)
 
-            await expect(service.initHashesSigning(user.identifier, headers.mobileUid, SignAlgo.DSTU)).rejects.toThrow(
-                new ModelNotFoundError(diiaIdModel.modelName, user.identifier),
-            )
+            await expect(
+                service.initHashesSigning({
+                    userIdentifier: user.identifier,
+                    mobileUid: headers.mobileUid,
+                    signAlgo: SignAlgo.DSTU,
+                }),
+            ).rejects.toThrow(new ModelNotFoundError(diiaIdModel.modelName, user.identifier))
         })
 
         it('should return true if init hashes signing', async () => {
@@ -936,23 +942,25 @@ describe(`Service ${DiiaIdService.name}`, () => {
             jest.spyOn(diiaIdModel, 'findOne').mockResolvedValueOnce(localDiiaId)
             jest.spyOn(externalEventBus, 'publish').mockResolvedValueOnce(true)
 
-            expect(await service.initHashesSigning(user.identifier, headers.mobileUid, SignAlgo.DSTU)).toBeTruthy()
+            expect(
+                await service.initHashesSigning({
+                    userIdentifier: user.identifier,
+                    mobileUid: headers.mobileUid,
+                    signAlgo: SignAlgo.DSTU,
+                }),
+            ).toBeTruthy()
         })
     })
 
     describe(`method ${service.softDeleteDiiaIdByIdentityDocument.name}`, () => {
         it('should return if not identity document', async () => {
-            expect(
-                await service.softDeleteDiiaIdByIdentityDocument(user.identifier, headers.mobileUid, <DocumentType>'wrong-document-type'),
-            ).toBeFalsy()
+            expect(await service.softDeleteDiiaIdByIdentityDocument(user.identifier, headers.mobileUid, 'wrong-document-type')).toBeFalsy()
         })
 
         it('should successfully soft delete diia id by identity document', async () => {
             jest.spyOn(diiaIdModel, 'find').mockResolvedValueOnce([])
 
-            expect(
-                await service.softDeleteDiiaIdByIdentityDocument(user.identifier, headers.mobileUid, DocumentType.InternalPassport),
-            ).toBeFalsy()
+            expect(await service.softDeleteDiiaIdByIdentityDocument(user.identifier, headers.mobileUid, 'internal-passport')).toBeFalsy()
 
             expect(diiaLogger.info).toHaveBeenCalledWith('Start soft delete Diia Id')
         })

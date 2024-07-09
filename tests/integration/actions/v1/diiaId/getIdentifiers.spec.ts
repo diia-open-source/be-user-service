@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
 import moment from 'moment'
 
@@ -45,7 +45,7 @@ describe(`Action ${GetDiiaIdIdentifiersAction.name}`, () => {
         const { identifier: userIdentifier } = session.user
         const { mobileUid } = headers
 
-        const signings: UserSigningHistoryItem[] = [...new Array(3)].map(() => ({
+        const signings: UserSigningHistoryItem[] = Array.from({ length: 3 }).map(() => ({
             userIdentifier: userIdentifier,
             sessionId: randomUUID(),
             resourceId: randomUUID(),

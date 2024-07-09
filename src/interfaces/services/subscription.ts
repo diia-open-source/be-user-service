@@ -1,6 +1,4 @@
-import { UpdateQuery } from 'mongoose'
-
-import { DocumentType } from '@diia-inhouse/types'
+import { UpdateQuery } from '@diia-inhouse/db'
 
 import { PublicServiceCode, SubscriptionModel, SubscriptionType } from '@interfaces/models/subscription'
 import { AnalyticsHeaders } from '@interfaces/services/analytics'
@@ -33,7 +31,7 @@ export interface SubscriptionsResponse {
 export interface SubscribeDocumentsParams {
     userIdentifier: string
     subscriptionType: SubscriptionType
-    documentType: DocumentType
+    documentType: string
     documentSubscriptionId: string
     isSubscribed: boolean
     headers: AnalyticsHeaders

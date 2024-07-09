@@ -1,12 +1,13 @@
 import { v4 as uuid } from 'uuid'
 
 import { IdentifierService } from '@diia-inhouse/crypto'
-import { EventBusListener, InternalEvent, QueueMessageMetaData } from '@diia-inhouse/diia-queue'
+import { EventBusListener, QueueMessageMetaData } from '@diia-inhouse/diia-queue'
 import { ValidationSchema } from '@diia-inhouse/validators'
 
 import UserSigningHistoryService from '@services/userSigningHistory'
 
 import { SigningStatusEventPayload } from '@interfaces/eventListeners/publicServiceSigningStatus'
+import { InternalEvent } from '@interfaces/queue'
 import { UserHistoryItemStatus } from '@interfaces/services/userHistory'
 import { UpsertItemParams } from '@interfaces/services/userSigningHistory'
 

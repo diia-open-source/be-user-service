@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+import "token/gender.proto";
+import "profileFeature.proto";
+
+package ua.gov.diia.user.userprofile;
+option java_multiple_files = true;
+option java_package = "ua.gov.diia.user.userprofile";
+
+message GetUserProfileFeaturesRequest {
+  string userIdentifier = 1;
+  repeated ua.gov.diia.types.profilefeatures.ProfileFeature features = 2;
+}
+
+message GetUserProfileFeaturesResponse {
+  optional DiiaOfficeProfile office = 1;
+}
+
+message GetUserProfilesRequest { repeated string userIdentifiers = 1; }
+
+message GetUserProfilesResponse { repeated UserProfile userProfiles = 1; }
+
+message UserProfile {
+  string identifier = 1;
+  ua.gov.diia.types.token.Gender gender = 2;
+  google.protobuf.Timestamp birthDay = 3;
+}
+
+message DiiaOfficeProfile {
+  string profileId = 1;
+  string organizationId = 2;
+  string unitId = 3;
+  repeated string scopes = 4;
+  bool isOrganizationAdmin = 5;
+  Status status = 6;
+  optional string googleWorkspace = 7;
+
+  enum Status {
+    ACTIVE = 0;
+    SUSPENDED = 1;
+    DISMISSED = 2;
+  }
+}

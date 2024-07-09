@@ -1,10 +1,9 @@
 import { chunk, flatten, keyBy } from 'lodash'
 import moment from 'moment'
-import { AnyBulkWriteOperation, MatchKeysAndValues, UpdateManyModel, WithId } from 'mongodb'
-import { FilterQuery, PipelineStage, UpdateQuery } from 'mongoose'
 
+import { AnyBulkWriteOperation, FilterQuery, PipelineStage, UpdateManyModel, UpdateQuery, mongo } from '@diia-inhouse/db'
 import { InternalServerError } from '@diia-inhouse/errors'
-import { DocStatus, DocumentType, Logger, OwnerType, UserDocumentSubtype } from '@diia-inhouse/types'
+import { DocStatus, Logger, OwnerType } from '@diia-inhouse/types'
 
 import AnalyticsService from '@services/analytics'
 import DiiaIdService from '@services/diiaId'
@@ -14,7 +13,7 @@ import userDocumentModel from '@models/userDocument'
 
 import { UserDocument } from '@interfaces/models/userDocument'
 import { AnalyticsActionType, AnalyticsCategory, AnalyticsData, AnalyticsHeaders } from '@interfaces/services/analytics'
-import { UserProfileDocument, VehicleLicenseUserDocumentData } from '@interfaces/services/documents'
+import { UserDocumentSubtype, UserProfileDocument, VehicleLicenseUserDocumentData } from '@interfaces/services/documents'
 import { MessageTemplateCode, TemplateStub } from '@interfaces/services/notification'
 import {
     AvailableDocumentsMap,
@@ -29,21 +28,21 @@ import {
 } from '@interfaces/services/userDocument'
 
 export default class UserDocumentService {
-    private readonly inactiveDocStatuses: Partial<Record<DocumentType, DocStatus[]>> = {}
+    private readonly inactiveDocStatuses: Record<string, DocStatus[]> = {}
 
     private readonly defaultInactiveDocStatuses = [DocStatus.Confirming, DocStatus.NotConfirmed, DocStatus.NotFound]
 
-    private readonly deviceRelatedDocuments: DocumentType[] = [
-        DocumentType.LocalVaccinationCertificate,
-        DocumentType.ChildLocalVaccinationCertificate,
-        DocumentType.InternationalVaccinationCertificate,
-        DocumentType.MilitaryBond,
+    private readonly deviceRelatedDocuments: string[] = [
+        'local-vaccination-certificate',
+        'child-local-vaccination-certificate',
+        'international-vaccination-certificate',
+        'military-bond',
     ]
 
-    private comparingMapEntries: [DocumentType, DocumentType[]][] = []
+    private comparingMapEntries: [string, string[]][] = []
 
-    readonly processingStrategies: Partial<Record<DocumentType, ProcessingStrategy>> = {
-        [DocumentType.DriverLicense]: this.processDriverLicense.bind(this),
+    readonly processingStrategies: Record<string, ProcessingStrategy> = {
+        'driver-license': this.processDriverLicense.bind(this),
     }
 
     constructor(
@@ -53,10 +52,10 @@ export default class UserDocumentService {
 
         private readonly logger: Logger,
 
-        private readonly comparingMap: Partial<Record<DocumentType, DocumentType[]>> = {},
+        private readonly comparingMap: Record<string, string[]> = {},
     ) {
-        this.comparingMap[DocumentType.DriverLicense] = [DocumentType.InternalPassport, DocumentType.ForeignPassport]
-        this.comparingMapEntries = <[DocumentType, DocumentType[]][]>Object.entries(this.comparingMap)
+        this.comparingMap['driver-license'] = ['internal-passport', 'foreign-passport']
+        this.comparingMapEntries = <[string, string[]][]>Object.entries(this.comparingMap)
     }
 
     async getUserDocuments({
@@ -75,7 +74,7 @@ export default class UserDocumentService {
             query.$or = [{ mobileUid: { $exists: false } }, { mobileUid }]
         }
 
-        return await userDocumentModel.find(query)
+        return await userDocumentModel.find(query).lean()
     }
 
     async getDocumentsByFilters(filters: DocumentFilter[]): Promise<UserDocument[]> {
@@ -85,7 +84,7 @@ export default class UserDocumentService {
             $or: documentQueries,
         }
 
-        return await userDocumentModel.find(query)
+        return await userDocumentModel.find(query).lean()
     }
 
     async getUserDocumentsByFilters(userIdentifier: string, filters: DocumentFilter[]): Promise<UserDocument[]> {
@@ -101,7 +100,7 @@ export default class UserDocumentService {
 
     async updateDocuments(
         userIdentifier: string,
-        documentType: DocumentType,
+        documentType: string,
         documents: UserProfileDocument[],
         mobileUid?: string,
         headers?: AnalyticsHeaders,
@@ -112,9 +111,9 @@ export default class UserDocumentService {
         const storedDocumentsByIdentifier = keyBy(storedDocuments, 'documentIdentifier')
         const documentsByIdentifier = keyBy(documents, 'documentIdentifier')
         const documentsToStore = documents.filter(({ documentIdentifier }) => !storedDocumentsByIdentifier[documentIdentifier])
-        const documentsToUpdate = documents.filter(({ documentIdentifier }) => !!storedDocumentsByIdentifier[documentIdentifier])
+        const documentsToUpdate = documents.filter(({ documentIdentifier }) => Boolean(storedDocumentsByIdentifier[documentIdentifier]))
         const missingDocuments = storedDocuments.filter(({ documentIdentifier }) => !documentsByIdentifier[documentIdentifier])
-        const operations: AnyBulkWriteOperation<UserDocument>[] = [
+        const operations = [
             ...this.getCreateStoredDocumentsOperations(
                 documentsToStore,
                 documentType,
@@ -129,7 +128,7 @@ export default class UserDocumentService {
                 : this.getUpdateStoredDocumentsDocStatusOperations(missingDocuments)),
         ]
 
-        if (!operations.length) {
+        if (operations.length === 0) {
             this.logger.debug('There are no any user documents updates')
 
             return
@@ -146,7 +145,7 @@ export default class UserDocumentService {
 
     async addDocument(
         userIdentifier: string,
-        documentType: DocumentType,
+        documentType: string,
         document: UserProfileDocument,
         mobileUid: string,
         headers?: AnalyticsHeaders,
@@ -195,11 +194,11 @@ export default class UserDocumentService {
     }
 
     async verifyUserDocuments(userIdentifier: string, documentsToVerify: DocumentToVerify[]): Promise<VerifiedDocument[]> {
-        const documentTypes: Set<DocumentType> = new Set()
+        const documentTypes: Set<string> = new Set()
 
-        documentsToVerify.forEach((documentToVerify: DocumentToVerify) => {
+        for (const documentToVerify of documentsToVerify) {
             documentTypes.add(documentToVerify.documentType)
-        })
+        }
 
         const userDocuments: UserDocument[] = await userDocumentModel.find({
             userIdentifier,
@@ -207,20 +206,15 @@ export default class UserDocumentService {
         })
         const userDocumentsByDocumentIdentifier: Map<string, UserDocument> = new Map()
 
-        userDocuments.forEach((userDocument: UserDocument) => {
+        for (const userDocument of userDocuments) {
             userDocumentsByDocumentIdentifier.set(userDocument.documentIdentifier, userDocument)
-        })
+        }
 
         return documentsToVerify.map((documentToVerify: DocumentToVerify) => {
             const { documentType, documentIdentifer } = documentToVerify
-            let isOwner: boolean
-
             const userDocument = userDocumentsByDocumentIdentifier.get(documentIdentifer)
-            if (userDocument) {
-                isOwner = userDocument.ownerType === OwnerType.owner
-            } else {
-                isOwner = false
-            }
+
+            const isOwner: boolean = userDocument ? userDocument.ownerType === OwnerType.owner : false
 
             return {
                 documentType,
@@ -230,31 +224,31 @@ export default class UserDocumentService {
         })
     }
 
-    async getDocumentIdentifiers(userIdentifier: string, documentType: DocumentType): Promise<string[]> {
+    async getDocumentIdentifiers(userIdentifier: string, documentType: string): Promise<string[]> {
         const userDocuments: UserDocument[] = await userDocumentModel.find({
             userIdentifier,
             ...this.getActiveQuery(documentType),
         })
-        if (!userDocuments.length) {
+        if (userDocuments.length === 0) {
             return []
         }
 
         return userDocuments.map((userDocument: UserDocument) => userDocument.documentIdentifier)
     }
 
-    async validateUserDocument(userIdentifier: string, documentType: DocumentType, documentIdentifier: string): Promise<boolean> {
+    async validateUserDocument(userIdentifier: string, documentType: string, documentIdentifier: string): Promise<boolean> {
         const userDocument = await userDocumentModel.findOne({
             userIdentifier,
             documentIdentifier,
             ...this.getActiveQuery(documentType),
         })
 
-        return !!userDocument
+        return Boolean(userDocument)
     }
 
     async identifyPenaltyOwner(vehicleLicenseIdentifier: string | undefined, penaltyFixingDate: Date): Promise<string | undefined> {
         const query: FilterQuery<UserDocument> = {
-            ...this.getActiveQuery(DocumentType.VehicleLicense),
+            ...this.getActiveQuery('vehicle-license'),
             $and: [
                 {
                     $or: [
@@ -296,7 +290,7 @@ export default class UserDocumentService {
         let properUser: string | undefined
         const userDocuments: UserDocument[] = await userDocumentModel.find(query)
 
-        userDocuments.forEach(({ ownerType, userIdentifier }: UserDocument) => {
+        for (const { ownerType, userIdentifier } of userDocuments) {
             switch (ownerType) {
                 case OwnerType.owner: {
                     ownerUser = userIdentifier
@@ -312,14 +306,14 @@ export default class UserDocumentService {
                     throw new TypeError(`Unkown owner type: ${unknownOwnerType}`)
                 }
             }
-        })
+        }
 
         return properUser || ownerUser
     }
 
-    async getUserDocumentTypes(userIdentifier: string): Promise<DocumentType[]> {
+    async getUserDocumentTypes(userIdentifier: string): Promise<string[]> {
         const documentTypeField: keyof UserDocument = 'documentType'
-        const userDocuments: { documentTypes: DocumentType[] }[] = await userDocumentModel.aggregate<{ documentTypes: DocumentType[] }>([
+        const userDocuments: { documentTypes: string[] }[] = await userDocumentModel.aggregate<{ documentTypes: string[] }>([
             {
                 $match: { userIdentifier, ...this.getActiveQuery() },
             },
@@ -343,7 +337,7 @@ export default class UserDocumentService {
     }
 
     async getUserDocumentTypesCounts(userIdentifier: string): Promise<UserDocumentTypesCounts> {
-        const userDocuments: { _id: DocumentType; count: number }[] = await userDocumentModel.aggregate([
+        const userDocuments: { _id: string; count: number }[] = await userDocumentModel.aggregate([
             {
                 $match: { userIdentifier, ...this.getActiveQuery() },
             },
@@ -357,37 +351,42 @@ export default class UserDocumentService {
 
         const documents: UserDocumentTypesCounts = {}
 
-        userDocuments.forEach(({ _id: documentType, count }: { _id: DocumentType; count: number }) => {
+        for (const { _id: documentType, count } of userDocuments) {
             documents[documentType] = count
-        })
+        }
 
         return documents
     }
 
     /** @deprecated replaced with hasDocumentsByFilters */
-    async hasDocuments(userIdentifier: string, documentTypes: DocumentType[][]): Promise<boolean> {
+    async hasDocuments(userIdentifier: string, documentTypes: string[][]): Promise<boolean> {
         const documentTypeField: keyof UserDocument = 'documentType'
-        const availableDocuments: DocumentType[] = await userDocumentModel.distinct(documentTypeField, {
+        const availableDocuments: string[] = await userDocumentModel.distinct(documentTypeField, {
             userIdentifier,
             ...this.getActiveQuery(flatten(documentTypes)),
         })
         const availableDocumentsSet = new Set(availableDocuments)
         let result = true
 
-        documentTypes.forEach((oneOfDocuments) => {
+        for (const oneOfDocuments of documentTypes) {
             const isOneOfDocumentsPresent = oneOfDocuments.some((docType) => availableDocumentsSet.has(docType))
             if (!isOneOfDocumentsPresent) {
                 result = false
             }
-        })
+        }
 
         return result
     }
 
     async hasDocumentsByFilters(userIdentifier: string, filters: DocumentFilter[][]): Promise<HasDocumentsResult> {
-        const documentTypesSet: Set<DocumentType> = new Set()
+        const documentTypesSet: Set<string> = new Set()
 
-        filters.forEach((oneOfFilters) => oneOfFilters.forEach((filter) => documentTypesSet.add(filter.documentType)))
+        for (const oneOfFilters of filters) {
+            for (const filter of oneOfFilters) {
+                documentTypesSet.add(filter.documentType)
+            }
+        }
+
         const documentTypes = [...documentTypesSet]
         const pipeline: PipelineStage[] = [
             { $match: { userIdentifier, ...this.getActiveQuery(documentTypes) } },
@@ -397,7 +396,7 @@ export default class UserDocumentService {
         const userDocuments: UserDocumentsDistinctItem[] = await userDocumentModel.aggregate(pipeline)
         const docsMetadata: AvailableDocumentsMap = new Map()
 
-        userDocuments.forEach(({ documentType, ownerType, docStatus }) => {
+        for (const { documentType, ownerType, docStatus } of userDocuments) {
             const [ownerTypes, docStatuses] = docsMetadata.get(documentType) || [new Set(), new Set()]
 
             ownerTypes.add(ownerType)
@@ -406,11 +405,12 @@ export default class UserDocumentService {
             }
 
             docsMetadata.set(documentType, [ownerTypes, docStatuses])
-        })
-        let hasDocuments = true
-        const missingDocuments: DocumentType[] = []
+        }
 
-        filters.forEach((oneOfFilter) => {
+        let hasDocuments = true
+        const missingDocuments: string[] = []
+
+        for (const oneOfFilter of filters) {
             const isOneOfDocumentsPresent = oneOfFilter.some(({ documentType, ownerType, docStatus }) => {
                 const metadata = docsMetadata.get(documentType)
                 if (metadata) {
@@ -430,18 +430,18 @@ export default class UserDocumentService {
             if (!isOneOfDocumentsPresent) {
                 hasDocuments = false
             }
-        })
+        }
 
         return { hasDocuments, missingDocuments }
     }
 
-    async hasOneOfDocuments(userIdentifier: string, documentTypes: DocumentType[]): Promise<boolean> {
+    async hasOneOfDocuments(userIdentifier: string, documentTypes: string[]): Promise<boolean> {
         const availableDocumentsAmount: number = await userDocumentModel.countDocuments({
             userIdentifier,
             ...this.getActiveQuery(documentTypes),
         })
 
-        return !!availableDocumentsAmount
+        return Boolean(availableDocumentsAmount)
     }
 
     async removeDeviceDocuments(userIdentifier: string, mobileUid: string): Promise<void> {
@@ -460,7 +460,7 @@ export default class UserDocumentService {
 
     async removeUserDocumentById(
         userIdentifier: string,
-        documentType: DocumentType,
+        documentType: string,
         documentId: string,
         mobileUid?: string,
         headers?: AnalyticsHeaders,
@@ -491,7 +491,7 @@ export default class UserDocumentService {
 
     async checkInternationalVaccinationCertificatesExpirations(): Promise<void> {
         const query: FilterQuery<UserDocument> = {
-            ...this.getActiveQuery(DocumentType.InternationalVaccinationCertificate),
+            ...this.getActiveQuery('international-vaccination-certificate'),
             expirationDate: {
                 $gt: moment().add(23, 'hours').toDate(),
                 $lte: moment().add(24, 'hours').toDate(),
@@ -536,7 +536,7 @@ export default class UserDocumentService {
 
     async checkDriverLicensesExpirations(): Promise<void> {
         const expirationLastDayQuery: FilterQuery<UserDocument> = {
-            ...this.getActiveQuery(DocumentType.DriverLicense),
+            ...this.getActiveQuery('driver-license'),
             documentSubType: UserDocumentSubtype.IssuedFirst,
             expirationDate: {
                 $gte: moment().startOf('day').toDate(),
@@ -545,7 +545,7 @@ export default class UserDocumentService {
             [`notifications.${MessageTemplateCode.DriverLicenseExpirationLastDay}`]: { $exists: false },
         }
         const expiresInFewDaysQuery: FilterQuery<UserDocument> = {
-            ...this.getActiveQuery(DocumentType.DriverLicense),
+            ...this.getActiveQuery('driver-license'),
             documentSubType: UserDocumentSubtype.IssuedFirst,
             expirationDate: {
                 $gte: moment().add(10, 'days').startOf('day').toDate(),
@@ -562,7 +562,7 @@ export default class UserDocumentService {
 
     async checkVehicleLicensesExpirations(): Promise<void> {
         const expirationLastDayQuery: FilterQuery<UserDocument> = {
-            ...this.getActiveQuery(DocumentType.VehicleLicense),
+            ...this.getActiveQuery('vehicle-license'),
             ownerType: OwnerType.properUser,
             expirationDate: {
                 $gte: moment().startOf('day').toDate(),
@@ -571,7 +571,7 @@ export default class UserDocumentService {
             [`notifications.${MessageTemplateCode.VehicleLicenseExpirationLastDayToProperUser}`]: { $exists: false },
         }
         const expiresInFewDaysQuery: FilterQuery<UserDocument> = {
-            ...this.getActiveQuery(DocumentType.VehicleLicense),
+            ...this.getActiveQuery('vehicle-license'),
             ownerType: OwnerType.properUser,
             expirationDate: {
                 $gte: moment().add(10, 'days').startOf('day').toDate(),
@@ -594,29 +594,31 @@ export default class UserDocumentService {
         ])
     }
 
-    async processUserDocuments(userIdentifier: string, documentTypes: DocumentType[]): Promise<[DocumentType, DocumentType][]> {
+    async processUserDocuments(userIdentifier: string, documentTypes: string[]): Promise<[string, string][]> {
         const filteredComparingEntries = this.comparingMapEntries.filter(([sourceDocType, docTypesToCompare]) => {
             return documentTypes.includes(sourceDocType) || docTypesToCompare.some((docType) => documentTypes.includes(docType))
         })
-        const processableDocTypes = <DocumentType[]>[...new Set(filteredComparingEntries.flat(2))]
-        if (!processableDocTypes.length) {
+        // eslint-disable-next-line unicorn/no-magic-array-flat-depth
+        const processableDocTypes = <string[]>[...new Set(filteredComparingEntries.flat(2))]
+        if (processableDocTypes.length === 0) {
             return []
         }
 
         const userDocuments = await userDocumentModel
             .find({ userIdentifier, ...this.getActiveQuery(processableDocTypes) })
             .sort({ _id: -1 })
-        const documentsMap = new Map<DocumentType, UserDocument[]>()
+        const documentsMap = new Map<string, UserDocument[]>()
 
-        userDocuments.forEach((doc) => {
+        for (const doc of userDocuments) {
             const { documentType } = doc
             const items = (documentsMap.get(documentType) || []).concat(doc)
 
             documentsMap.set(documentType, items)
-        })
+        }
+
         const dbOperations: AnyBulkWriteOperation<UserDocument>[] = []
-        const processedDocumentTypes: [DocumentType, DocumentType][] = []
-        const tasks = filteredComparingEntries.map(async ([docType]: [DocumentType, DocumentType[]]) => {
+        const processedDocumentTypes: [string, string][] = []
+        const tasks = filteredComparingEntries.map(async ([docType]: [string, string[]]) => {
             const documents = documentsMap.get(docType)
             const docTypeToCompare = this.comparingMap[docType]?.find((type) => documentsMap.get(type))
             if (!documents?.length || !docTypeToCompare) {
@@ -644,7 +646,7 @@ export default class UserDocumentService {
         })
 
         await Promise.all(tasks)
-        if (dbOperations.length) {
+        if (dbOperations.length > 0) {
             const result = await userDocumentModel.bulkWrite(dbOperations)
 
             this.logger.info('Process user documents bulk write result', result)
@@ -747,7 +749,7 @@ export default class UserDocumentService {
                 }),
             )
 
-            if (operations.length) {
+            if (operations.length > 0) {
                 await userDocumentModel.bulkWrite(operations)
             }
         }
@@ -781,27 +783,27 @@ export default class UserDocumentService {
     ): FilterQuery<UserDocument> {
         const query: FilterQuery<UserDocument> = {
             userIdentifier,
-            documentType: DocumentType.InternationalVaccinationCertificate,
+            documentType: 'international-vaccination-certificate',
         }
 
-        if (!documents.length) {
+        if (documents.length === 0) {
             return query
         }
 
         const documentSubTypes: Set<string> = new Set()
         const birthCertificateIds: Set<string> = new Set()
 
-        documents.forEach(({ documentSubType, compoundDocument }) => {
+        for (const { documentSubType, compoundDocument } of documents) {
             documentSubTypes.add(documentSubType!)
 
             if (compoundDocument) {
                 birthCertificateIds.add(compoundDocument.documentIdentifier)
             }
-        })
+        }
 
         query.documentSubType = { $in: Array.from(documentSubTypes) }
 
-        if (birthCertificateIds.size) {
+        if (birthCertificateIds.size > 0) {
             query['compoundDocument.documentIdentifier'] = { $in: Array.from(birthCertificateIds) }
         } else {
             query.compoundDocument = { $exists: false }
@@ -810,9 +812,9 @@ export default class UserDocumentService {
         return query
     }
 
-    private getActiveQuery(documentType?: DocumentType | DocumentType[]): FilterQuery<UserDocument> {
+    private getActiveQuery(documentType?: string | string[]): FilterQuery<UserDocument> {
         if (!documentType) {
-            const documentTypesWithCustomInactiveDocStatuses = <DocumentType[]>Object.keys(this.inactiveDocStatuses)
+            const documentTypesWithCustomInactiveDocStatuses = <string[]>Object.keys(this.inactiveDocStatuses)
 
             return {
                 $or: [
@@ -840,13 +842,13 @@ export default class UserDocumentService {
         return { documentType, docStatus: { $nin: this.getInactiveDocStatuses(documentType) } }
     }
 
-    private getInactiveDocStatuses(documentType: DocumentType): DocStatus[] {
+    private getInactiveDocStatuses(documentType: string): DocStatus[] {
         return this.inactiveDocStatuses[documentType] || this.defaultInactiveDocStatuses
     }
 
     private getCreateStoredDocumentsOperations(
         documents: UserProfileDocument[],
-        documentType: DocumentType,
+        documentType: string,
         userIdentifier: string,
         isDeviceRelatedDocument: boolean,
         mobileUid?: string,
@@ -897,8 +899,8 @@ export default class UserDocumentService {
     }
 
     private getDeleteStoredDocumentsOperations(
-        documents: WithId<UserDocument>[],
-        documentType: DocumentType,
+        documents: mongo.WithId<UserDocument>[],
+        documentType: string,
         userIdentifier: string,
         headers?: AnalyticsHeaders,
     ): AnyBulkWriteOperation<UserDocument>[] {
@@ -911,7 +913,7 @@ export default class UserDocumentService {
         })
     }
 
-    private getUpdateStoredDocumentsDocStatusOperations(documents: WithId<UserDocument>[]): AnyBulkWriteOperation<UserDocument>[] {
+    private getUpdateStoredDocumentsDocStatusOperations(documents: mongo.WithId<UserDocument>[]): AnyBulkWriteOperation<UserDocument>[] {
         return documents.map(({ _id }) => ({
             updateOne: {
                 filter: { _id },
@@ -922,7 +924,7 @@ export default class UserDocumentService {
 
     private getUpdateStoredDocumentsOperations(
         documents: UserProfileDocument[],
-        documentType: DocumentType,
+        documentType: string,
     ): AnyBulkWriteOperation<UserDocument>[] {
         return documents.map((document) => {
             const {
@@ -938,7 +940,7 @@ export default class UserDocumentService {
                 issueDate,
             } = document
 
-            const $set: MatchKeysAndValues<UserDocument> = {
+            const $set: mongo.MatchKeysAndValues<UserDocument> = {
                 docId,
                 docStatus,
                 fullNameHash,
@@ -961,12 +963,12 @@ export default class UserDocumentService {
 
     private async getStoredDocuments(
         userIdentifier: string,
-        documentType: DocumentType,
+        documentType: string,
         documents: UserProfileDocument[],
         isDeviceRelatedDocument: boolean,
         mobileUid?: string,
-    ): Promise<WithId<UserDocument>[]> {
-        const isInternationalVaccinationCertificate = documentType === DocumentType.InternationalVaccinationCertificate
+    ): Promise<mongo.WithId<UserDocument>[]> {
+        const isInternationalVaccinationCertificate = documentType === 'international-vaccination-certificate'
         const query: FilterQuery<UserDocument> = isInternationalVaccinationCertificate
             ? this.getInternationalVaccinationCertificateQuery(userIdentifier, documents)
             : { userIdentifier, documentType }
@@ -993,9 +995,9 @@ export default class UserDocumentService {
         let sendNotification = false
         const operations: AnyBulkWriteOperation<UserDocument>[] = []
 
-        sourceDocs.forEach(({ documentType, documentIdentifier, fullNameHash, comparedTo }) => {
+        for (const { documentType, documentIdentifier, fullNameHash, comparedTo } of sourceDocs) {
             if (!fullNameHash) {
-                return
+                continue
             }
 
             const isHashMismatched = fullNameHash !== docToCompareFullNameHash
@@ -1009,12 +1011,18 @@ export default class UserDocumentService {
                     updateOne: {
                         filter: { userIdentifier, documentType, documentIdentifier },
                         update: {
-                            $set: { comparedTo: { documentType: docToCompare.documentType, fullNameHash: docToCompareFullNameHash } },
+                            $set: {
+                                comparedTo: {
+                                    documentType: docToCompare.documentType,
+                                    fullNameHash: docToCompareFullNameHash,
+                                },
+                            },
                         },
                     },
                 })
             }
-        })
+        }
+
         if (sendNotification) {
             await this.notificationService.createNotificationWithPushesSafe({
                 templateCode: MessageTemplateCode.DriverLicenseDataChanged,

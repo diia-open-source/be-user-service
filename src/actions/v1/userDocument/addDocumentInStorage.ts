@@ -20,7 +20,7 @@ export default class AddDocumentInStorageAction implements AppAction {
         userIdentifier: { type: 'string' },
         mobileUid: { type: 'string', optional: true },
         hashData: { type: 'string' },
-        documentType: { type: 'string', enum: this.userDocumentStorageService.storageDocumentTypes },
+        documentType: { type: 'string' },
         encryptedData: { type: 'string' },
     }
 

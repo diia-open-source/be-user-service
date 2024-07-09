@@ -1,6 +1,6 @@
 import { v4 as uuid } from 'uuid'
 
-import { AppAction } from '@diia-inhouse/diia-app'
+import { GrpcAppAction } from '@diia-inhouse/diia-app'
 
 import { IdentifierService } from '@diia-inhouse/crypto'
 import { ActionVersion, SessionType } from '@diia-inhouse/types'
@@ -15,7 +15,12 @@ import { DiiaIdSignType } from '@interfaces/externalEventListeners/diiaIdSignHas
 import { SignAlgo } from '@interfaces/models/diiaId'
 import { UserHistoryItemStatus } from '@interfaces/services/userHistory'
 
-export default class InitDiiaIdHashesSigningAction implements AppAction {
+/**
+ * Init hashes signing with signing history.
+ *
+ * Use case: hashes already extracted, needs only to init signing.
+ */
+export default class InitDiiaIdHashesSigningAction implements GrpcAppAction {
     constructor(
         private readonly diiaIdService: DiiaIdService,
         private readonly userSigningHistoryService: UserSigningHistoryService,
@@ -29,7 +34,7 @@ export default class InitDiiaIdHashesSigningAction implements AppAction {
 
     readonly name: string = 'initDiiaIdHashesSigning'
 
-    readonly validationRules: ValidationSchema = {
+    readonly validationRules: ValidationSchema<CustomActionArguments['params']> = {
         publicService: { type: 'string' },
         applicationId: { type: 'string' },
         documents: { type: 'array', items: { type: 'string' } },
@@ -44,11 +49,22 @@ export default class InitDiiaIdHashesSigningAction implements AppAction {
         signType: { type: 'enum', values: Object.values(DiiaIdSignType).filter(Number.isInteger), optional: true },
         noSigningTime: { type: 'boolean', optional: true },
         noContentTimestamp: { type: 'boolean', optional: true },
+        processId: { type: 'string', optional: true },
     }
 
     async handler(args: CustomActionArguments): Promise<ActionResult> {
         const {
-            params: { publicService, applicationId, documents, recipient, signAlgo, signType, noSigningTime, noContentTimestamp },
+            params: {
+                publicService,
+                applicationId,
+                documents,
+                recipient,
+                signAlgo,
+                signType,
+                noSigningTime,
+                noContentTimestamp,
+                processId,
+            },
             session: {
                 user: { identifier: userIdentifier },
             },
@@ -58,7 +74,15 @@ export default class InitDiiaIdHashesSigningAction implements AppAction {
         const currentDate: Date = new Date()
 
         try {
-            await this.diiaIdService.initHashesSigning(userIdentifier, mobileUid, signAlgo, signType, noSigningTime, noContentTimestamp)
+            await this.diiaIdService.initHashesSigning({
+                userIdentifier,
+                mobileUid,
+                signAlgo,
+                signType,
+                noSigningTime,
+                noContentTimestamp,
+                processId,
+            })
         } catch (err) {
             await utils.handleError(err, async (e) => {
                 if (!e.getData()?.processCode) {

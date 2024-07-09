@@ -1,8 +1,7 @@
-import { ObjectId } from 'bson'
-
 import { AppAction } from '@diia-inhouse/diia-app'
 
-import { EventBus, InternalEvent, Task } from '@diia-inhouse/diia-queue'
+import { mongo } from '@diia-inhouse/db'
+import { EventBus, Task } from '@diia-inhouse/diia-queue'
 import { BadRequestError, ModelNotFoundError } from '@diia-inhouse/errors'
 import { ActionVersion, Logger, PlatformType, SessionType } from '@diia-inhouse/types'
 import { ValidationSchema } from '@diia-inhouse/validators'
@@ -11,6 +10,7 @@ import DistributionService from '@services/distribution'
 import NotificationService from '@services/notification'
 
 import { ActionResult, CustomActionArguments } from '@interfaces/actions/v1/startSendingMessageNotifications'
+import { InternalEvent } from '@interfaces/queue'
 import { ServiceTask } from '@interfaces/tasks'
 
 export default class StartSendingMessageNotificationsAction implements AppAction {
@@ -30,7 +30,7 @@ export default class StartSendingMessageNotificationsAction implements AppAction
     readonly name: string = 'startSendingMessageNotifications'
 
     readonly validationRules: ValidationSchema = {
-        messageId: { type: 'objectId' },
+        messageId: { type: 'string' },
         platformTypes: {
             type: 'array',
             items: { type: 'string', enum: Object.values(PlatformType) },
@@ -41,31 +41,29 @@ export default class StartSendingMessageNotificationsAction implements AppAction
 
     async handler(args: CustomActionArguments): Promise<ActionResult> {
         const { messageId, platformTypes, useExpirations } = args.params
+        const messageObjectId = new mongo.ObjectId(messageId)
 
-        const message: boolean = await this.notificationService.isMessageExists(messageId)
+        const message: boolean = await this.notificationService.isMessageExists(messageObjectId)
         if (!message) {
             throw new ModelNotFoundError('Message', messageId)
         }
 
-        const [distributionId, platformTypesToSend]: [ObjectId, PlatformType[]] = await this.distributionService.createOrUpdate(
-            messageId,
-            platformTypes,
-        )
-        if (!platformTypesToSend.length) {
+        const [distributionId, platformTypesToSend] = await this.distributionService.createOrUpdate(messageObjectId, platformTypes)
+        if (platformTypesToSend.length === 0) {
             throw new BadRequestError('No available platform type to send notifications')
         }
 
         const publishResultNotificationBatches: boolean = await this.task.publish(ServiceTask.CREATE_NOTIFICATIONS_BATCHES, {
-            messageId,
+            messageId: messageObjectId,
             platformTypes: platformTypesToSend,
             useExpirations,
         })
         if (!publishResultNotificationBatches) {
-            throw Error('Failed to publish task to the queue')
+            throw new Error('Failed to publish task to the queue')
         }
 
         const publishResultMassAnonymous: boolean = await this.eventBus.publish(InternalEvent.UserSendMassAnonymousNotifications, {
-            messageId,
+            messageId: messageObjectId,
             platformTypes: platformTypesToSend,
             useExpirations,
         })

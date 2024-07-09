@@ -1,14 +1,15 @@
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
 import { MoleculerService } from '@diia-inhouse/diia-app'
 
 import { AnalyticsActionResult, GetRatingFormParams, RateServiceEventPayload } from '@diia-inhouse/analytics'
-import { EventBus, InternalEvent } from '@diia-inhouse/diia-queue'
+import { EventBus } from '@diia-inhouse/diia-queue'
 import TestKit from '@diia-inhouse/test'
 import { ActionVersion, Logger } from '@diia-inhouse/types'
 
 import AnalyticsService from '@services/analytics'
 
+import { InternalEvent } from '@interfaces/queue'
 import { AnalyticsActionType, AnalyticsCategory, GetLastSubmittedRatingParams } from '@interfaces/services/analytics'
 
 describe('Service: `AnalyticsService`', () => {
@@ -124,7 +125,7 @@ describe('Service: `AnalyticsService`', () => {
         })
 
         it('should log throwed error', async () => {
-            const throwedError = new Error()
+            const throwedError = new Error('Error')
 
             jest.spyOn(eventBusMock, 'publish').mockRejectedValueOnce(throwedError)
             const errorSpy = jest.spyOn(loggerMock, 'error')

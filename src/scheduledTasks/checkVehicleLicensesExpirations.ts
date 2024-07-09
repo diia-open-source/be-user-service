@@ -1,7 +1,9 @@
-import { EventBusListener, ScheduledTaskEvent } from '@diia-inhouse/diia-queue'
+import { EventBusListener } from '@diia-inhouse/diia-queue'
 import { Logger } from '@diia-inhouse/types'
 
 import UserDocumentService from '@services/userDocument'
+
+import { ScheduledTaskEvent } from '@interfaces/queue'
 
 export default class CheckVehicleLicensesExpirationsTask implements EventBusListener {
     constructor(

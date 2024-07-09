@@ -1,6 +1,6 @@
 import { v4 as uuid } from 'uuid'
 
-import { AppAction } from '@diia-inhouse/diia-app'
+import { GrpcAppAction } from '@diia-inhouse/diia-app'
 
 import { IdentifierService } from '@diia-inhouse/crypto'
 import { CryptoDocServiceClient, VerifySignExternalRequest } from '@diia-inhouse/diia-crypto-client'
@@ -15,7 +15,7 @@ import { ActionResult, CustomActionArguments } from '@interfaces/actions/v1/diia
 import { ProcessCode } from '@interfaces/services'
 import { UserHistoryItemStatus } from '@interfaces/services/userHistory'
 
-export default class ValidateSignedFileHashesAction implements AppAction {
+export default class ValidateSignedFileHashesAction implements GrpcAppAction {
     constructor(
         private readonly userSigningHistoryService: UserSigningHistoryService,
         private readonly cryptoDocServiceClient: CryptoDocServiceClient,
@@ -30,7 +30,7 @@ export default class ValidateSignedFileHashesAction implements AppAction {
 
     readonly name: string = 'validateSignedFileHashes' // TODO(BACK-0):  should be renamed: validateFileSignatures !!!
 
-    readonly validationRules: ValidationSchema = {
+    readonly validationRules: ValidationSchema<CustomActionArguments['params']> = {
         files: {
             type: 'array',
             items: {

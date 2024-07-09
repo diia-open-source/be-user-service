@@ -15,8 +15,9 @@ describe(`Service ${ServiceUserService.name}`, () => {
     describe('method: `getServiceUserByLogin`', () => {
         it('should throw AccessDeniedError if user not found', async () => {
             const login = 'login'
+            const undefinedValue = undefined
 
-            jest.spyOn(serviceUserModelMock, 'findOne').mockResolvedValueOnce(undefined)
+            jest.spyOn(serviceUserModelMock, 'findOne').mockResolvedValueOnce(undefinedValue)
 
             await expect(serviceUserService.getServiceUserByLogin(login)).rejects.toEqual(new AccessDeniedError('ServiceUser not found'))
         })

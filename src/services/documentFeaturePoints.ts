@@ -1,15 +1,16 @@
-import { FilterQuery, UpdateQuery } from 'mongoose'
 import { v4 as uuid } from 'uuid'
 
-import { ExternalCommunicator, ExternalEvent } from '@diia-inhouse/diia-queue'
+import { FilterQuery, UpdateQuery } from '@diia-inhouse/db'
+import { ExternalCommunicator } from '@diia-inhouse/diia-queue'
 import { ModelNotFoundError, ServiceUnavailableError } from '@diia-inhouse/errors'
-import { DocumentType, Logger } from '@diia-inhouse/types'
+import { Logger } from '@diia-inhouse/types'
 
 import documentFeaturePointsModel from '@models/documentFeaturePoints'
 
 import DocumentFeaturePointsDataMapper from '@dataMappers/documentFeaturePointsDataMapper'
 
 import { DocumentFeaturePointsModel } from '@interfaces/models/documentFeaturePoints'
+import { ExternalEvent } from '@interfaces/queue'
 import { CheckPointsResult, FeaturePointResponse, GetPointsResult } from '@interfaces/services/documentFeaturePoints'
 
 export default class DocumentFeaturePointsService {
@@ -29,7 +30,7 @@ export default class DocumentFeaturePointsService {
 
     async createDocumentFeaturePoints(
         userIdentifier: string | undefined,
-        documentType: DocumentType,
+        documentType: string,
         documentIdentifier: string,
         photo: string,
     ): Promise<number[]> {
@@ -54,7 +55,7 @@ export default class DocumentFeaturePointsService {
 
     async createDocumentFeaturePointsEntity(
         userIdentifier: string,
-        documentType: DocumentType,
+        documentType: string,
         documentIdentifier: string,
         photo: string,
     ): Promise<void> {
@@ -85,7 +86,7 @@ export default class DocumentFeaturePointsService {
         }
     }
 
-    async removeDocumentFeaturePoints(userIdentifier: string, documentType: DocumentType, documentIdentifier: string): Promise<void> {
+    async removeDocumentFeaturePoints(userIdentifier: string, documentType: string, documentIdentifier: string): Promise<void> {
         const query: FilterQuery<DocumentFeaturePointsModel> = { userIdentifier, documentType, documentIdentifier }
 
         await documentFeaturePointsModel.deleteOne(query)

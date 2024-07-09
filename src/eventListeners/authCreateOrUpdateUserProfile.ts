@@ -1,7 +1,7 @@
 import moment from 'moment'
 
 import { IdentifierService } from '@diia-inhouse/crypto'
-import { EventBusListener, InternalEvent } from '@diia-inhouse/diia-queue'
+import { EventBusListener } from '@diia-inhouse/diia-queue'
 import { Gender, PlatformType } from '@diia-inhouse/types'
 import { ValidationSchema } from '@diia-inhouse/validators'
 
@@ -9,6 +9,7 @@ import SubscriptionService from '@services/subscription'
 import UserProfileService from '@services/userProfile'
 
 import { EventPayload } from '@interfaces/eventListeners/authCreateOrUpdateUserProfile'
+import { InternalEvent } from '@interfaces/queue'
 
 export default class AuthCreateOrUpdateUserProfileEventListener implements EventBusListener {
     constructor(

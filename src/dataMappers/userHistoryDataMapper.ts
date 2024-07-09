@@ -1,6 +1,5 @@
 import {
     ChipStatusAtmType,
-    DocumentType,
     MessageBodyItem,
     MessageBodyItemType,
     NavigationPanel,
@@ -8,7 +7,6 @@ import {
     PublicServiceContextMenuType,
     StubMessageMlc,
 } from '@diia-inhouse/types'
-import { utils } from '@diia-inhouse/utils'
 
 import { StatusHistoryItem, UserSharingHistoryItemModel } from '@interfaces/models/userSharingHistoryItem'
 import { UserSigningHistoryItemModel } from '@interfaces/models/userSigningHistoryItem'
@@ -95,17 +93,13 @@ export default class UserHistoryDataMapper {
         [UserHistoryItemStatus.Processing]: ChipStatusAtmType.pending,
     }
 
-    getDocumentName(docType: DocumentType): string {
-        return utils.getDocumentName(docType)
-    }
-
     getStatus(model: UserSharingHistoryItemModel | UserSigningHistoryItemModel): UserHistoryItemStatus {
         const { status, statusHistory } = model
         if (status !== UserHistoryItemStatus.Processing) {
             return status
         }
 
-        const { date: statusDate }: StatusHistoryItem = statusHistory[statusHistory.length - 1]
+        const { date: statusDate } = <StatusHistoryItem>statusHistory.at(-1)
 
         const threshold: number = statusDate.getTime() + this.failHistoryItemThreshold
         const now: number = Date.now()

@@ -1,8 +1,7 @@
-import { randomUUID } from 'crypto'
-
-import { mongo } from 'mongoose'
+import { randomUUID } from 'node:crypto'
 
 import { IdentifierService } from '@diia-inhouse/crypto'
+import { mongo } from '@diia-inhouse/db'
 import TestKit, { mockInstance } from '@diia-inhouse/test'
 import { PlatformType } from '@diia-inhouse/types'
 

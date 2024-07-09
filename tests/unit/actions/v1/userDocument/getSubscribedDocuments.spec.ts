@@ -1,5 +1,5 @@
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocumentType, OwnerType } from '@diia-inhouse/types'
+import { OwnerType } from '@diia-inhouse/types'
 
 import GetSubscribedDocumentsAction from '@actions/v1/userDocument/getSubscribedDocuments'
 
@@ -12,7 +12,7 @@ describe(`Action ${GetSubscribedDocumentsAction.name}`, () => {
     const headers = testKit.session.getHeaders()
     const userDocumentServiceMock = mockInstance(UserDocumentService)
 
-    const getSubscribedDocumentsAction = new GetSubscribedDocumentsAction(userDocumentServiceMock)
+    const getSubscribedDocumentsAction = new GetSubscribedDocumentsAction(userDocumentServiceMock, [])
 
     describe('method `handler`', () => {
         it('should return user documents', async () => {
@@ -20,7 +20,7 @@ describe(`Action ${GetSubscribedDocumentsAction.name}`, () => {
                 params: {
                     userIdentifier: 'userIdentifier',
                     subscriptionType: SubscriptionType.Push,
-                    documentType: DocumentType.BirthCertificate,
+                    documentType: 'birth-certificate',
                 },
                 session: testKit.session.getUserSession(),
                 headers,
@@ -29,7 +29,7 @@ describe(`Action ${GetSubscribedDocumentsAction.name}`, () => {
             const userDocuments = [
                 {
                     userIdentifier: 'userIdentifier',
-                    documentType: DocumentType.DriverLicense,
+                    documentType: 'driver-license',
                     documentIdentifier: 'documentIdentifier',
                     ownerType: OwnerType.owner,
                     notifications: {},

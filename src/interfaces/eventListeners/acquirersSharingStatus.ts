@@ -1,5 +1,3 @@
-import { DocumentType } from '@diia-inhouse/types'
-
 import { SharingHistoryAcquirer, SharingHistoryOffer } from '@interfaces/models/userSharingHistoryItem'
 import { UserHistoryItemStatus } from '@interfaces/services/userHistory'
 
@@ -8,7 +6,7 @@ export interface EventPayload {
     mobileUid: string
     sharingId: string
     status: UserHistoryItemStatus
-    documents: DocumentType[]
+    documents: string[]
     acquirer: SharingHistoryAcquirer
     offer?: SharingHistoryOffer
 }

@@ -2,13 +2,15 @@ import { MoleculerService } from '@diia-inhouse/diia-app'
 
 import { IdentifierService } from '@diia-inhouse/crypto'
 import { mockInstance } from '@diia-inhouse/test'
-import { ActionVersion, DocumentType, PassportType, SessionType } from '@diia-inhouse/types'
+import { ActionVersion, SessionType } from '@diia-inhouse/types'
 import { utils } from '@diia-inhouse/utils'
 
 import DocumentsService from '@services/documents'
 
+import { documentsDocServiceClient } from '@tests/mocks/grpc/clients'
 import SessionGenerator from '@tests/mocks/sessionGenerator'
 
+import { AppConfig } from '@interfaces/config'
 import { IdentityDocument, Passport } from '@interfaces/services/documents'
 
 describe(`Service ${DocumentsService.name}`, () => {
@@ -20,7 +22,12 @@ describe(`Service ${DocumentsService.name}`, () => {
 
     beforeEach(() => {
         mockMoleculerService = mockInstance(MoleculerService)
-        documentsService = new DocumentsService(mockMoleculerService)
+        documentsService = new DocumentsService(
+            <AppConfig>{ documents: { memoizeCacheTtl: 1 } },
+            mockMoleculerService,
+            documentsDocServiceClient,
+            jest.fn(),
+        )
     })
 
     describe('method: `getPassportToProcess`', () => {
@@ -35,7 +42,7 @@ describe(`Service ${DocumentsService.name}`, () => {
                 sign: 'sign',
                 countryCode: 'countryCode',
                 recordNumber: 'recordNumber',
-                type: PassportType.ID,
+                type: 'ID',
             }
 
             jest.spyOn(mockMoleculerService, 'act').mockResolvedValueOnce(passport)
@@ -80,7 +87,7 @@ describe(`Service ${DocumentsService.name}`, () => {
     describe('method: `expireDocument`', () => {
         it('should successfully execute method', async () => {
             const userIdentifier = 'userIdentifier'
-            const documentType = DocumentType.BirthCertificate
+            const documentType = 'birth-certificate'
 
             jest.spyOn(mockMoleculerService, 'act').mockResolvedValueOnce(null)
 

@@ -1,5 +1,4 @@
-import { UpdateWriteOpResult } from 'mongoose'
-
+import { UpdateWriteOpResult } from '@diia-inhouse/db'
 import DiiaLogger from '@diia-inhouse/diia-logger'
 import TestKit, { mockInstance } from '@diia-inhouse/test'
 

@@ -1,7 +1,6 @@
-import { ObjectId } from 'bson'
 import moment from 'moment'
-import { FilterQuery, UpdateQuery } from 'mongoose'
 
+import { FilterQuery, UpdateQuery, mongo } from '@diia-inhouse/db'
 import { AccessDeniedError } from '@diia-inhouse/errors'
 import { AppUserActionHeaders, Logger, UserTokenData } from '@diia-inhouse/types'
 
@@ -87,7 +86,7 @@ export default class OtpService {
         return amount > 0
     }
 
-    private async removeOtherOtps(mobileUid: string, idToKeep: ObjectId): Promise<void> {
+    private async removeOtherOtps(mobileUid: string, idToKeep: mongo.ObjectId): Promise<void> {
         const query: FilterQuery<OtpModel> = { mobileUid, _id: { $ne: idToKeep } }
         const modifier: UpdateQuery<OtpModel> = { isDeleted: true }
 

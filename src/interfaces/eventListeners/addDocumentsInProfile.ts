@@ -1,10 +1,10 @@
-import { DocumentType, PlatformType } from '@diia-inhouse/types'
+import { PlatformType } from '@diia-inhouse/types'
 
 import { UserProfileDocument } from '@interfaces/services/documents'
 
 export interface EventPayload {
     userIdentifier: string
-    documentType: DocumentType
+    documentType: string
     documents: UserProfileDocument[]
     headers: {
         mobileUid?: string

@@ -1,7 +1,6 @@
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
-import { ObjectId } from 'bson'
-
+import { mongo } from '@diia-inhouse/db'
 import TestKit from '@diia-inhouse/test'
 
 import GetSessionHistoryScreenAction from '@src/actions/v1/userHistory/getSessionHistoryScreen'
@@ -106,7 +105,7 @@ describe(`Action ${GetSessionHistoryScreenAction.name}`, () => {
             documents: [],
             date: new Date(),
             acquirer: {
-                id: new ObjectId(),
+                id: new mongo.ObjectId(),
                 name: 'name',
                 address: 'address',
             },
@@ -133,16 +132,19 @@ describe(`Action ${GetSessionHistoryScreenAction.name}`, () => {
                                     code: UserHistoryCode.Authorization,
                                     count: authorizationCount,
                                     label: 'Авторизації',
+                                    chipMlc: { code: UserHistoryCode.Authorization, label: 'Авторизації' },
                                 },
                                 {
                                     code: UserHistoryCode.Signing,
                                     count: signingCount,
                                     label: 'Підписання',
+                                    chipMlc: { code: UserHistoryCode.Signing, label: 'Підписання' },
                                 },
                                 {
                                     code: UserHistoryCode.Sharing,
                                     count: sharingCount,
                                     label: 'Шеринг документів',
+                                    chipMlc: { code: UserHistoryCode.Sharing, label: 'Шеринг документів' },
                                 },
                             ],
                             preselectedCode: UserHistoryCode.Authorization,

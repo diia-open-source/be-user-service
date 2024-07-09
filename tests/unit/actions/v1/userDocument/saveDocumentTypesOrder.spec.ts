@@ -1,5 +1,4 @@
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocumentType } from '@diia-inhouse/types'
 
 import SaveDocumentTypesOrderAction from '@actions/v1/userDocument/saveDocumentTypesOrder'
 
@@ -10,7 +9,7 @@ describe(`Action ${SaveDocumentTypesOrderAction.name}`, () => {
     const headers = testKit.session.getHeaders()
     const userDocumentStorageServiceMock = mockInstance(UserDocumentSettingsService)
 
-    const saveDocumentTypesOrderAction = new SaveDocumentTypesOrderAction(userDocumentStorageServiceMock)
+    const saveDocumentTypesOrderAction = new SaveDocumentTypesOrderAction(userDocumentStorageServiceMock, [])
 
     describe('method `handler`', () => {
         it('should return true if saved documents order', async () => {
@@ -18,11 +17,11 @@ describe(`Action ${SaveDocumentTypesOrderAction.name}`, () => {
                 params: {
                     documentsOrder: [
                         {
-                            documentType: DocumentType.ForeignPassport,
+                            documentType: 'foreign-passport',
                             order: 1,
                         },
                         {
-                            documentType: DocumentType.DriverLicense,
+                            documentType: 'driver-license',
                             order: 2,
                         },
                     ],

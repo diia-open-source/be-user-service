@@ -1,7 +1,7 @@
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocStatus, DocumentType, OwnerType } from '@diia-inhouse/types'
+import { DocStatus, OwnerType } from '@diia-inhouse/types'
 
 import AddDocumentInProfileEventListener from '@src/eventListeners/addDocumentInProfile'
 
@@ -12,7 +12,7 @@ describe('AddDocumentInProfileEventListener', () => {
     const testKit = new TestKit()
     const analyticsServiceMock = mockInstance(AnalyticsService)
     const userDocumentServiceMock = mockInstance(UserDocumentService)
-    const addDocumentInProfileEventListener = new AddDocumentInProfileEventListener(analyticsServiceMock, userDocumentServiceMock)
+    const addDocumentInProfileEventListener = new AddDocumentInProfileEventListener(analyticsServiceMock, userDocumentServiceMock, [])
 
     describe('method: `handler`', () => {
         it('should succeed', async () => {
@@ -21,7 +21,7 @@ describe('AddDocumentInProfileEventListener', () => {
             } = testKit.session.getUserSession()
             const message = {
                 documentIdentifier: 'document-identifier',
-                documentType: DocumentType.BirthCertificate,
+                documentType: 'birth-certificate',
                 headers: testKit.session.getHeaders(),
                 ownerType: OwnerType.owner,
                 userIdentifier: identifier,

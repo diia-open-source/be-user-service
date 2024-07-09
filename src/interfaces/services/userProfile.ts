@@ -1,13 +1,12 @@
-import { ObjectId } from 'bson'
-
-import { DocumentType, Gender } from '@diia-inhouse/types'
+import { mongo } from '@diia-inhouse/db'
+import { Gender } from '@diia-inhouse/types'
 
 import { AttentionMessage } from '@interfaces/services/index'
 import { UserDocumentTypesCounts } from '@interfaces/services/userDocument'
 
 export interface UserIdentifiersWithLastId {
     userIdentifiers: string[]
-    nextLastId?: ObjectId
+    nextLastId?: mongo.ObjectId
 }
 
 export interface UserInfoWithAttentionMessage {
@@ -51,7 +50,7 @@ export interface UserIdentifier {
 }
 
 export interface UserFilterDocument {
-    type: DocumentType
+    type: string
 }
 
 export interface UserFilterCount {

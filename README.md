@@ -124,5 +124,4 @@ You may obtain a copy of the License at [https://joinup.ec.europa.eu/collection/
 
 Questions regarding the Diia project, the License and any re-use should be directed to [modt.opensource@thedigital.gov.ua](mailto:modt.opensource@thedigital.gov.ua).
 
-This project incorporates third party material. In all cases the original copyright notices and the license under which these third party dependencies were provided remains as so. In relation to the Typescript dependency you should also review the [Typescript Third Party Notices](
-https://github.com/microsoft/TypeScript/blob/9684ba6b0d73c37546ada901e5d0a5324de7fc1d/ThirdPartyNoticeText.txt).
+This project incorporates third party material. In all cases the original copyright notices and the license under which these third party dependencies were provided remains as so. In relation to the Typescript dependency you should also review the [Typescript Third Party Notices](https://github.com/microsoft/TypeScript/blob/9684ba6b0d73c37546ada901e5d0a5324de7fc1d/ThirdPartyNoticeText.txt).

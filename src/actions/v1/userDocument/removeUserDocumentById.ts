@@ -1,6 +1,6 @@
 import { AppAction } from '@diia-inhouse/diia-app'
 
-import { ActionVersion, DocumentType, SessionType } from '@diia-inhouse/types'
+import { ActionVersion, SessionType } from '@diia-inhouse/types'
 import { ValidationSchema } from '@diia-inhouse/validators'
 
 import AnalyticsService from '@services/analytics'
@@ -14,7 +14,15 @@ export default class RemoveUserDocumentByIdAction implements AppAction {
         private readonly analyticsService: AnalyticsService,
         private readonly userDocumentService: UserDocumentService,
         private readonly userDocumentStorageService: UserDocumentStorageService,
-    ) {}
+        private readonly documentTypes: string[],
+    ) {
+        this.validationRules = {
+            userIdentifier: { type: 'string' },
+            documentType: { type: 'string', enum: this.documentTypes },
+            documentId: { type: 'string' },
+            mobileUid: { type: 'string', optional: true },
+        }
+    }
 
     readonly sessionType: SessionType = SessionType.None
 
@@ -22,12 +30,7 @@ export default class RemoveUserDocumentByIdAction implements AppAction {
 
     readonly name: string = 'removeUserDocumentById'
 
-    readonly validationRules: ValidationSchema<CustomActionArguments['params']> = {
-        userIdentifier: { type: 'string' },
-        documentType: { type: 'string', enum: Object.values(DocumentType) },
-        documentId: { type: 'string' },
-        mobileUid: { type: 'string', optional: true },
-    }
+    readonly validationRules: ValidationSchema<CustomActionArguments['params']>
 
     async handler(args: CustomActionArguments): Promise<ActionResult> {
         const {

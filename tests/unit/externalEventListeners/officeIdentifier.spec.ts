@@ -1,17 +1,17 @@
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
 import { IdentifierService } from '@diia-inhouse/crypto'
 import DiiaLogger from '@diia-inhouse/diia-logger'
-import { ExternalEvent } from '@diia-inhouse/diia-queue'
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocumentType, HttpStatusCode, ProfileFeature } from '@diia-inhouse/types'
+import { DiiaOfficeStatus, HttpStatusCode, ProfileFeature } from '@diia-inhouse/types'
 
 import OfficeIdentifierEventListener from '@src/externalEventListeners/officeIdentifier'
 
 import DocumentsService from '@services/documents'
 import UserProfileService from '@services/userProfile'
 
-import { DiiaOfficeProfile, DiiaOfficeStatus } from '@interfaces/models/userProfile'
+import { DiiaOfficeProfile } from '@interfaces/models/userProfile'
+import { ExternalEvent } from '@interfaces/queue'
 
 describe('OfficeIdentifierEventListener', () => {
     const testKit = new TestKit()
@@ -36,7 +36,7 @@ describe('OfficeIdentifierEventListener', () => {
                 response: {
                     rnokpp: itn,
                     profile: <Omit<DiiaOfficeProfile, 'status'>>{},
-                    status: DiiaOfficeStatus.Dismissed,
+                    status: DiiaOfficeStatus.DISMISSED,
                 },
             }
             const {
@@ -51,7 +51,7 @@ describe('OfficeIdentifierEventListener', () => {
 
             expect(identifierServiceMock.createIdentifier).toHaveBeenCalledWith(itn)
             expect(userProfileServiceMock.setProfileFeature).toHaveBeenCalledWith(identifier, ProfileFeature.office, { ...profile, status })
-            expect(documentsServiceMock.expireDocument).toHaveBeenCalledWith(identifier, DocumentType.OfficialCertificate)
+            expect(documentsServiceMock.expireDocument).toHaveBeenCalledWith(identifier, 'official-certificate')
         })
 
         it('should just log error in case it is received', async () => {
@@ -67,7 +67,7 @@ describe('OfficeIdentifierEventListener', () => {
                 response: {
                     rnokpp: itn,
                     profile: <Omit<DiiaOfficeProfile, 'status'>>{},
-                    status: DiiaOfficeStatus.Active,
+                    status: DiiaOfficeStatus.ACTIVE,
                 },
             }
             const { error } = message

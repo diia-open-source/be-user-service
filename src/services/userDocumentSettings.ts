@@ -1,14 +1,28 @@
-import { UpdateQuery } from 'mongoose'
+import { isEmpty } from 'lodash'
 
 import { IdentifierService } from '@diia-inhouse/crypto'
+import { UpdateQuery } from '@diia-inhouse/db'
 import { BadRequestError } from '@diia-inhouse/errors'
-import { DocumentType, DocumentTypeCamelCase, ProfileFeature, SessionType } from '@diia-inhouse/types'
+import { ProfileFeature, SessionType } from '@diia-inhouse/types'
+import { utils } from '@diia-inhouse/utils'
+
+import {
+    DocumentOrderSettingsItem,
+    DocumentVisibilitySettingsItem,
+    GetUserDocumentSettingsReq,
+    GetUserDocumentSettingsRes,
+    UpdateDocumentVisibilityReq,
+} from '@src/generated'
+
+import DocumentsService from '@services/documents'
 
 import userDocumentSettingsModel from '@models/userDocumentSettings'
 
-import { UserDocumentSettingsModel } from '@interfaces/models/userDocumentSettings'
+import { DocumentTypeSetting, UserDocumentSettingsModel } from '@interfaces/models/userDocumentSettings'
 import {
     DocumentTypeWithOrder,
+    DocumentVisibilitySettings,
+    DocumentsDefaultOrder,
     SaveDocumentsOrderByDocumentTypeRequest,
     UserDocumentsOrderParams,
     UserDocumentsOrderResponse,
@@ -17,82 +31,20 @@ import {
 export default class UserDocumentSettingsService {
     private readonly defaultNotDefinedOrder: number = -1
 
-    private readonly sortedDocumentTypes: DocumentType[] = [
-        DocumentType.MilitaryBond,
-        DocumentType.HousingCertificate,
-        DocumentType.UId,
-        DocumentType.TaxpayerCard,
-        DocumentType.LocalVaccinationCertificate,
-        DocumentType.InternationalVaccinationCertificate,
-        DocumentType.ChildLocalVaccinationCertificate,
-        DocumentType.InternalPassport,
-        DocumentType.ForeignPassport,
-        DocumentType.ResidencePermitPermanent,
-        DocumentType.ResidencePermitTemporary,
-        DocumentType.PensionCard,
-        DocumentType.DriverLicense,
-        DocumentType.VehicleLicense,
-        DocumentType.StudentIdCard,
-        DocumentType.RefInternallyDisplacedPerson,
-        DocumentType.BirthCertificate,
-        DocumentType.EResidency,
-        DocumentType.EResidentPassport,
-        DocumentType.EducationDocument,
-        DocumentType.VehicleInsurance,
-        DocumentType.OfficialCertificate,
-    ]
-
-    private readonly eResidentDocumentFilter: DocumentType[] = [DocumentType.EResidency, DocumentType.EResidentPassport]
-
-    private readonly officeOnlyDocumentTypes = [DocumentType.OfficialCertificate]
-
-    private readonly defaultSortedEResidentDocumentTypes: DocumentType[] = this.sortedDocumentTypes.filter((docType) =>
-        this.eResidentDocumentFilter.includes(docType),
-    )
-
-    private readonly defaultSortedDocumentTypesBySessionType: Partial<Record<SessionType, DocumentType[]>> = {
-        [SessionType.User]: this.sortedDocumentTypes,
-        [SessionType.EResident]: this.defaultSortedEResidentDocumentTypes,
-    }
-
-    private readonly documentTypeToCamelCase: Record<DocumentType, DocumentTypeCamelCase> = {
-        [DocumentType.InternalPassport]: DocumentTypeCamelCase.idCard,
-        [DocumentType.ForeignPassport]: DocumentTypeCamelCase.foreignPassport,
-        [DocumentType.TaxpayerCard]: DocumentTypeCamelCase.taxpayerCard,
-        [DocumentType.DriverLicense]: DocumentTypeCamelCase.driverLicense,
-        [DocumentType.VehicleLicense]: DocumentTypeCamelCase.vehicleLicense,
-        [DocumentType.VehicleInsurance]: DocumentTypeCamelCase.vehicleLicense,
-        [DocumentType.StudentIdCard]: DocumentTypeCamelCase.studentCard,
-        [DocumentType.RefInternallyDisplacedPerson]: DocumentTypeCamelCase.referenceInternallyDisplacedPerson,
-        [DocumentType.BirthCertificate]: DocumentTypeCamelCase.birthCertificate,
-        [DocumentType.LocalVaccinationCertificate]: DocumentTypeCamelCase.localVaccinationCertificate,
-        [DocumentType.ChildLocalVaccinationCertificate]: DocumentTypeCamelCase.childLocalVaccinationCertificate,
-        [DocumentType.InternationalVaccinationCertificate]: DocumentTypeCamelCase.internationalVaccinationCertificate,
-        [DocumentType.PensionCard]: DocumentTypeCamelCase.pensionCard,
-        [DocumentType.ResidencePermitPermanent]: DocumentTypeCamelCase.residencePermitPermanent,
-        [DocumentType.ResidencePermitTemporary]: DocumentTypeCamelCase.residencePermitTemporary,
-        [DocumentType.UId]: DocumentTypeCamelCase.uId,
-        [DocumentType.EResidency]: DocumentTypeCamelCase.eResidency,
-        [DocumentType.EResidentPassport]: DocumentTypeCamelCase.eResidentPassport,
-        [DocumentType.MilitaryBond]: DocumentTypeCamelCase.militaryBond,
-        [DocumentType.OfficialCertificate]: DocumentTypeCamelCase.officialCertificate,
-        [DocumentType.HousingCertificate]: DocumentTypeCamelCase.housingCertificate,
-        [DocumentType.EducationDocument]: DocumentTypeCamelCase.educationDocument,
-        [DocumentType.MarriageActRecord]: DocumentTypeCamelCase.marriageActRecord,
-        [DocumentType.DivorceActRecord]: DocumentTypeCamelCase.divorceActRecord,
-        [DocumentType.NameChangeActRecord]: DocumentTypeCamelCase.nameChangeActRecord,
-        [DocumentType.UserBirthCertificate]: DocumentTypeCamelCase.userBirthCertificate,
-    }
+    private readonly officeOnlyDocumentTypes = ['official-certificate']
 
     private readonly unorderedDocumentsStartOrder = 1000
 
-    constructor(private readonly identifier: IdentifierService) {}
+    constructor(
+        private readonly identifier: IdentifierService,
+        private readonly documentsService: DocumentsService,
+    ) {}
 
     async saveDocumentsOrder(params: UserDocumentsOrderParams, documentsOrder: DocumentTypeWithOrder[]): Promise<void> {
         const { userIdentifier } = params
 
         await this.validateDocumentTypeOrders(params, documentsOrder)
-        const documentTypeOrders = this.generateDocumentTypeOrders(documentsOrder)
+        const documentTypeOrders = await this.generateDocumentTypeOrders(documentsOrder)
         const documentSettings = await this.getDocumentSettingsByUserIdentifier(userIdentifier)
         if (documentSettings) {
             await userDocumentSettingsModel.updateOne({ userIdentifier }, documentTypeOrders)
@@ -105,17 +57,17 @@ export default class UserDocumentSettingsService {
 
     async saveDocumentsOrderByDocumentType(
         params: UserDocumentsOrderParams,
-        documentType: DocumentType,
+        documentType: string,
         documentsOrder: SaveDocumentsOrderByDocumentTypeRequest[],
     ): Promise<void> {
         const { userIdentifier } = params
-        if (!documentsOrder.length) {
+        if (documentsOrder.length === 0) {
             throw new BadRequestError('Please, define at least one document number')
         }
 
         const documentSettings = await this.getDocumentSettingsByUserIdentifier(userIdentifier)
         if (!documentSettings) {
-            const documentTypeOrders = this.generateDocumentTypeOrders()
+            const documentTypeOrders = await this.generateDocumentTypeOrders()
 
             await userDocumentSettingsModel.create({ userIdentifier, ...documentTypeOrders })
         }
@@ -123,11 +75,11 @@ export default class UserDocumentSettingsService {
         this.validateDocumentsOrderByDocumentType(documentsOrder)
         const documentIdentifiersForUpdate: { [key: string]: number } = {}
 
-        documentsOrder.forEach(({ docNumber, order }: SaveDocumentsOrderByDocumentTypeRequest) => {
+        for (const { docNumber, order } of documentsOrder) {
             const identifier: string = this.identifier.createIdentifier(docNumber)
 
             documentIdentifiersForUpdate[identifier] = order
-        })
+        }
 
         await userDocumentSettingsModel.updateOne(
             { userIdentifier },
@@ -139,16 +91,140 @@ export default class UserDocumentSettingsService {
         )
     }
 
+    /** @deprecated use getDocumentSettings instead */
     async getDocumentsOrder(params: UserDocumentsOrderParams): Promise<UserDocumentsOrderResponse[]> {
-        const { userIdentifier } = params
-        const defaultSortedDocumentTypes = this.getDefaultSortedDocumentTypes(params)
+        const { userIdentifier, features = {} } = params
+
+        const settingsModel = await this.getDocumentSettingsByUserIdentifier(userIdentifier)
+        const defaultSortedDocumentTypes = await this.getDefaultSortedDocumentTypes(userIdentifier, Object.keys(features))
+
+        return this.getDocumentOrderSettings(defaultSortedDocumentTypes, settingsModel)
+    }
+
+    async getDocumentsTypeOrder(params: UserDocumentsOrderParams): Promise<string[]> {
+        const { userIdentifier, features = {} } = params
+
+        const defaultSortedDocumentTypes = await this.getDefaultSortedDocumentTypes(userIdentifier, Object.keys(features))
+
         const documentSettings = await this.getDocumentSettingsByUserIdentifier(userIdentifier)
+        if (!documentSettings) {
+            return defaultSortedDocumentTypes.map((docType: string) => utils.documentTypeToCamelCase(docType))
+        }
 
+        const ordered: DocumentTypeWithOrder[] = []
+        const unordered: Set<string> = new Set()
+        const sortedDocumentTypes = await this.getSortedByDefaultDocumentTypesBySession(SessionType.User)
+
+        for (const documentType of sortedDocumentTypes) {
+            const { documentTypeOrder = this.defaultNotDefinedOrder } = <DocumentTypeSetting>(documentSettings[documentType] || {})
+            if (documentTypeOrder === this.defaultNotDefinedOrder) {
+                unordered.add(documentType)
+            } else {
+                ordered.push({ order: documentTypeOrder, documentType })
+            }
+        }
+
+        for (const [indx, documentType] of defaultSortedDocumentTypes.entries()) {
+            if (unordered.has(documentType)) {
+                ordered.push({ order: this.unorderedDocumentsStartOrder + indx, documentType })
+            }
+        }
+
+        return ordered
+            .sort((a: DocumentTypeWithOrder, b: DocumentTypeWithOrder) => a.order - b.order)
+            .map(({ documentType }: DocumentTypeWithOrder) => utils.documentTypeToCamelCase(documentType))
+    }
+
+    async getDocumentSettings(params: GetUserDocumentSettingsReq): Promise<GetUserDocumentSettingsRes> {
+        const { userIdentifier, features, documentsDefaultOrder } = params
+
+        const settingsModel = await this.getDocumentSettingsByUserIdentifier(userIdentifier)
+        const defaultSortedDocumentTypes = await this.getDefaultSortedDocumentTypes(userIdentifier, features, true, documentsDefaultOrder)
+
+        const documentOrderSettings = this.getDocumentOrderSettings(defaultSortedDocumentTypes, settingsModel)
+
+        if (!settingsModel) {
+            return {
+                documentOrderSettings,
+                documentVisibilitySettings: [],
+            }
+        }
+
+        const sortedDocumentTypes = await this.getSortedByDefaultDocumentTypesBySession(SessionType.User, documentsDefaultOrder)
+
+        return {
+            documentOrderSettings,
+            documentVisibilitySettings: sortedDocumentTypes.map((documentType): DocumentVisibilitySettingsItem => {
+                const documentSetting = <DocumentTypeSetting>(settingsModel[documentType] || {})
+                const { hiddenDocuments = [], hiddenDocumentType } = documentSetting
+
+                return { documentType, hiddenDocuments, hiddenDocumentType }
+            }),
+        }
+    }
+
+    async updateDocumentVisibility(params: UpdateDocumentVisibilityReq): Promise<void> {
+        const { userIdentifier, documentType, hideDocuments, unhideDocuments, hideDocumentType } = params
+
+        const hiddenDocumentsField = [documentType, <keyof DocumentTypeSetting>'hiddenDocuments'].join('.')
+        const hiddenDocumentTypeField = [documentType, <keyof DocumentTypeSetting>'hiddenDocumentType'].join('.')
+
+        const hideModifier: UpdateQuery<UserDocumentSettingsModel> = {
+            $addToSet: { [hiddenDocumentsField]: { $each: hideDocuments } },
+            $set: { [hiddenDocumentTypeField]: hideDocumentType },
+        }
+
+        await userDocumentSettingsModel.updateOne({ userIdentifier }, hideModifier, { upsert: true })
+
+        if (unhideDocuments.length > 0) {
+            const unhideModifier: UpdateQuery<UserDocumentSettingsModel> = {
+                $pull: { [hiddenDocumentsField]: { $in: unhideDocuments } },
+            }
+
+            await userDocumentSettingsModel.updateOne({ userIdentifier }, unhideModifier)
+        }
+    }
+
+    async setDocumentAsHidden(userIdentifier: string, documentType: string, documentId: string): Promise<void> {
+        const modifier: UpdateQuery<UserDocumentSettingsModel> = {
+            $push: { [`${documentType}.hiddenDocuments`]: documentId },
+        }
+
+        await userDocumentSettingsModel.updateOne({ userIdentifier }, modifier, { upsert: true })
+    }
+
+    async unhideDocumentByType(userIdentifier: string, documentType: string): Promise<void> {
+        const modifier: UpdateQuery<UserDocumentSettingsModel> = {
+            $set: { [`${documentType}.hiddenDocuments`]: [] },
+        }
+
+        await userDocumentSettingsModel.updateOne({ userIdentifier }, modifier)
+    }
+
+    async getDocumentVisibilitySettings(userIdentifier: string, documentType: string): Promise<DocumentVisibilitySettings> {
+        const settingsModel = await this.getDocumentSettingsByUserIdentifier(userIdentifier)
+        if (!settingsModel) {
+            return { hiddenDocuments: [], hiddenDocumentType: false }
+        }
+
+        const { hiddenDocuments = [], hiddenDocumentType = false } = <DocumentTypeSetting>(settingsModel[documentType] || {})
+
+        return { hiddenDocuments, hiddenDocumentType }
+    }
+
+    isDocumentHidden(visibilitySettings: DocumentVisibilitySettings, docId: string): boolean {
+        return visibilitySettings.hiddenDocumentType || visibilitySettings.hiddenDocuments.includes(docId)
+    }
+
+    private getDocumentOrderSettings(
+        defaultSortedDocumentTypes: string[],
+        documentSettings: UserDocumentSettingsModel | null,
+    ): DocumentOrderSettingsItem[] {
         return defaultSortedDocumentTypes
-            .map((documentType, defaultSortedOrder): [UserDocumentsOrderResponse, number] => {
-                const documentSetting = documentSettings?.[documentType]
+            .map((documentType, defaultSortedOrder): [DocumentOrderSettingsItem, number] => {
+                const documentSetting = <DocumentTypeSetting | undefined>documentSettings?.[documentType]
 
-                if (documentSetting && documentSetting?.documentTypeOrder !== this.defaultNotDefinedOrder) {
+                if (documentSetting) {
                     const { documentTypeOrder, documentIdentifiers = {} } = documentSetting
 
                     return [
@@ -158,70 +234,14 @@ export default class UserDocumentSettingsService {
                                 .sort(([, orderA], [, orderB]) => orderA - orderB)
                                 .map(([documentIdentifier]) => documentIdentifier),
                         },
-                        documentTypeOrder,
+                        documentTypeOrder === this.defaultNotDefinedOrder ? defaultSortedOrder : documentTypeOrder,
                     ]
                 }
 
-                return [{ documentType }, defaultSortedOrder]
+                return [{ documentType, documentIdentifiers: [] }, defaultSortedOrder]
             })
             .sort(([, a], [, b]) => a - b)
             .map(([userDocumentOrder]) => userDocumentOrder)
-    }
-
-    async getDocumentsTypeOrder(params: UserDocumentsOrderParams): Promise<DocumentTypeCamelCase[]> {
-        const { userIdentifier } = params
-        const defaultSortedDocumentTypes = this.getDefaultSortedDocumentTypes(params)
-        const documentSettings = await this.getDocumentSettingsByUserIdentifier(userIdentifier)
-        if (!documentSettings) {
-            return defaultSortedDocumentTypes.map((docType: DocumentType) => this.documentTypeToCamelCase[docType])
-        }
-
-        const ordered: DocumentTypeWithOrder[] = []
-        const unordered: Set<DocumentType> = new Set()
-
-        Object.values(DocumentType).forEach((documentType: DocumentType) => {
-            const { documentTypeOrder = this.defaultNotDefinedOrder } = documentSettings[documentType] || {}
-            if (documentTypeOrder === this.defaultNotDefinedOrder) {
-                unordered.add(documentType)
-            } else {
-                ordered.push({ order: documentTypeOrder, documentType })
-            }
-        })
-        defaultSortedDocumentTypes.forEach((documentType: DocumentType, indx: number) => {
-            if (unordered.has(documentType)) {
-                ordered.push({ order: this.unorderedDocumentsStartOrder + indx, documentType })
-            }
-        })
-
-        return ordered
-            .sort((a: DocumentTypeWithOrder, b: DocumentTypeWithOrder) => a.order - b.order)
-            .map(({ documentType }: DocumentTypeWithOrder) => this.documentTypeToCamelCase[documentType])
-    }
-
-    async setDocumentAsHidden(userIdentifier: string, documentType: DocumentType, documentId: string): Promise<void> {
-        const modifier: UpdateQuery<UserDocumentSettingsModel> = {
-            $push: { [`${documentType}.hiddenDocuments`]: documentId },
-        }
-
-        await userDocumentSettingsModel.updateOne({ userIdentifier }, modifier, { upsert: true })
-    }
-
-    async unhideDocumentByType(userIdentifier: string, documentType: DocumentType): Promise<void> {
-        const modifier: UpdateQuery<UserDocumentSettingsModel> = {
-            $set: { [`${documentType}.hiddenDocuments`]: [] },
-        }
-
-        await userDocumentSettingsModel.updateOne({ userIdentifier }, modifier)
-    }
-
-    async getHiddenDocuments(userIdentifier: string, documentType: DocumentType): Promise<string[]> {
-        const settings = await userDocumentSettingsModel.findOne({ userIdentifier })
-
-        if (!settings) {
-            return []
-        }
-
-        return settings[documentType]?.hiddenDocuments || []
     }
 
     private async getDocumentSettingsByUserIdentifier(userIdentifier: string): Promise<UserDocumentSettingsModel | null> {
@@ -232,11 +252,13 @@ export default class UserDocumentSettingsService {
         params: UserDocumentsOrderParams,
         documentsOrder: DocumentTypeWithOrder[],
     ): Promise<void | never> {
-        const documentTypeSet: Set<DocumentType> = new Set()
+        const documentTypeSet: Set<string> = new Set()
         const orderSet: Set<number> = new Set()
-        const allowedDocumentTypes = this.getDefaultSortedDocumentTypes(params, false)
+        const { userIdentifier, features = {} } = params
 
-        documentsOrder.forEach(({ documentType, order }: DocumentTypeWithOrder) => {
+        const allowedDocumentTypes = await this.getDefaultSortedDocumentTypes(userIdentifier, Object.keys(features), false)
+
+        for (const { documentType, order } of documentsOrder) {
             if (!allowedDocumentTypes.includes(documentType)) {
                 throw new BadRequestError('Document type is not supported', { documentType })
             }
@@ -255,14 +277,14 @@ export default class UserDocumentSettingsService {
 
             documentTypeSet.add(documentType)
             orderSet.add(order)
-        })
+        }
     }
 
     private validateDocumentsOrderByDocumentType(documentsOrder: SaveDocumentsOrderByDocumentTypeRequest[]): void | never {
         const docNumberSet: Set<string> = new Set()
         const orderSet: Set<number> = new Set()
 
-        documentsOrder.forEach(({ docNumber, order }: SaveDocumentsOrderByDocumentTypeRequest) => {
+        for (const { docNumber, order } of documentsOrder) {
             if (order <= 0 || !Number.isInteger(order)) {
                 throw new BadRequestError('Invalid order number', { order, docNumber })
             }
@@ -277,36 +299,56 @@ export default class UserDocumentSettingsService {
 
             docNumberSet.add(docNumber)
             orderSet.add(order)
-        })
+        }
     }
 
-    private generateDocumentTypeOrders(documentsOrder?: DocumentTypeWithOrder[]): Record<string, number> {
+    private async generateDocumentTypeOrders(documentsOrder?: DocumentTypeWithOrder[]): Promise<Record<string, number>> {
         const documentTypeOrders: Record<string, number> = {}
-        const providedDocumentTypes: Set<DocumentType> = new Set()
+        const providedDocumentTypes: Set<string> = new Set()
 
-        documentsOrder?.forEach(({ documentType, order }: DocumentTypeWithOrder) => {
+        for (const { documentType, order } of documentsOrder || []) {
             providedDocumentTypes.add(documentType)
             documentTypeOrders[`${documentType}.documentTypeOrder`] = order
-        })
+        }
 
-        this.sortedDocumentTypes.forEach((documentType: DocumentType) => {
+        const sortedDocumentTypes = await this.getSortedByDefaultDocumentTypesBySession(SessionType.User)
+
+        for (const documentType of sortedDocumentTypes) {
             if (!providedDocumentTypes.has(documentType)) {
                 documentTypeOrders[`${documentType}.documentTypeOrder`] = this.defaultNotDefinedOrder
             }
-        })
+        }
 
         return documentTypeOrders
     }
 
-    private getDefaultSortedDocumentTypes(params: UserDocumentsOrderParams, excludeFeatureSpecificDocs = true): DocumentType[] {
-        const sessionType = this.identifier.getSessionTypeFromIdentifier(params.userIdentifier)
+    private async getDefaultSortedDocumentTypes(
+        userIdentifier: string,
+        features: string[],
+        excludeFeatureSpecificDocs = true,
+        documentsDefaultOrder?: DocumentsDefaultOrder,
+    ): Promise<string[]> {
+        const sessionType = this.identifier.getSessionTypeFromIdentifier(userIdentifier)
+        const documentTypes = await this.getSortedByDefaultDocumentTypesBySession(sessionType, documentsDefaultOrder)
+        const hasOfficeFeature = features.includes(ProfileFeature.office)
 
-        let documentTypes = this.defaultSortedDocumentTypesBySessionType[sessionType] || []
-
-        if (excludeFeatureSpecificDocs && !params.features?.[ProfileFeature.office]) {
-            documentTypes = documentTypes.filter((item) => !this.officeOnlyDocumentTypes.includes(item))
+        if (excludeFeatureSpecificDocs && !hasOfficeFeature) {
+            return documentTypes.filter((item) => !this.officeOnlyDocumentTypes.includes(item))
         }
 
         return documentTypes
+    }
+
+    private async getSortedByDefaultDocumentTypesBySession(
+        sessionType: SessionType,
+        documentsDefaultOrder?: DocumentsDefaultOrder,
+    ): Promise<string[]> {
+        if (documentsDefaultOrder && !isEmpty(documentsDefaultOrder)) {
+            return documentsDefaultOrder[sessionType]?.items || []
+        }
+
+        const { sortedDocumentTypes } = await this.documentsService.getSortedByDefaultDocumentTypes()
+
+        return sortedDocumentTypes[sessionType].items || []
     }
 }

@@ -1,4 +1,4 @@
-import { UpdateQuery } from 'mongoose'
+import { UpdateQuery } from '@diia-inhouse/db'
 
 import { SubscriptionModel, SubscriptionSubType, SubscriptionType } from '@interfaces/models/subscription'
 import { SubscriptionCode, SubscriptionParams, SubscriptionStrategy } from '@interfaces/services/subscription'

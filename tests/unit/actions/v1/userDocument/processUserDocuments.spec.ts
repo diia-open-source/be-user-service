@@ -1,5 +1,4 @@
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocumentType } from '@diia-inhouse/types'
 
 import ProcessUserDocuments from '@actions/v1/userDocument/processUserDocuments'
 
@@ -10,19 +9,19 @@ describe(`Action ${ProcessUserDocuments.name}`, () => {
     const headers = testKit.session.getHeaders()
     const userActionAccessServiceMock = mockInstance(UserDocumentService)
 
-    const processUserDocuments = new ProcessUserDocuments(userActionAccessServiceMock)
+    const processUserDocuments = new ProcessUserDocuments(userActionAccessServiceMock, [])
 
     describe('method `handler`', () => {
         it('should return array of document types', async () => {
             const args = {
-                params: { userIdentifier: 'userIdentifier', documentTypes: [DocumentType.BirthCertificate] },
+                params: { userIdentifier: 'userIdentifier', documentTypes: ['birth-certificate'] },
                 session: testKit.session.getUserSession(),
                 headers,
             }
 
-            const mockDocumentTypeArray: [DocumentType, DocumentType][] = [
-                [DocumentType.DriverLicense, DocumentType.VehicleLicense],
-                [DocumentType.VehicleLicense, DocumentType.DriverLicense],
+            const mockDocumentTypeArray: [string, string][] = [
+                ['driver-license', 'vehicle-license'],
+                ['vehicle-license', 'driver-license'],
             ]
 
             jest.spyOn(userActionAccessServiceMock, 'processUserDocuments').mockResolvedValueOnce(mockDocumentTypeArray)

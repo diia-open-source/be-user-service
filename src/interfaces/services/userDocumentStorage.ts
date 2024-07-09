@@ -1,12 +1,10 @@
-import { DocumentType } from '@diia-inhouse/types'
-
 export type EncryptedDataByDocumentType = {
-    [key in DocumentType]?: string[]
+    [key in string]?: string[]
 }
 
 export type DecryptedDocument = Record<string, unknown> & { photo?: string; docPhoto?: string }
 
-export type DecryptedDocuments = Partial<Record<DocumentType, DecryptedDocument[]>>
+export type DecryptedDocuments = Record<string, DecryptedDocument[]>
 
 export enum VaccinationCertificateType {
     Vaccination = 'vaccination',
@@ -16,7 +14,7 @@ export enum VaccinationCertificateType {
 
 export interface StoredMedicalData {
     id: string
-    documentType: DocumentType
+    documentType: string
     documentIdentifier: string
     vaccinations: unknown[]
     tests: unknown[]
@@ -36,5 +34,5 @@ export interface AddDocumentOps {
 
 export interface GetDocumentsOps {
     mobileUid?: string
-    documentTypes?: DocumentType[]
+    documentTypes?: string[]
 }

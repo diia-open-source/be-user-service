@@ -1,5 +1,5 @@
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocumentType, Gender } from '@diia-inhouse/types'
+import { Gender } from '@diia-inhouse/types'
 
 import GetUserInfoForFiltersAction from '@actions/v1/userInfo/getUserInfoForFilters'
 
@@ -23,7 +23,7 @@ describe(`Action ${GetUserInfoForFiltersAction.name}`, () => {
             const userInfoFilters = {
                 age: 30,
                 gender: Gender.female,
-                documents: { [DocumentType.DriverLicense]: 1 },
+                documents: { 'driver-license': 1 },
             }
 
             jest.spyOn(userProfileServiceMock, 'getUserFilterInfo').mockResolvedValueOnce(userInfoFilters)

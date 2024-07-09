@@ -18,7 +18,7 @@ export default class RemoveFromStorageByHashDataAction implements AppAction {
 
     readonly validationRules: ValidationSchema = {
         userIdentifier: { type: 'string' },
-        documentType: { type: 'string', enum: this.userDocumentStorageService.storageDocumentTypes },
+        documentType: { type: 'string' },
         hashData: { type: 'string' },
     }
 

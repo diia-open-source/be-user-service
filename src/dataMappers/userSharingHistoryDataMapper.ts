@@ -1,6 +1,6 @@
 import moment from 'moment'
 
-import { ButtonState, CardMlc, DocumentType, TextLabelMlc } from '@diia-inhouse/types'
+import { ButtonState, CardMlc, TextLabelMlc } from '@diia-inhouse/types'
 import { utils } from '@diia-inhouse/utils'
 
 import UserHistoryDataMapper from '@dataMappers/userHistoryDataMapper'
@@ -11,12 +11,11 @@ import { HistoryItem, HistoryItemResponse, UserHistoryCode } from '@interfaces/s
 export default class UserSharingHistoryDataMapper {
     constructor(private readonly userHistoryDataMapper: UserHistoryDataMapper) {}
 
-    toEntity(model: UserSharingHistoryItemModel): HistoryItem {
+    toEntity(model: UserSharingHistoryItemModel, documentsNames: string[]): HistoryItem {
         const {
             sharingId,
             acquirer: { name: acquirerName, address },
             date,
-            documents,
             offer,
         } = model
 
@@ -24,7 +23,7 @@ export default class UserSharingHistoryDataMapper {
             id: sharingId,
             status: this.userHistoryDataMapper.getStatus(model),
             date: moment(date).format(this.userHistoryDataMapper.dateFormatV1),
-            documents: documents.map((docType: DocumentType) => this.userHistoryDataMapper.getDocumentName(docType)),
+            documents: documentsNames,
             recipient: { name: acquirerName, address },
             purpose: offer?.name,
         }
@@ -32,7 +31,6 @@ export default class UserSharingHistoryDataMapper {
 
     toHistoryItemEntity(model: UserSharingHistoryItemModel, action: UserHistoryCode): CardMlc {
         const { sharingId, acquirer, date } = model
-
         const status = this.userHistoryDataMapper.getStatus(model)
 
         return {
@@ -43,6 +41,7 @@ export default class UserSharingHistoryDataMapper {
                 type: this.userHistoryDataMapper.getHistoryStatusChipTypeByStatus(status),
             },
             title: acquirer.name,
+            subtitles: [],
             description: acquirer.address,
             botLabel: utils.formatDate(date, this.userHistoryDataMapper.dateFormat),
             btnPrimaryAdditionalAtm: {
@@ -55,12 +54,9 @@ export default class UserSharingHistoryDataMapper {
         }
     }
 
-    getHistoryItem(model: UserSharingHistoryItemModel, action: UserHistoryCode): HistoryItemResponse['body'] {
-        const { acquirer, date, documents, offer } = model
-
+    getHistoryItem(model: UserSharingHistoryItemModel, documentsNames: string[], action: UserHistoryCode): HistoryItemResponse['body'] {
+        const { acquirer, date, offer } = model
         const status = this.userHistoryDataMapper.getStatus(model)
-
-        const documentsNames = documents.map((docType: DocumentType) => this.userHistoryDataMapper.getDocumentName(docType))
 
         return [
             {

@@ -1,6 +1,6 @@
 import { AppAction } from '@diia-inhouse/diia-app'
 
-import { ActionVersion, DocumentType, SessionType } from '@diia-inhouse/types'
+import { ActionVersion, SessionType } from '@diia-inhouse/types'
 import { ValidationSchema } from '@diia-inhouse/validators'
 
 import UserDocumentService from '@services/userDocument'
@@ -31,8 +31,8 @@ export default class IsUkrainianCitizenAction implements AppAction {
         } = args
 
         const hasPassport: boolean = await this.userDocumentService.hasOneOfDocuments(userIdentifier, [
-            DocumentType.InternalPassport,
-            DocumentType.ForeignPassport,
+            'internal-passport',
+            'foreign-passport',
         ])
         if (hasPassport) {
             return true

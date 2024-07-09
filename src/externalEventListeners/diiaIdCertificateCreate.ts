@@ -1,4 +1,4 @@
-import { EventBusListener, ExternalEvent } from '@diia-inhouse/diia-queue'
+import { EventBusListener } from '@diia-inhouse/diia-queue'
 import { BadRequestError } from '@diia-inhouse/errors'
 import { ValidationSchema } from '@diia-inhouse/validators'
 
@@ -6,6 +6,7 @@ import DiiaIdService from '@services/diiaId'
 
 import { EventPayload } from '@interfaces/externalEventListeners/diiaIdCertificateCreate'
 import { SignAlgo } from '@interfaces/models/diiaId'
+import { ExternalEvent } from '@interfaces/queue'
 
 export default class DiiaIdCertificateCreateEventListener implements EventBusListener {
     constructor(private readonly diiaIdService: DiiaIdService) {}

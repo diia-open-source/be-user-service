@@ -1,9 +1,10 @@
-import { EventBusListener, ExternalEvent } from '@diia-inhouse/diia-queue'
+import { EventBusListener } from '@diia-inhouse/diia-queue'
 import { ValidationSchema } from '@diia-inhouse/validators'
 
 import UserProfileService from '@services/userProfile'
 
 import { EventPayload } from '@interfaces/externalEventListeners/officeIdentifierTokenFail'
+import { ExternalEvent } from '@interfaces/queue'
 
 export default class OfficeIdentifierTokenFailEventListener implements EventBusListener {
     constructor(private readonly userProfileService: UserProfileService) {}

@@ -1,7 +1,6 @@
-import { FilterQuery } from 'mongoose'
-
 import { IdentifierService } from '@diia-inhouse/crypto'
-import { DocStatus, DocumentType, OwnerType } from '@diia-inhouse/types'
+import { FilterQuery } from '@diia-inhouse/db'
+import { DocStatus, OwnerType } from '@diia-inhouse/types'
 
 import AddDocumentInProfileEventListener from '@src/eventListeners/addDocumentInProfile'
 
@@ -44,7 +43,7 @@ describe(`Event listener ${AddDocumentInProfileEventListener.name}`, () => {
 
         const msg: EventPayload = {
             userIdentifier,
-            documentType: DocumentType.DriverLicense,
+            documentType: 'driver-license',
             documentIdentifier,
             ownerType: OwnerType.owner,
             docId: '123',
@@ -83,7 +82,7 @@ describe(`Event listener ${AddDocumentInProfileEventListener.name}`, () => {
 
         const newUserDocument: UserDocument = {
             userIdentifier,
-            documentType: DocumentType.DriverLicense,
+            documentType: 'driver-license',
             documentIdentifier,
             ownerType: OwnerType.owner,
             notifications: {},
@@ -93,7 +92,7 @@ describe(`Event listener ${AddDocumentInProfileEventListener.name}`, () => {
 
         const msg: EventPayload = {
             userIdentifier,
-            documentType: DocumentType.DriverLicense,
+            documentType: 'driver-license',
             documentIdentifier,
             ownerType: OwnerType.properUser,
             docId: '123',

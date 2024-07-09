@@ -1,6 +1,6 @@
-import { ObjectId } from 'bson'
 import { v4 as uuid } from 'uuid'
 
+import { mongo } from '@diia-inhouse/db'
 import { AppUserActionHeaders, UserSession } from '@diia-inhouse/types'
 
 import AcquirersSigningStatusEventListener from '@src/eventListeners/acquirersSigningStatus'
@@ -23,7 +23,7 @@ export default class AcquirersSigningStatusEventMock {
             status,
             documents: [],
             acquirer: {
-                id: new ObjectId(),
+                id: new mongo.ObjectId(),
                 name: 'Integration test acquirer',
                 address: 'Integration test address',
             },

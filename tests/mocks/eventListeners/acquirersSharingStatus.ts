@@ -1,6 +1,6 @@
-import { ObjectId } from 'mongodb'
 import { v4 as uuid } from 'uuid'
 
+import { mongo } from '@diia-inhouse/db'
 import { AppUserActionHeaders, UserSession } from '@diia-inhouse/types'
 
 import AcquirersSharingStatusEventListener from '@src/eventListeners/acquirersSharingStatus'
@@ -23,7 +23,7 @@ export default class AcquirersSharingStatusEventMock {
             status,
             documents: [],
             acquirer: {
-                id: new ObjectId(),
+                id: new mongo.ObjectId(),
                 name: 'Integration test acquirer',
                 address: 'Integration test address',
             },

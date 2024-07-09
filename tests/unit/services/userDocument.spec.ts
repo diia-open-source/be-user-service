@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
 const userDocumentModelMock = {
     bulkWrite: jest.fn(),
@@ -26,12 +26,11 @@ const momentStubs = {
 jest.mock('@models/userDocument', () => userDocumentModelMock)
 jest.mock('moment', () => momentStubs.moment)
 
-import { BulkWriteResult } from 'mongodb'
-
 import { AnalyticsCategory } from '@diia-inhouse/analytics'
+import { mongo } from '@diia-inhouse/db'
 import Logger from '@diia-inhouse/diia-logger'
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocStatus, DocumentType, DurationMs, OwnerType, UserDocumentSubtype } from '@diia-inhouse/types'
+import { DocStatus, DurationMs, OwnerType } from '@diia-inhouse/types'
 
 import AnalyticsService from '@services/analytics'
 import DiiaIdService from '@services/diiaId'
@@ -39,7 +38,7 @@ import NotificationService from '@services/notification'
 import UserDocumentService from '@services/userDocument'
 
 import { AnalyticsActionType } from '@interfaces/services/analytics'
-import { UserProfileDocument } from '@interfaces/services/documents'
+import { UserDocumentSubtype, UserProfileDocument } from '@interfaces/services/documents'
 import { MessageTemplateCode, TemplateStub } from '@interfaces/services/notification'
 
 describe(`Service ${UserDocumentService.name}`, () => {
@@ -66,7 +65,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
             const { user } = session
             const { identifier: userIdentifier } = user
             const { mobileUid } = headers
-            const documentType = DocumentType.DriverLicense
+            const documentType = 'driver-license'
             const documentIdentifier = randomUUID()
             const ownerType = OwnerType.owner
             const docId = randomUUID()
@@ -105,7 +104,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
             const { mobileUid } = headers
             const { user } = session
             const { identifier: userIdentifier } = user
-            const documentType = DocumentType.MilitaryBond
+            const documentType = 'military-bond'
             const documentIdentifier = randomUUID()
             const ownerType = OwnerType.owner
             const docId = randomUUID()
@@ -127,7 +126,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
             const { mobileUid } = headers
             const { user } = session
             const { identifier: userIdentifier } = user
-            const documentType = DocumentType.InternationalVaccinationCertificate
+            const documentType = 'international-vaccination-certificate'
             const ownerType = OwnerType.owner
             const document1 = {
                 docId: randomUUID(),
@@ -186,7 +185,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
             const { mobileUid } = headers
             const { user } = session
             const { identifier: userIdentifier } = user
-            const documentType = DocumentType.InternationalVaccinationCertificate
+            const documentType = 'international-vaccination-certificate'
             const ownerType = OwnerType.owner
             const document1 = {
                 docId: randomUUID(),
@@ -223,12 +222,12 @@ describe(`Service ${UserDocumentService.name}`, () => {
             ])
         })
 
-        it(`should query stored ${DocumentType.InternationalVaccinationCertificate} documents by compoundDocument.documentIdentifier if passed documents has compoundDocument.documentIdentifier`, async () => {
+        it(`should query stored ${'international-vaccination-certificate'} documents by compoundDocument.documentIdentifier if passed documents has compoundDocument.documentIdentifier`, async () => {
             const { session, headers } = testKit.session.getUserActionArguments()
             const { mobileUid } = headers
             const { user } = session
             const { identifier: userIdentifier } = user
-            const documentType = DocumentType.InternationalVaccinationCertificate
+            const documentType = 'international-vaccination-certificate'
             const ownerType = OwnerType.owner
             const document1: UserProfileDocument = {
                 docId: randomUUID(),
@@ -266,12 +265,12 @@ describe(`Service ${UserDocumentService.name}`, () => {
             })
         })
 
-        it(`should query stored ${DocumentType.InternationalVaccinationCertificate} documents if passed documents has no compoundDocument.documentIdentifier`, async () => {
+        it(`should query stored ${'international-vaccination-certificate'} documents if passed documents has no compoundDocument.documentIdentifier`, async () => {
             const { session, headers } = testKit.session.getUserActionArguments()
             const { mobileUid } = headers
             const { user } = session
             const { identifier: userIdentifier } = user
-            const documentType = DocumentType.InternationalVaccinationCertificate
+            const documentType = 'international-vaccination-certificate'
             const ownerType = OwnerType.owner
             const document1: UserProfileDocument = {
                 docId: randomUUID(),
@@ -311,7 +310,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
             const { identifier: userIdentifier } = user
             const { mobileUid } = headers
 
-            const documentType = DocumentType.VehicleLicense
+            const documentType = 'vehicle-license'
             const initialDocument: UserProfileDocument = {
                 docId: randomUUID(),
                 docStatus: DocStatus.Ok,
@@ -372,7 +371,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
             const { mobileUid } = headers
             const { user } = session
             const { identifier: userIdentifier } = user
-            const documentType = DocumentType.InternationalVaccinationCertificate
+            const documentType = 'international-vaccination-certificate'
 
             const userDocumentsFindSpy = userDocumentModelMock.find.mockResolvedValueOnce([])
             const userDocumentsBulkWriteSpy = userDocumentModelMock.bulkWrite.mockResolvedValueOnce({})
@@ -390,7 +389,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
         const {
             user: { identifier: userIdentifier },
         } = testKit.session.getUserSession()
-        const documentType = DocumentType.BirthCertificate
+        const documentType = 'birth-certificate'
         const documents = [
             {
                 documentIdentifier: randomUUID(),
@@ -419,7 +418,8 @@ describe(`Service ${UserDocumentService.name}`, () => {
                 },
             ],
         ])('should successfully fetch and return user documents when activeOnly = %s', async (activeOnly, expectedQuery) => {
-            userDocumentModelMock.find.mockResolvedValueOnce(documents)
+            userDocumentModelMock.find.mockReturnThis()
+            userDocumentModelMock.lean.mockResolvedValueOnce(documents)
 
             expect(await userDocumentService.getUserDocuments({ userIdentifier, documentType, mobileUid, activeOnly })).toEqual(documents)
 
@@ -432,7 +432,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
             const {
                 user: { identifier: userIdentifier },
             } = testKit.session.getUserSession()
-            const documentType = DocumentType.BirthCertificate
+            const documentType = 'birth-certificate'
             const documents = [
                 {
                     documentIdentifier: randomUUID(),
@@ -457,7 +457,8 @@ describe(`Service ${UserDocumentService.name}`, () => {
                 },
             ]
 
-            userDocumentModelMock.find.mockResolvedValueOnce(documents)
+            userDocumentModelMock.find.mockReturnThis()
+            userDocumentModelMock.lean.mockResolvedValueOnce(documents)
 
             expect(await userDocumentService.getDocumentsByFilters(filters)).toEqual(documents)
 
@@ -487,7 +488,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
             const {
                 user: { identifier: userIdentifier },
             } = testKit.session.getUserSession()
-            const documentType = DocumentType.BirthCertificate
+            const documentType = 'birth-certificate'
             const documents = [
                 {
                     documentIdentifier: randomUUID(),
@@ -524,7 +525,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
             const docId = randomUUID()
             const docStatus = DocStatus.Ok
             const documentIdentifier = randomUUID()
-            const documentType = DocumentType.InternationalVaccinationCertificate
+            const documentType = 'international-vaccination-certificate'
             const ownerType = OwnerType.owner
             const headers = testKit.session.getHeaders()
             const {
@@ -571,17 +572,17 @@ describe(`Service ${UserDocumentService.name}`, () => {
             } = testKit.session.getUserSession()
             const documensToVerify = [
                 {
-                    documentType: DocumentType.BirthCertificate,
+                    documentType: 'birth-certificate',
                     documentIdentifer: 'birth-certificate-identifier',
                 },
                 {
-                    documentType: DocumentType.DriverLicense,
+                    documentType: 'driver-license',
                     documentIdentifer: 'driver-license-identifier',
                 },
             ]
             const documents = [
                 {
-                    documentType: DocumentType.BirthCertificate,
+                    documentType: 'birth-certificate',
                     documentIdentifier: 'birth-certificate-identifier',
                     ownerType: OwnerType.owner,
                 },
@@ -591,12 +592,12 @@ describe(`Service ${UserDocumentService.name}`, () => {
 
             expect(await userDocumentService.verifyUserDocuments(userIdentifier, documensToVerify)).toEqual([
                 {
-                    documentType: DocumentType.BirthCertificate,
+                    documentType: 'birth-certificate',
                     documentIdentifer: 'birth-certificate-identifier',
                     isOwner: true,
                 },
                 {
-                    documentType: DocumentType.DriverLicense,
+                    documentType: 'driver-license',
                     documentIdentifer: 'driver-license-identifier',
                     isOwner: false,
                 },
@@ -606,11 +607,11 @@ describe(`Service ${UserDocumentService.name}`, () => {
                 userIdentifier,
                 $or: [
                     {
-                        documentType: DocumentType.BirthCertificate,
+                        documentType: 'birth-certificate',
                         docStatus: { $nin: [DocStatus.Confirming, DocStatus.NotConfirmed, DocStatus.NotFound] },
                     },
                     {
-                        documentType: DocumentType.DriverLicense,
+                        documentType: 'driver-license',
                         docStatus: { $nin: [DocStatus.Confirming, DocStatus.NotConfirmed, DocStatus.NotFound] },
                     },
                 ],
@@ -620,7 +621,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
 
     describe(`method ${userDocumentService.getDocumentIdentifiers.name}`, () => {
         it('should successfully fetch and return documents identifiers', async () => {
-            const documentType = DocumentType.BirthCertificate
+            const documentType = 'birth-certificate'
             const {
                 user: { identifier: userIdentifier },
             } = testKit.session.getUserSession()
@@ -647,7 +648,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
 
     describe(`method ${userDocumentService.validateUserDocument.name}`, () => {
         it('should successfully validate user document', async () => {
-            const documentType = DocumentType.BirthCertificate
+            const documentType = 'birth-certificate'
             const documentIdentifier = 'birth-certificate-identifier'
             const {
                 user: { identifier: userIdentifier },
@@ -673,7 +674,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
     })
 
     describe(`method ${userDocumentService.identifyPenaltyOwner.name}`, () => {
-        const documentType = DocumentType.VehicleLicense
+        const documentType = 'vehicle-license'
         const vehicleLicenseIdentifier = randomUUID()
         const penaltyFixingDate = new Date()
         const expectedQuery = {
@@ -763,7 +764,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
             const {
                 user: { identifier: userIdentifier },
             } = testKit.session.getUserSession()
-            const expectedDocumentTypes = [DocumentType.InternalPassport, DocumentType.VehicleLicense, DocumentType.DriverLicense]
+            const expectedDocumentTypes = ['internal-passport', 'vehicle-license', 'driver-license']
 
             userDocumentModelMock.aggregate.mockResolvedValueOnce([{ documentTypes: expectedDocumentTypes }])
             userDocumentModelMock.aggregate.mockResolvedValueOnce([])
@@ -808,17 +809,17 @@ describe(`Service ${UserDocumentService.name}`, () => {
             } = testKit.session.getUserSession()
 
             userDocumentModelMock.aggregate.mockResolvedValueOnce([
-                { _id: DocumentType.InternalPassport, count: 1 },
-                { _id: DocumentType.BirthCertificate, count: 1 },
-                { _id: DocumentType.VehicleLicense, count: 2 },
-                { _id: DocumentType.DriverLicense, count: 1 },
+                { _id: 'internal-passport', count: 1 },
+                { _id: 'birth-certificate', count: 1 },
+                { _id: 'vehicle-license', count: 2 },
+                { _id: 'driver-license', count: 1 },
             ])
 
             expect(await userDocumentService.getUserDocumentTypesCounts(userIdentifier)).toEqual({
-                [DocumentType.InternalPassport]: 1,
-                [DocumentType.BirthCertificate]: 1,
-                [DocumentType.VehicleLicense]: 2,
-                [DocumentType.DriverLicense]: 1,
+                'internal-passport': 1,
+                'birth-certificate': 1,
+                'vehicle-license': 2,
+                'driver-license': 1,
             })
 
             expect(userDocumentModelMock.aggregate).toHaveBeenCalledWith([
@@ -847,37 +848,37 @@ describe(`Service ${UserDocumentService.name}`, () => {
         const {
             user: { identifier: userIdentifier },
         } = testKit.session.getUserSession()
-        const availableDocuments = [DocumentType.BirthCertificate, DocumentType.InternalPassport]
+        const availableDocuments = ['birth-certificate', 'internal-passport']
 
         it.each([
             [
                 true,
-                [[DocumentType.BirthCertificate], [DocumentType.InternalPassport]],
+                [['birth-certificate'], ['internal-passport']],
                 {
                     $or: [
                         {
                             docStatus: { $nin: [DocStatus.Confirming, DocStatus.NotConfirmed, DocStatus.NotFound] },
-                            documentType: DocumentType.BirthCertificate,
+                            documentType: 'birth-certificate',
                         },
                         {
                             docStatus: { $nin: [DocStatus.Confirming, DocStatus.NotConfirmed, DocStatus.NotFound] },
-                            documentType: DocumentType.InternalPassport,
+                            documentType: 'internal-passport',
                         },
                     ],
                 },
             ],
             [
                 false,
-                [[DocumentType.DriverLicense], [DocumentType.PensionCard]],
+                [['driver-license'], ['pension-card']],
                 {
                     $or: [
                         {
                             docStatus: { $nin: [DocStatus.Confirming, DocStatus.NotConfirmed, DocStatus.NotFound] },
-                            documentType: DocumentType.DriverLicense,
+                            documentType: 'driver-license',
                         },
                         {
                             docStatus: { $nin: [DocStatus.Confirming, DocStatus.NotConfirmed, DocStatus.NotFound] },
-                            documentType: DocumentType.PensionCard,
+                            documentType: 'pension-card',
                         },
                     ],
                 },
@@ -896,13 +897,13 @@ describe(`Service ${UserDocumentService.name}`, () => {
             user: { identifier: userIdentifier },
         } = testKit.session.getUserSession()
         const userDocuments = [
-            { documentType: DocumentType.InternalPassport, ownerType: OwnerType.owner, docStatus: DocStatus.Ok },
-            { documentType: DocumentType.DriverLicense, ownerType: OwnerType.owner, docStatus: DocStatus.Ok },
+            { documentType: 'internal-passport', ownerType: OwnerType.owner, docStatus: DocStatus.Ok },
+            { documentType: 'driver-license', ownerType: OwnerType.owner, docStatus: DocStatus.Ok },
         ]
 
         it.each([
             [
-                { hasDocuments: true, missingDocuments: [DocumentType.VehicleLicense] },
+                { hasDocuments: true, missingDocuments: ['vehicle-license'] },
                 [
                     {
                         $match: {
@@ -910,15 +911,15 @@ describe(`Service ${UserDocumentService.name}`, () => {
                             $or: [
                                 {
                                     docStatus: { $nin: [DocStatus.Confirming, DocStatus.NotConfirmed, DocStatus.NotFound] },
-                                    documentType: DocumentType.InternalPassport,
+                                    documentType: 'internal-passport',
                                 },
                                 {
                                     docStatus: { $nin: [DocStatus.Confirming, DocStatus.NotConfirmed, DocStatus.NotFound] },
-                                    documentType: DocumentType.VehicleLicense,
+                                    documentType: 'vehicle-license',
                                 },
                                 {
                                     docStatus: { $nin: [DocStatus.Confirming, DocStatus.NotConfirmed, DocStatus.NotFound] },
-                                    documentType: DocumentType.DriverLicense,
+                                    documentType: 'driver-license',
                                 },
                             ],
                         },
@@ -927,15 +928,15 @@ describe(`Service ${UserDocumentService.name}`, () => {
                     { $project: { documentType: '$_id.documentType', ownerType: '$_id.ownerType', docStatus: '$_id.docStatus', _id: 0 } },
                 ],
                 [
-                    [{ documentType: DocumentType.InternalPassport, ownerType: OwnerType.owner, docStatus: [DocStatus.Ok] }],
+                    [{ documentType: 'internal-passport', ownerType: OwnerType.owner, docStatus: [DocStatus.Ok] }],
                     [
-                        { documentType: DocumentType.VehicleLicense, ownerType: OwnerType.owner, docStatus: [DocStatus.Ok] },
-                        { documentType: DocumentType.DriverLicense, ownerType: OwnerType.owner, docStatus: [DocStatus.Ok] },
+                        { documentType: 'vehicle-license', ownerType: OwnerType.owner, docStatus: [DocStatus.Ok] },
+                        { documentType: 'driver-license', ownerType: OwnerType.owner, docStatus: [DocStatus.Ok] },
                     ],
                 ],
             ],
             [
-                { hasDocuments: false, missingDocuments: [DocumentType.VehicleLicense] },
+                { hasDocuments: false, missingDocuments: ['vehicle-license'] },
                 [
                     {
                         $match: {
@@ -943,15 +944,15 @@ describe(`Service ${UserDocumentService.name}`, () => {
                             $or: [
                                 {
                                     docStatus: { $nin: [DocStatus.Confirming, DocStatus.NotConfirmed, DocStatus.NotFound] },
-                                    documentType: DocumentType.InternalPassport,
+                                    documentType: 'internal-passport',
                                 },
                                 {
                                     docStatus: { $nin: [DocStatus.Confirming, DocStatus.NotConfirmed, DocStatus.NotFound] },
-                                    documentType: DocumentType.DriverLicense,
+                                    documentType: 'driver-license',
                                 },
                                 {
                                     docStatus: { $nin: [DocStatus.Confirming, DocStatus.NotConfirmed, DocStatus.NotFound] },
-                                    documentType: DocumentType.VehicleLicense,
+                                    documentType: 'vehicle-license',
                                 },
                             ],
                         },
@@ -961,10 +962,10 @@ describe(`Service ${UserDocumentService.name}`, () => {
                 ],
                 [
                     [
-                        { documentType: DocumentType.InternalPassport, ownerType: OwnerType.owner, docStatus: [DocStatus.Ok] },
-                        { documentType: DocumentType.DriverLicense, ownerType: OwnerType.owner, docStatus: [DocStatus.Ok] },
+                        { documentType: 'internal-passport', ownerType: OwnerType.owner, docStatus: [DocStatus.Ok] },
+                        { documentType: 'driver-license', ownerType: OwnerType.owner, docStatus: [DocStatus.Ok] },
                     ],
-                    [{ documentType: DocumentType.VehicleLicense, ownerType: OwnerType.owner, docStatus: [DocStatus.Ok] }],
+                    [{ documentType: 'vehicle-license', ownerType: OwnerType.owner, docStatus: [DocStatus.Ok] }],
                 ],
             ],
         ])(
@@ -988,13 +989,13 @@ describe(`Service ${UserDocumentService.name}`, () => {
             [
                 true,
                 1,
-                [DocumentType.InternalPassport],
+                ['internal-passport'],
                 {
                     userIdentifier,
                     $or: [
                         {
                             docStatus: { $nin: [DocStatus.Confirming, DocStatus.NotConfirmed, DocStatus.NotFound] },
-                            documentType: DocumentType.InternalPassport,
+                            documentType: 'internal-passport',
                         },
                     ],
                 },
@@ -1002,13 +1003,13 @@ describe(`Service ${UserDocumentService.name}`, () => {
             [
                 false,
                 0,
-                [DocumentType.VehicleLicense],
+                ['vehicle-license'],
                 {
                     userIdentifier,
                     $or: [
                         {
                             docStatus: { $nin: [DocStatus.Confirming, DocStatus.NotConfirmed, DocStatus.NotFound] },
-                            documentType: DocumentType.VehicleLicense,
+                            documentType: 'vehicle-license',
                         },
                     ],
                 },
@@ -1062,7 +1063,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
         const {
             user: { identifier: userIdentifier },
         } = testKit.session.getUserSession()
-        const documentType = DocumentType.LocalVaccinationCertificate
+        const documentType = 'local-vaccination-certificate'
         const documentId = randomUUID()
         const headers = testKit.session.getHeaders()
 
@@ -1095,11 +1096,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
                 AnalyticsActionType.RemoveDocument,
                 headers,
             )
-            expect(diiaIdService.softDeleteDiiaIdByIdentityDocument).toHaveBeenLastCalledWith(
-                userIdentifier,
-                headers.mobileUid,
-                documentType,
-            )
+            expect(diiaIdService.softDeleteDiiaIdByIdentityDocument).toHaveBeenLastCalledWith(userIdentifier, mobileUid, documentType)
         })
 
         it('should just log and do nothing in case there is no stored user document', async () => {
@@ -1132,7 +1129,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
                     _id: randomUUID(),
                     userIdentifier,
                     mobileUid,
-                    compoundDocument: { documentIdentifier: randomUUID(), documentType: DocumentType.InternationalVaccinationCertificate },
+                    compoundDocument: { documentIdentifier: randomUUID(), documentType: 'international-vaccination-certificate' },
                 },
                 {
                     _id: randomUUID(),
@@ -1156,7 +1153,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
             expect(momentStubs.toDate).toHaveBeenCalledWith()
             expect(userDocumentModelMock.find).toHaveBeenCalledWith({
                 docStatus: { $nin: [DocStatus.Confirming, DocStatus.NotConfirmed, DocStatus.NotFound] },
-                documentType: DocumentType.InternationalVaccinationCertificate,
+                documentType: 'international-vaccination-certificate',
                 expirationDate: {
                     $gt: now,
                     $lte: now,
@@ -1222,7 +1219,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
             expect(momentStubs.toDate).toHaveBeenCalledWith()
             expect(userDocumentModelMock.find).toHaveBeenCalledWith({
                 docStatus: { $nin: [DocStatus.Confirming, DocStatus.NotConfirmed, DocStatus.NotFound] },
-                documentType: DocumentType.DriverLicense,
+                documentType: 'driver-license',
                 documentSubType: UserDocumentSubtype.IssuedFirst,
                 expirationDate: {
                     $gte: now,
@@ -1232,7 +1229,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
             })
             expect(userDocumentModelMock.find).toHaveBeenCalledWith({
                 docStatus: { $nin: [DocStatus.Confirming, DocStatus.NotConfirmed, DocStatus.NotFound] },
-                documentType: DocumentType.DriverLicense,
+                documentType: 'driver-license',
                 documentSubType: UserDocumentSubtype.IssuedFirst,
                 expirationDate: {
                     $gte: now,
@@ -1324,7 +1321,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
             expect(momentStubs.toDate).toHaveBeenCalledWith()
             expect(userDocumentModelMock.find).toHaveBeenCalledWith({
                 docStatus: { $nin: [DocStatus.Confirming, DocStatus.NotConfirmed, DocStatus.NotFound] },
-                documentType: DocumentType.VehicleLicense,
+                documentType: 'vehicle-license',
                 ownerType: OwnerType.properUser,
                 expirationDate: {
                     $gte: now,
@@ -1334,7 +1331,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
             })
             expect(userDocumentModelMock.find).toHaveBeenCalledWith({
                 docStatus: { $nin: [DocStatus.Confirming, DocStatus.NotConfirmed, DocStatus.NotFound] },
-                documentType: DocumentType.VehicleLicense,
+                documentType: 'vehicle-license',
                 ownerType: OwnerType.properUser,
                 expirationDate: {
                     $gte: now,
@@ -1411,15 +1408,15 @@ describe(`Service ${UserDocumentService.name}`, () => {
         } = testKit.session.getUserSession()
 
         it('should successfully process user documents', async () => {
-            const documentsToProcess = [DocumentType.InternalPassport, DocumentType.ForeignPassport]
+            const documentsToProcess = ['internal-passport', 'foreign-passport']
             const userDocuments = [
                 {
                     documentIdentifier: randomUUID(),
-                    documentType: DocumentType.InternalPassport,
+                    documentType: 'internal-passport',
                     ownerType: OwnerType.owner,
                     userIdentifier,
                     comparedTo: {
-                        documentType: DocumentType.ForeignPassport,
+                        documentType: 'foreign-passport',
                         fullNameHash: 'full-name-hash-other',
                     },
                     docId: randomUUID(),
@@ -1428,11 +1425,11 @@ describe(`Service ${UserDocumentService.name}`, () => {
                 },
                 {
                     documentIdentifier: randomUUID(),
-                    documentType: DocumentType.DriverLicense,
+                    documentType: 'driver-license',
                     ownerType: OwnerType.owner,
                     userIdentifier,
                     comparedTo: {
-                        documentType: DocumentType.InternalPassport,
+                        documentType: 'internal-passport',
                         fullNameHash: 'full-name-hash-other',
                     },
                     docId: randomUUID(),
@@ -1444,10 +1441,10 @@ describe(`Service ${UserDocumentService.name}`, () => {
             userDocumentModelMock.find.mockReturnValueOnce({ sort: userDocumentModelMock.sort })
             userDocumentModelMock.sort.mockResolvedValueOnce(userDocuments)
             jest.spyOn(notificationService, 'createNotificationWithPushesSafe').mockResolvedValueOnce()
-            userDocumentModelMock.bulkWrite.mockResolvedValueOnce(<BulkWriteResult>{})
+            userDocumentModelMock.bulkWrite.mockResolvedValueOnce(<mongo.BulkWriteResult>{})
 
             expect(await userDocumentService.processUserDocuments(userIdentifier, documentsToProcess)).toEqual([
-                [DocumentType.DriverLicense, DocumentType.InternalPassport],
+                ['driver-license', 'internal-passport'],
             ])
 
             expect(userDocumentModelMock.find).toHaveBeenCalledWith({
@@ -1455,15 +1452,15 @@ describe(`Service ${UserDocumentService.name}`, () => {
                 $or: [
                     {
                         docStatus: { $nin: [DocStatus.Confirming, DocStatus.NotConfirmed, DocStatus.NotFound] },
-                        documentType: DocumentType.DriverLicense,
+                        documentType: 'driver-license',
                     },
                     {
                         docStatus: { $nin: [DocStatus.Confirming, DocStatus.NotConfirmed, DocStatus.NotFound] },
-                        documentType: DocumentType.InternalPassport,
+                        documentType: 'internal-passport',
                     },
                     {
                         docStatus: { $nin: [DocStatus.Confirming, DocStatus.NotConfirmed, DocStatus.NotFound] },
-                        documentType: DocumentType.ForeignPassport,
+                        documentType: 'foreign-passport',
                     },
                 ],
             })
@@ -1492,10 +1489,10 @@ describe(`Service ${UserDocumentService.name}`, () => {
         })
 
         it.each([
-            ['there are no processable document types', [DocumentType.BirthCertificate], [], (): void => {}],
+            ['there are no processable document types', ['birth-certificate'], [], (): void => {}],
             [
                 'there are no such doc with type to compare',
-                [DocumentType.InternalPassport, DocumentType.ForeignPassport],
+                ['internal-passport', 'foreign-passport'],
                 [],
                 (): void => {
                     userDocumentModelMock.find.mockReturnValueOnce({ sort: userDocumentModelMock.sort })
@@ -1504,20 +1501,20 @@ describe(`Service ${UserDocumentService.name}`, () => {
             ],
             [
                 'document to compare has no full name hash',
-                [DocumentType.InternalPassport, DocumentType.ForeignPassport],
-                [[DocumentType.DriverLicense, DocumentType.InternalPassport]],
+                ['internal-passport', 'foreign-passport'],
+                [['driver-license', 'internal-passport']],
                 (): void => {
                     userDocumentModelMock.find.mockReturnValueOnce({ sort: userDocumentModelMock.sort })
                     userDocumentModelMock.sort.mockResolvedValueOnce([
                         {
                             documentIdentifier: randomUUID(),
-                            documentType: DocumentType.InternalPassport,
+                            documentType: 'internal-passport',
                             ownerType: OwnerType.owner,
                             userIdentifier,
                         },
                         {
                             documentIdentifier: randomUUID(),
-                            documentType: DocumentType.DriverLicense,
+                            documentType: 'driver-license',
                             ownerType: OwnerType.owner,
                             userIdentifier,
                         },
@@ -1526,21 +1523,21 @@ describe(`Service ${UserDocumentService.name}`, () => {
             ],
             [
                 'source document to compare has no full name hash',
-                [DocumentType.InternalPassport, DocumentType.ForeignPassport],
-                [[DocumentType.DriverLicense, DocumentType.InternalPassport]],
+                ['internal-passport', 'foreign-passport'],
+                [['driver-license', 'internal-passport']],
                 (): void => {
                     userDocumentModelMock.find.mockReturnValueOnce({ sort: userDocumentModelMock.sort })
                     userDocumentModelMock.sort.mockResolvedValueOnce([
                         {
                             documentIdentifier: randomUUID(),
-                            documentType: DocumentType.InternalPassport,
+                            documentType: 'internal-passport',
                             ownerType: OwnerType.owner,
                             userIdentifier,
                             fullNameHash: 'full-name-hash',
                         },
                         {
                             documentIdentifier: randomUUID(),
-                            documentType: DocumentType.DriverLicense,
+                            documentType: 'driver-license',
                             ownerType: OwnerType.owner,
                             userIdentifier,
                         },

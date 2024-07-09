@@ -1,6 +1,6 @@
 import { AppAction } from '@diia-inhouse/diia-app'
 
-import { ActionVersion, DocumentType, SessionType } from '@diia-inhouse/types'
+import { ActionVersion, SessionType } from '@diia-inhouse/types'
 import { ValidationSchema } from '@diia-inhouse/validators'
 
 import UserDocumentStorageService from '@services/userDocumentStorage'
@@ -8,7 +8,17 @@ import UserDocumentStorageService from '@services/userDocumentStorage'
 import { ActionResult, CustomActionArguments } from '@interfaces/actions/v1/userDocument/hasStorageDocument'
 
 export default class HasStorageDocumentAction implements AppAction {
-    constructor(private readonly userDocumentStorageService: UserDocumentStorageService) {}
+    constructor(
+        private readonly userDocumentStorageService: UserDocumentStorageService,
+        private readonly documentTypes: string[],
+    ) {
+        this.validationRules = {
+            userIdentifier: { type: 'string' },
+            mobileUid: { type: 'string' },
+            documentType: { type: 'string', enum: this.documentTypes },
+            id: { type: 'string' },
+        }
+    }
 
     readonly sessionType: SessionType = SessionType.None
 
@@ -16,12 +26,7 @@ export default class HasStorageDocumentAction implements AppAction {
 
     readonly name: string = 'hasStorageDocument'
 
-    readonly validationRules: ValidationSchema = {
-        userIdentifier: { type: 'string' },
-        mobileUid: { type: 'string' },
-        documentType: { type: 'string', enum: Object.values(DocumentType) },
-        id: { type: 'string' },
-    }
+    readonly validationRules: ValidationSchema
 
     async handler(args: CustomActionArguments): Promise<ActionResult> {
         const {

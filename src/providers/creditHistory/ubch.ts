@@ -1,4 +1,4 @@
-import { ExternalCommunicator, ExternalEvent } from '@diia-inhouse/diia-queue'
+import { ExternalCommunicator } from '@diia-inhouse/diia-queue'
 import { ServiceUnavailableError } from '@diia-inhouse/errors'
 import { HttpStatusCode, Logger } from '@diia-inhouse/types'
 
@@ -13,6 +13,7 @@ import {
     UbchResponseData,
     UnsubscribeRequestData,
 } from '@interfaces/providers/creditHistory/ubch'
+import { ExternalEvent } from '@interfaces/queue'
 
 export default class UbchProvider implements CreditHistoryProvider {
     private readonly sessid: string

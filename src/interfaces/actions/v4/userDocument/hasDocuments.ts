@@ -1,4 +1,4 @@
-import { DocumentType, ServiceActionArguments } from '@diia-inhouse/types'
+import { ServiceActionArguments } from '@diia-inhouse/types'
 
 import { DocumentFilter } from '@interfaces/services/userDocument'
 
@@ -11,5 +11,5 @@ export interface CustomActionArguments extends ServiceActionArguments {
 
 export type ActionResult = {
     hasDocuments: boolean
-    missingDocumnets: DocumentType[]
+    missingDocumnets: string[]
 }

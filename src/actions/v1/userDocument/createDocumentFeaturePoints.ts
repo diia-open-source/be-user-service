@@ -1,6 +1,6 @@
 import { AppAction } from '@diia-inhouse/diia-app'
 
-import { ActionVersion, DocumentType, SessionType } from '@diia-inhouse/types'
+import { ActionVersion, SessionType } from '@diia-inhouse/types'
 import { ValidationSchema } from '@diia-inhouse/validators'
 
 import DocumentFeaturePointsService from '@services/documentFeaturePoints'
@@ -8,7 +8,17 @@ import DocumentFeaturePointsService from '@services/documentFeaturePoints'
 import { ActionResult, CustomActionArguments } from '@interfaces/actions/v1/userDocument/createDocumentFeaturePoints'
 
 export default class CreateDocumentFeaturePoints implements AppAction {
-    constructor(private readonly documentFeaturePointsService: DocumentFeaturePointsService) {}
+    constructor(
+        private readonly documentFeaturePointsService: DocumentFeaturePointsService,
+        private readonly documentTypes: string[],
+    ) {
+        this.validationRules = {
+            userIdentifier: { type: 'string', optional: true },
+            documentType: { type: 'string', enum: this.documentTypes },
+            documentIdentifier: { type: 'string' },
+            photo: { type: 'string' },
+        }
+    }
 
     readonly sessionType: SessionType = SessionType.None
 
@@ -16,12 +26,7 @@ export default class CreateDocumentFeaturePoints implements AppAction {
 
     readonly name: string = 'createDocumentFeaturePoints'
 
-    readonly validationRules: ValidationSchema<CustomActionArguments['params']> = {
-        userIdentifier: { type: 'string', optional: true },
-        documentType: { type: 'string', enum: Object.values(DocumentType) },
-        documentIdentifier: { type: 'string' },
-        photo: { type: 'string' },
-    }
+    readonly validationRules: ValidationSchema<CustomActionArguments['params']>
 
     async handler(args: CustomActionArguments): Promise<ActionResult> {
         const { userIdentifier, documentType, documentIdentifier, photo } = args.params

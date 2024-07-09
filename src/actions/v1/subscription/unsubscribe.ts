@@ -1,6 +1,6 @@
 import { AppAction } from '@diia-inhouse/diia-app'
 
-import { ActionVersion, DocumentType, SessionType } from '@diia-inhouse/types'
+import { ActionVersion, SessionType } from '@diia-inhouse/types'
 import { ValidationSchema } from '@diia-inhouse/validators'
 
 import SubscriptionService from '@services/subscription'
@@ -9,7 +9,16 @@ import { ActionResult, CustomActionArguments } from '@interfaces/actions/v1/subs
 import { SubscriptionType } from '@interfaces/models/subscription'
 
 export default class UnsubscribeAction implements AppAction {
-    constructor(private readonly subscriptionService: SubscriptionService) {}
+    constructor(
+        private readonly subscriptionService: SubscriptionService,
+        private readonly documentTypes: string[],
+    ) {
+        this.validationRules = {
+            subscriptionType: { type: 'string', enum: Object.values(SubscriptionType) },
+            documentType: { type: 'string', enum: this.documentTypes },
+            documentSubscriptionId: { type: 'string' },
+        }
+    }
 
     readonly sessionType: SessionType = SessionType.User
 
@@ -17,11 +26,7 @@ export default class UnsubscribeAction implements AppAction {
 
     readonly name: string = 'unsubscribe'
 
-    readonly validationRules: ValidationSchema = {
-        subscriptionType: { type: 'string', enum: Object.values(SubscriptionType) },
-        documentType: { type: 'string', enum: Object.values(DocumentType) },
-        documentSubscriptionId: { type: 'string' },
-    }
+    readonly validationRules: ValidationSchema
 
     async handler(args: CustomActionArguments): Promise<ActionResult> {
         const {

@@ -1,15 +1,12 @@
-import { Model, Schema, model, models } from 'mongoose'
-
-import { Gender, ProfileFeature } from '@diia-inhouse/types'
+import { Model, Schema, model, models } from '@diia-inhouse/db'
+import { DiiaOfficeStatus, Gender, ProfileFeature } from '@diia-inhouse/types'
 
 import {
     CitizenshipSource,
     DiiaOfficeProfile,
-    DiiaOfficeStatus,
     UserProfile,
     UserProfileCitizenship,
     UserProfileFeatures,
-    UserProfileSettings,
 } from '@interfaces/models/userProfile'
 
 const citizenshipSchema = new Schema<UserProfileCitizenship>(
@@ -38,7 +35,7 @@ export const diiaOfficeProfileSchema = new Schema<DiiaOfficeProfile>(
         tokenFailedAt: { type: Date },
         isOrganizationAdmin: { type: Boolean, required: true },
         googleWorkspace: { type: String },
-        status: { type: String, enum: Object.values(DiiaOfficeStatus), required: true, default: DiiaOfficeStatus.Active },
+        status: { type: String, enum: Object.values(DiiaOfficeStatus), required: true, default: DiiaOfficeStatus.ACTIVE },
     },
     { _id: false },
 )
@@ -46,13 +43,6 @@ export const diiaOfficeProfileSchema = new Schema<DiiaOfficeProfile>(
 const featuresSchema = new Schema<UserProfileFeatures>(
     {
         [ProfileFeature.office]: { type: diiaOfficeProfileSchema },
-    },
-    { _id: false },
-)
-
-const settingsSchema = new Schema<UserProfileSettings>(
-    {
-        myInfoUsePassportPhoto: { type: Boolean },
     },
     { _id: false },
 )
@@ -65,11 +55,8 @@ const userProfileSchema = new Schema<UserProfile>(
         citizenship: { type: citizenshipBySourceSchema },
         communityCode: { type: String },
         features: { type: featuresSchema },
-        settings: { type: settingsSchema },
     },
-    {
-        timestamps: true,
-    },
+    { timestamps: true },
 )
 
 userProfileSchema.index({ gender: 1, birthDay: 1 })

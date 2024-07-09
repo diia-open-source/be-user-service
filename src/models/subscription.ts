@@ -1,6 +1,4 @@
-import { Model, Schema, SchemaDefinition, model, models } from 'mongoose'
-
-import { DocumentType } from '@diia-inhouse/types'
+import { Model, Schema, SchemaDefinition, model, models } from '@diia-inhouse/db'
 
 import {
     DocumentsSubs,
@@ -15,25 +13,22 @@ import {
     SubscriptionType,
 } from '@interfaces/models/subscription'
 
-const documentsSubscriptionSchemaDefinition: SchemaDefinition<DocumentsSubs> = Object.values(DocumentType).reduce(
-    (acc: SchemaDefinition<DocumentsSubs>, type: DocumentType) => {
+const documentsSubscriptionSchemaDefinition: SchemaDefinition<DocumentsSubs> = {
+    type: Map,
+    of: { type: Object },
+}
+
+const publicServiceSubscriptionSchemaDefinition: SchemaDefinition<PublicServicesSubs> = ((): SchemaDefinition<PublicServicesSubs> => {
+    const acc: SchemaDefinition<PublicServicesSubs> = {}
+
+    for (const type of Object.values(PublicServiceCode)) {
         acc[type] = { type: Object }
+    }
 
-        return acc
-    },
-    {},
-)
+    return acc
+})()
 
-const publicServiceSubscriptionSchemaDefinition: SchemaDefinition<PublicServicesSubs> = Object.values(PublicServiceCode).reduce(
-    (acc: SchemaDefinition<PublicServicesSubs>, type: PublicServiceCode) => {
-        acc[type] = { type: Object }
-
-        return acc
-    },
-    {},
-)
-
-const documentsSubscriptionSchema = new Schema<DocumentsSubs>(documentsSubscriptionSchemaDefinition, { _id: false })
+const documentsSubscriptionSchema = new Schema<DocumentsSubs>(documentsSubscriptionSchemaDefinition, { _id: false, strict: false })
 const publicServiceSubscriptionSchema = new Schema<PublicServicesSubs>(publicServiceSubscriptionSchemaDefinition, { _id: false })
 
 const pushSubscriptionByTypeSchema = new Schema<PushSubscriptionBySubType>(

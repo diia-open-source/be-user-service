@@ -1,6 +1,7 @@
-import { FilterQuery, UpdateQuery } from 'mongoose'
-
+import { FilterQuery, UpdateQuery } from '@diia-inhouse/db'
 import { NotFoundError } from '@diia-inhouse/errors'
+
+import DocumentsService from '@services/documents'
 
 import userSharingHistoryItemModel from '@models/userSharingHistoryItem'
 
@@ -19,6 +20,7 @@ import { UpsertItemParams } from '@interfaces/services/userSharingHistory'
 
 export default class UserSharingHistoryService {
     constructor(
+        private readonly documentsService: DocumentsService,
         private readonly userSharingHistoryDataMapper: UserSharingHistoryDataMapper,
         private readonly userHistoryDataMapper: UserHistoryDataMapper,
     ) {}
@@ -44,11 +46,16 @@ export default class UserSharingHistoryService {
             userSharingHistoryItemModel.find(query).skip(skip).limit(limit).sort({ _id: -1 }),
             userSharingHistoryItemModel.countDocuments(query),
         ])
+        const history = await Promise.all(
+            items.map(async (item) => {
+                const { documents } = item
+                const documentsNames = await this.documentsService.getDocumentNames(documents)
 
-        return {
-            history: items.map((item: UserSharingHistoryItemModel) => this.userSharingHistoryDataMapper.toEntity(item)),
-            total,
-        }
+                return this.userSharingHistoryDataMapper.toEntity(item, documentsNames)
+            }),
+        )
+
+        return { history, total }
     }
 
     async countHistory(userIdentifier: string, sessionId: string | undefined): Promise<number> {
@@ -81,9 +88,10 @@ export default class UserSharingHistoryService {
             throw new NotFoundError('Sharing history item with provided sharingId and sessionId not found for current user')
         }
 
+        const { documents } = sharingHistoryItem
+        const documentsNames = await this.documentsService.getDocumentNames(documents)
+        const body = this.userSharingHistoryDataMapper.getHistoryItem(sharingHistoryItem, documentsNames, action)
         const navigationPanelMlc = this.userHistoryDataMapper.getHistoryScreenNavigationPanelMlc(navigationPanelLabel)
-        const body = this.userSharingHistoryDataMapper.getHistoryItem(sharingHistoryItem, action)
-
         const response: HistoryItemResponse = {
             topGroup: [
                 {

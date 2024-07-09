@@ -1,10 +1,11 @@
 import { v4 as uuid } from 'uuid'
 
-import { ExternalCommunicator, ExternalEvent, ExternalEventBus } from '@diia-inhouse/diia-queue'
+import { ExternalCommunicator, ExternalEventBus } from '@diia-inhouse/diia-queue'
 import { ServiceUnavailableError } from '@diia-inhouse/errors'
 import { Logger } from '@diia-inhouse/types'
 
 import { DiiaIdCertificateInfoResponse } from '@interfaces/externalEventListeners/diiaIdCertificateInfo'
+import { ExternalEvent } from '@interfaces/queue'
 import { EResidentDiiaIdInfoRequest } from '@interfaces/services/eResidentDiiaIdConfirmation'
 
 export default class EResidentDiiaIdConfirmationService {

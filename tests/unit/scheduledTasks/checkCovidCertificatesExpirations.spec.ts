@@ -1,10 +1,11 @@
 import Logger from '@diia-inhouse/diia-logger'
-import { ScheduledTaskEvent } from '@diia-inhouse/diia-queue'
 import { mockInstance } from '@diia-inhouse/test'
 
 import CheckCovidCertificatesExpirationsTask from '@src/scheduledTasks/checkCovidCertificatesExpirations'
 
 import UserDocumentService from '@services/userDocument'
+
+import { ScheduledTaskEvent } from '@interfaces/queue'
 
 describe(`Scheduled Task ${CheckCovidCertificatesExpirationsTask.name}`, () => {
     const logger = mockInstance(Logger)

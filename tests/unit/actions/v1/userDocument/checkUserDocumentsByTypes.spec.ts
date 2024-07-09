@@ -1,5 +1,4 @@
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocumentType } from '@diia-inhouse/types'
 
 import CheckUserDocumentsByTypesAction from '@actions/v1/userDocument/checkUserDocumentsByTypes'
 
@@ -12,7 +11,7 @@ describe(`Action ${CheckUserDocumentsByTypesAction.name}`, () => {
     const headers = testKit.session.getHeaders()
     const userDocumentServiceMock = mockInstance(UserDocumentService)
 
-    const checkUserDocumentsByTypesAction = new CheckUserDocumentsByTypesAction(userDocumentServiceMock)
+    const checkUserDocumentsByTypesAction = new CheckUserDocumentsByTypesAction(userDocumentServiceMock, [])
 
     describe('method `handler`', () => {
         it('should return verified documents', async () => {
@@ -21,7 +20,7 @@ describe(`Action ${CheckUserDocumentsByTypesAction.name}`, () => {
                     userIdentifier: testKit.session.getUserSession().user.identifier,
                     documentsToVerify: [
                         {
-                            documentType: DocumentType.BirthCertificate,
+                            documentType: 'birth-certificate',
                             documentIdentifer: 'documentIdentifer',
                         },
                     ],

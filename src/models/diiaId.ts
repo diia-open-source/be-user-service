@@ -1,4 +1,4 @@
-import { Model, Schema, model, models } from 'mongoose'
+import { Model, Schema, model, models } from '@diia-inhouse/db'
 
 import { DiiaId, DiiaIdRevoking, SignAlgo } from '@interfaces/models/diiaId'
 import { IdentityDocumentType } from '@interfaces/services/documents'

@@ -1,5 +1,4 @@
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocumentType } from '@diia-inhouse/types'
 
 import SaveDocumentsOrderByDocumentTypeAction from '@actions/v2/userDocument/saveDocumentsOrderByDocumentType'
 
@@ -9,13 +8,13 @@ describe(`Action ${SaveDocumentsOrderByDocumentTypeAction.name}`, () => {
     const testKit = new TestKit()
     const userDocumentSettingsService = mockInstance(UserDocumentSettingsService)
 
-    const action = new SaveDocumentsOrderByDocumentTypeAction(userDocumentSettingsService)
+    const action = new SaveDocumentsOrderByDocumentTypeAction(userDocumentSettingsService, [])
 
     describe('Method `handler`', () => {
         it('should return true after saved user documents order by doc type', async () => {
             const args = {
                 params: {
-                    documentType: DocumentType.InternalPassport,
+                    documentType: 'internal-passport',
                     documentsOrder: [{ docNumber: 'docNumber', order: 1 }],
                 },
                 session: testKit.session.getUserSession(),

@@ -52,7 +52,7 @@ export default class SubscriptionDataMapper {
             .filter(([serviceCode]) => this.activeServiceCodes.includes(<PublicServiceCode>serviceCode))
             .map(([serviceCode, items]) => {
                 const code = <PublicServiceCode>serviceCode
-                const isSomeItemSubscribed: boolean = Object.values(items).some((isSubscribed: boolean) => isSubscribed)
+                const isSomeItemSubscribed: boolean = Object.values(items).some(Boolean)
                 const status: SubscriptionStatus = isSomeItemSubscribed ? SubscriptionStatus.Active : SubscriptionStatus.InActive
 
                 return {

@@ -1,5 +1,4 @@
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocumentType } from '@diia-inhouse/types'
 
 import IsUkrainianCitizenAction from '@actions/v1/isUkrainianCitizen'
 
@@ -31,8 +30,8 @@ describe(`Action ${IsUkrainianCitizenAction.name}`, () => {
             expect(await isUkrainianCitizenAction.handler(args)).toBeTruthy()
 
             expect(userDocumentServiceMock.hasOneOfDocuments).toHaveBeenCalledWith(args.params.userIdentifier, [
-                DocumentType.InternalPassport,
-                DocumentType.ForeignPassport,
+                'internal-passport',
+                'foreign-passport',
             ])
         })
 
@@ -53,8 +52,8 @@ describe(`Action ${IsUkrainianCitizenAction.name}`, () => {
             expect(await isUkrainianCitizenAction.handler(args)).toBeTruthy()
 
             expect(userDocumentServiceMock.hasOneOfDocuments).toHaveBeenCalledWith(args.params.userIdentifier, [
-                DocumentType.InternalPassport,
-                DocumentType.ForeignPassport,
+                'internal-passport',
+                'foreign-passport',
             ])
             expect(userProfileServiceMock.getUserCitizenship).toHaveBeenCalledWith(
                 args.params.userIdentifier,

@@ -1,5 +1,4 @@
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocumentType } from '@diia-inhouse/types'
 
 import GetEncryptedDataFromStorageAction from '@actions/v1/userDocument/getEncryptedDataFromStorage'
 
@@ -20,7 +19,7 @@ describe(`Action ${GetEncryptedDataFromStorageAction.name}`, () => {
                 params: {
                     userIdentifier: 'userIdentifier',
                     mobileUid: headers.mobileUid,
-                    documentTypes: [DocumentType.VehicleLicense],
+                    documentTypes: ['vehicle-license'],
                 },
                 session: testKit.session.getUserSession(),
                 headers,
@@ -29,7 +28,7 @@ describe(`Action ${GetEncryptedDataFromStorageAction.name}`, () => {
             const mockDataForVehicleLicense: string[] = ['encrypted-data-3']
 
             const mockEncryptedData: EncryptedDataByDocumentType = {
-                [DocumentType.VehicleLicense]: mockDataForVehicleLicense,
+                'vehicle-license': mockDataForVehicleLicense,
             }
 
             jest.spyOn(userDocumentStorageServiceMock, 'getEncryptedDataFromStorage').mockResolvedValueOnce(mockEncryptedData)

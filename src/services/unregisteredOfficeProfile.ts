@@ -17,6 +17,8 @@ export default class UnregisteredOfficeProfile {
     }
 
     async getUnregisteredProfile(identifier: string): Promise<DiiaOfficeProfile | undefined> {
-        return (await unregisteredOfficeProfile.findOne({ identifier }))?.profile
+        const unregisteredOfficeProfileItem = await unregisteredOfficeProfile.findOne({ identifier })
+
+        return unregisteredOfficeProfileItem?.profile
     }
 }

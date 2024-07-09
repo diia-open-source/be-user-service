@@ -1,6 +1,6 @@
 import { AppAction } from '@diia-inhouse/diia-app'
 
-import { ActionVersion, DocumentType, SessionType } from '@diia-inhouse/types'
+import { ActionVersion, SessionType } from '@diia-inhouse/types'
 import { ValidationSchema } from '@diia-inhouse/validators'
 
 import UserDocumentService from '@services/userDocument'
@@ -9,7 +9,17 @@ import { ActionResult, CustomActionArguments } from '@interfaces/actions/v1/user
 import { UserDocument } from '@interfaces/models/userDocument'
 
 export default class GetUserDocumentsAction implements AppAction {
-    constructor(private readonly userDocumentService: UserDocumentService) {}
+    constructor(
+        private readonly userDocumentService: UserDocumentService,
+        private readonly documentTypes: string[],
+    ) {
+        this.validationRules = {
+            userIdentifier: { type: 'string' },
+            documentType: { type: 'string', enum: this.documentTypes, optional: true },
+            mobileUid: { type: 'string', optional: true },
+            activeOnly: { type: 'boolean', optional: true },
+        }
+    }
 
     readonly sessionType: SessionType = SessionType.None
 
@@ -17,12 +27,7 @@ export default class GetUserDocumentsAction implements AppAction {
 
     readonly name: string = 'getUserDocuments'
 
-    readonly validationRules: ValidationSchema = {
-        userIdentifier: { type: 'string' },
-        documentType: { type: 'string', enum: Object.values(DocumentType), optional: true },
-        mobileUid: { type: 'string', optional: true },
-        activeOnly: { type: 'boolean', optional: true },
-    }
+    readonly validationRules: ValidationSchema
 
     async handler(args: CustomActionArguments): Promise<ActionResult> {
         const documents: UserDocument[] = await this.userDocumentService.getUserDocuments(args.params)

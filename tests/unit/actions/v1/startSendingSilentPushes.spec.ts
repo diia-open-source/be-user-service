@@ -1,10 +1,12 @@
-import { EventBus, InternalEvent } from '@diia-inhouse/diia-queue'
+import { EventBus } from '@diia-inhouse/diia-queue'
 import { BadRequestError, InternalServerError } from '@diia-inhouse/errors'
 import TestKit, { mockInstance } from '@diia-inhouse/test'
 
 import StartSendingSilentPushesAction from '@actions/v1/startSendingSilentPushes'
 
 import NotificationService from '@services/notification'
+
+import { InternalEvent } from '@interfaces/queue'
 
 describe(`Action ${StartSendingSilentPushesAction.name}`, () => {
     const testKit = new TestKit()

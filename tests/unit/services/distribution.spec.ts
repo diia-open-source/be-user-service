@@ -5,8 +5,7 @@ const distributionModelMock = {
 
 jest.mock('@models/distribution', () => distributionModelMock)
 
-import { ObjectId } from 'mongodb'
-
+import { mongo } from '@diia-inhouse/db'
 import { PlatformType } from '@diia-inhouse/types'
 
 import DistributionService from '@services/distribution'
@@ -16,9 +15,9 @@ const platformTypes = Object.values(PlatformType)
 
 describe('Service: DistributionService', () => {
     it('should create distribution with whole list of platforms', async () => {
-        const messageId = new ObjectId()
+        const messageId = new mongo.ObjectId()
         const createdDistribution = {
-            _id: new ObjectId(),
+            _id: new mongo.ObjectId(),
         }
 
         const createSpy = jest.spyOn(distributionModelMock, 'create').mockResolvedValueOnce(createdDistribution)
@@ -32,9 +31,9 @@ describe('Service: DistributionService', () => {
     })
 
     it('should create distribution with requested list of platforms', async () => {
-        const messageId = new ObjectId()
+        const messageId = new mongo.ObjectId()
         const createdDistribution = {
-            _id: new ObjectId(),
+            _id: new mongo.ObjectId(),
         }
         const newPlatformTypesToSend = [PlatformType.Android, PlatformType.iOS]
 
@@ -56,7 +55,7 @@ describe('Service: DistributionService', () => {
         ['with partial list of platforms', [], [PlatformType.Android, PlatformType.iOS], [PlatformType.Android, PlatformType.iOS]],
         ['with partial list of existed platforms', [PlatformType.iOS], [PlatformType.Android], [PlatformType.Android]],
     ])('should update distribution %s', async (_message, modelPlatforms, updateListPlatforms, expectedUpdatedPlatforms) => {
-        const messageId = new ObjectId()
+        const messageId = new mongo.ObjectId()
         const saveDistributionSpy = jest.fn()
 
         jest.spyOn(distributionModelMock, 'findOne').mockResolvedValueOnce({

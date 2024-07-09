@@ -1,5 +1,4 @@
-import { Document } from 'mongoose'
-
+import { Document } from '@diia-inhouse/db'
 import { PlatformType } from '@diia-inhouse/types'
 
 export interface UserDevice {

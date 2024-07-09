@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
 import TestKit, { mockInstance } from '@diia-inhouse/test'
 import { Gender, PlatformType } from '@diia-inhouse/types'
@@ -12,7 +12,7 @@ describe(`External event listener ${NotificationTopicSubscribeTargetEventListene
 
     const userProfileService = mockInstance(UserProfileService)
 
-    const notificationTopicSubscribeTargetEventListener = new NotificationTopicSubscribeTargetEventListener(userProfileService)
+    const notificationTopicSubscribeTargetEventListener = new NotificationTopicSubscribeTargetEventListener(userProfileService, [])
 
     it(`should call ${userProfileService.subscribeUsersToTopic.name} with valid arguments`, async () => {
         const filter = { gender: Gender.female, childrenAmount: 5 }

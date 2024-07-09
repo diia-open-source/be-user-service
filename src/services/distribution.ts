@@ -1,5 +1,4 @@
-import { ObjectId } from 'bson'
-
+import { mongo } from '@diia-inhouse/db'
 import { PlatformType } from '@diia-inhouse/types'
 
 import distributionModel from '@models/distribution'
@@ -11,25 +10,25 @@ export default class DistributionService {
 
     private readonly platformTypesSet: Set<PlatformType> = new Set(this.allPlatformTypes)
 
-    async createOrUpdate(messageId: ObjectId, platformTypes?: PlatformType[]): Promise<[ObjectId, PlatformType[]]> {
+    async createOrUpdate(messageId: mongo.ObjectId, platformTypes?: PlatformType[]): Promise<[mongo.ObjectId, PlatformType[]]> {
         let distribution = await this.findByMessageId(messageId)
         let platformTypesToSend: PlatformType[] = []
         if (distribution) {
             if (platformTypes?.length) {
-                platformTypes.forEach((platformType: PlatformType) => {
+                for (const platformType of platformTypes) {
                     if (!distribution!.platformTypes.includes(platformType)) {
                         platformTypesToSend.push(platformType)
                     }
-                })
+                }
             } else {
-                this.platformTypesSet.forEach((platformType: PlatformType) => {
+                for (const platformType of this.platformTypesSet) {
                     if (!distribution!.platformTypes.includes(platformType)) {
                         platformTypesToSend.push(platformType)
                     }
-                })
+                }
             }
 
-            if (platformTypesToSend.length) {
+            if (platformTypesToSend.length > 0) {
                 distribution.platformTypes = distribution.platformTypes.concat(platformTypesToSend)
 
                 await distribution.save()
@@ -47,7 +46,7 @@ export default class DistributionService {
         return [distribution._id, platformTypesToSend]
     }
 
-    private async findByMessageId(messageId: ObjectId): Promise<DistributionModel | null> {
+    private async findByMessageId(messageId: mongo.ObjectId): Promise<DistributionModel | null> {
         return await distributionModel.findOne({ messageId })
     }
 }

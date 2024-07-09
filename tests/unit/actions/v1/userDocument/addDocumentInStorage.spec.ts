@@ -1,5 +1,4 @@
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocumentType } from '@diia-inhouse/types'
 
 import AddDocumentInStorageAction from '@actions/v1/userDocument/addDocumentInStorage'
 
@@ -21,7 +20,7 @@ describe(`Action ${AddDocumentInStorageAction.name}`, () => {
                     userIdentifier: 'userIdentifier',
                     mobileUid: headers.mobileUid,
                     hashData: 'hashData',
-                    documentType: DocumentType.BirthCertificate,
+                    documentType: 'birth-certificate',
                     encryptedData: 'encryptedData',
                 },
                 session: testKit.session.getUserSession(),

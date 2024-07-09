@@ -1,11 +1,11 @@
 const momentFormatStub = jest.fn()
 
+// eslint-disable-next-line unicorn/consistent-function-scoping
 jest.mock('moment', () => (): unknown => ({ format: momentFormatStub }))
 
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
 import { mockInstance } from '@diia-inhouse/test'
-import { DocumentType } from '@diia-inhouse/types'
 
 import UserHistoryDataMapper from '@dataMappers/userHistoryDataMapper'
 import UserSharingHistoryDataMapper from '@dataMappers/userSharingHistoryDataMapper'
@@ -26,7 +26,7 @@ describe('UserSharingHistoryDataMapper', () => {
                     address: 'acquirer-address',
                 },
                 date,
-                documents: [DocumentType.BirthCertificate],
+                documents: ['birth-certificate'],
                 sharingId: randomUUID(),
                 offer: {
                     name: 'offer-name',
@@ -40,9 +40,8 @@ describe('UserSharingHistoryDataMapper', () => {
 
             momentFormatStub.mockReturnValueOnce(date.toISOString())
             jest.spyOn(userHistoryDataMapperMock, 'getStatus').mockReturnValueOnce(UserHistoryItemStatus.Done)
-            jest.spyOn(userHistoryDataMapperMock, 'getDocumentName').mockReturnValueOnce('document-name')
 
-            expect(userSharingHistoryDataMapper.toEntity(model)).toEqual({
+            expect(userSharingHistoryDataMapper.toEntity(model, ['document-name'])).toEqual({
                 id: sharingId,
                 status: UserHistoryItemStatus.Done,
                 date: date.toISOString(),
@@ -52,7 +51,6 @@ describe('UserSharingHistoryDataMapper', () => {
             })
 
             expect(userHistoryDataMapperMock.getStatus).toHaveBeenCalledWith(model)
-            expect(userHistoryDataMapperMock.getDocumentName).toHaveBeenCalledWith(DocumentType.BirthCertificate)
         })
     })
 })

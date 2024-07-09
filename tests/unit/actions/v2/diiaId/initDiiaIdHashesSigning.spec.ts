@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
 const uuidV4Stub = jest.fn()
 
@@ -98,14 +98,14 @@ describe(`Action ${InitDiiaIdHashesSigningAction.name}`, () => {
 
             await expect(action.handler(args)).rejects.toEqual(err)
 
-            expect(diiaIdService.initHashesSigning).toHaveBeenCalledWith(
-                args.session.user.identifier,
-                args.headers.mobileUid,
-                args.params.signAlgo,
-                args.params.signType,
-                args.params.noSigningTime,
-                args.params.noContentTimestamp,
-            )
+            expect(diiaIdService.initHashesSigning).toHaveBeenCalledWith({
+                userIdentifier: args.session.user.identifier,
+                mobileUid: args.headers.mobileUid,
+                signAlgo: args.params.signAlgo,
+                signType: args.params.signType,
+                noSigningTime: args.params.noSigningTime,
+                noContentTimestamp: args.params.noContentTimestamp,
+            })
         })
 
         it('should successfully init hashes signing', async () => {
@@ -119,14 +119,14 @@ describe(`Action ${InitDiiaIdHashesSigningAction.name}`, () => {
 
             await action.handler(args)
 
-            expect(diiaIdService.initHashesSigning).toHaveBeenCalledWith(
-                args.session.user.identifier,
-                args.headers.mobileUid,
-                args.params.signAlgo,
-                args.params.signType,
-                args.params.noSigningTime,
-                args.params.noContentTimestamp,
-            )
+            expect(diiaIdService.initHashesSigning).toHaveBeenCalledWith({
+                userIdentifier: args.session.user.identifier,
+                mobileUid: args.headers.mobileUid,
+                signAlgo: args.params.signAlgo,
+                signType: args.params.signType,
+                noSigningTime: args.params.noSigningTime,
+                noContentTimestamp: args.params.noContentTimestamp,
+            })
             expect(userSigningHistoryService.upsertItem).toHaveBeenCalledWith({
                 userIdentifier: args.session.user.identifier,
                 sessionId,

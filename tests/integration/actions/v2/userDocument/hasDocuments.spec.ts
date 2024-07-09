@@ -1,5 +1,5 @@
 import { IdentifierService } from '@diia-inhouse/crypto'
-import { DocStatus, DocumentType, OwnerType } from '@diia-inhouse/types'
+import { DocStatus, OwnerType } from '@diia-inhouse/types'
 
 import HasDocumentsAction from '@actions/v2/userDocument/hasDocuments'
 
@@ -47,11 +47,11 @@ describe(`Action ${HasDocumentsAction.name}`, () => {
             docStatus: DocStatus.Ok,
         }
 
-        await userDocumentService.addDocument(userIdentifier, DocumentType.InternalPassport, document, mobileUid, headers)
+        await userDocumentService.addDocument(userIdentifier, 'internal-passport', document, mobileUid, headers)
 
         const hasDocuments = await hasDocumentsAction.handler({
             headers,
-            params: { userIdentifier, documentTypes: [[DocumentType.InternalPassport, DocumentType.ForeignPassport]] },
+            params: { userIdentifier, documentTypes: [['internal-passport', 'foreign-passport']] },
         })
 
         await userDocumentService.removeUserDocuments(userIdentifier)
@@ -71,11 +71,11 @@ describe(`Action ${HasDocumentsAction.name}`, () => {
             docStatus: DocStatus.Ok,
         }
 
-        await userDocumentService.addDocument(userIdentifier, DocumentType.DriverLicense, document, mobileUid, headers)
+        await userDocumentService.addDocument(userIdentifier, 'driver-license', document, mobileUid, headers)
 
         const hasDocuments = await hasDocumentsAction.handler({
             headers,
-            params: { userIdentifier, documentTypes: [[DocumentType.InternalPassport, DocumentType.ForeignPassport]] },
+            params: { userIdentifier, documentTypes: [['internal-passport', 'foreign-passport']] },
         })
 
         await userDocumentService.removeUserDocuments(userIdentifier)
@@ -102,15 +102,15 @@ describe(`Action ${HasDocumentsAction.name}`, () => {
         }
 
         await Promise.all([
-            userDocumentService.addDocument(userIdentifier, DocumentType.InternalPassport, internalPassport, mobileUid, headers),
-            userDocumentService.addDocument(userIdentifier, DocumentType.DriverLicense, driverLicense, mobileUid, headers),
+            userDocumentService.addDocument(userIdentifier, 'internal-passport', internalPassport, mobileUid, headers),
+            userDocumentService.addDocument(userIdentifier, 'driver-license', driverLicense, mobileUid, headers),
         ])
 
         const hasDocuments = await hasDocumentsAction.handler({
             headers,
             params: {
                 userIdentifier,
-                documentTypes: [[DocumentType.InternalPassport, DocumentType.ForeignPassport], [DocumentType.DriverLicense]],
+                documentTypes: [['internal-passport', 'foreign-passport'], ['driver-license']],
             },
         })
 
@@ -138,15 +138,15 @@ describe(`Action ${HasDocumentsAction.name}`, () => {
         }
 
         await Promise.all([
-            userDocumentService.addDocument(userIdentifier, DocumentType.InternalPassport, internalPassport, mobileUid, headers),
-            userDocumentService.addDocument(userIdentifier, DocumentType.VehicleLicense, vehicleLicense, mobileUid, headers),
+            userDocumentService.addDocument(userIdentifier, 'internal-passport', internalPassport, mobileUid, headers),
+            userDocumentService.addDocument(userIdentifier, 'vehicle-license', vehicleLicense, mobileUid, headers),
         ])
 
         const hasDocuments = await hasDocumentsAction.handler({
             headers,
             params: {
                 userIdentifier,
-                documentTypes: [[DocumentType.InternalPassport, DocumentType.ForeignPassport], [DocumentType.DriverLicense]],
+                documentTypes: [['internal-passport', 'foreign-passport'], ['driver-license']],
             },
         })
 

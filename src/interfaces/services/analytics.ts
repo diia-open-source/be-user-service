@@ -1,5 +1,5 @@
 import { AnalyticsActionResult, RatingCategory, RatingFormCode, RatingServiceCode, RatingType } from '@diia-inhouse/analytics'
-import { DocumentType, OwnerType, PlatformType } from '@diia-inhouse/types'
+import { OwnerType, PlatformType } from '@diia-inhouse/types'
 
 import { SubscriptionType } from '@interfaces/models/subscription'
 
@@ -19,7 +19,7 @@ export enum AnalyticsActionType {
 
 export interface AnalyticsData {
     documentId?: string
-    documentType?: DocumentType
+    documentType?: string
     subscriptionType?: SubscriptionType
     ownerType?: OwnerType
     penaltyId?: string

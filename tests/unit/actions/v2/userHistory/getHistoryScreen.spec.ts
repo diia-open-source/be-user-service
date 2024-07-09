@@ -29,11 +29,13 @@ describe(`Action ${GetHistoryScreenAction.name}`, () => {
                                         code: UserHistoryCode.Authorization,
                                         label: 'Авторизації',
                                         count: 1,
+                                        chipMlc: { code: UserHistoryCode.Authorization, label: 'Авторизації' },
                                     },
                                     {
                                         code: UserHistoryCode.Signing,
                                         label: 'Підписання',
                                         count: 1,
+                                        chipMlc: { code: UserHistoryCode.Signing, label: 'Підписання' },
                                     },
                                 ],
                                 preselectedCode: UserHistoryCode.Authorization,

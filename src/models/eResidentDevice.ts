@@ -1,5 +1,4 @@
-import { Model, Schema, model, models } from 'mongoose'
-
+import { Model, Schema, model, models } from '@diia-inhouse/db'
 import { PlatformType } from '@diia-inhouse/types'
 
 import { EResidentDevice } from '@interfaces/models/eResidentDevice'

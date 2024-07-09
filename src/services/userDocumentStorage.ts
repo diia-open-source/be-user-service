@@ -1,8 +1,7 @@
-import { FilterQuery, ObjectId } from 'mongoose'
-
 import { CryptoService } from '@diia-inhouse/crypto'
+import { FilterQuery, mongo } from '@diia-inhouse/db'
 import { BadRequestError } from '@diia-inhouse/errors'
-import { DocumentType, Logger } from '@diia-inhouse/types'
+import { Logger } from '@diia-inhouse/types'
 
 import userDocumentStorageModel from '@models/userDocumentStorage'
 
@@ -19,17 +18,6 @@ import {
 } from '@interfaces/services/userDocumentStorage'
 
 export default class UserDocumentStorageService {
-    readonly storageDocumentTypes: DocumentType[] = [
-        DocumentType.BirthCertificate,
-        DocumentType.VehicleLicense,
-        DocumentType.LocalVaccinationCertificate,
-        DocumentType.ChildLocalVaccinationCertificate,
-        DocumentType.InternationalVaccinationCertificate,
-        DocumentType.ResidencePermitPermanent,
-        DocumentType.ResidencePermitTemporary,
-        DocumentType.MilitaryBond,
-    ]
-
     constructor(
         private readonly crypto: CryptoService,
         private readonly logger: Logger,
@@ -38,7 +26,7 @@ export default class UserDocumentStorageService {
     async addDocument(
         userIdentifier: string,
         hashData: string,
-        documentType: DocumentType,
+        documentType: string,
         encryptedData: string,
         encryptedPhoto?: string,
         encryptedDocPhoto?: string,
@@ -80,7 +68,7 @@ export default class UserDocumentStorageService {
     async getEncryptedDataFromStorage(
         userIdentifier: string,
         mobileUid?: string,
-        documentTypes?: DocumentType[],
+        documentTypes?: string[],
     ): Promise<EncryptedDataByDocumentType> {
         const query: FilterQuery<UserDocumentStorageModel> = mobileUid
             ? { userIdentifier, $or: [{ mobileUid: { $exists: false } }, { mobileUid }] }
@@ -98,11 +86,11 @@ export default class UserDocumentStorageService {
 
         const encryptedDataByDocumentTypes: EncryptedDataByDocumentType = {}
 
-        userDocumentsStorage.forEach((userDocumentStorage) => {
+        for (const userDocumentStorage of userDocumentsStorage) {
             const { encryptedData, documentType } = userDocumentStorage
 
             encryptedDataByDocumentTypes[documentType] = [...(encryptedDataByDocumentTypes[documentType] || []), encryptedData]
-        })
+        }
 
         return encryptedDataByDocumentTypes
     }
@@ -140,11 +128,7 @@ export default class UserDocumentStorageService {
         return decryptedDocuments
     }
 
-    async removeFromStorageById(userIdentifier: string, documentType: DocumentType, documentId: string, mobileUid?: string): Promise<void> {
-        if (!this.storageDocumentTypes.includes(documentType)) {
-            return
-        }
-
+    async removeFromStorageById(userIdentifier: string, documentType: string, documentId: string, mobileUid?: string): Promise<void> {
         const query: FilterQuery<UserDocumentStorageModel> = {
             userIdentifier,
             documentType,
@@ -154,7 +138,7 @@ export default class UserDocumentStorageService {
 
         this.logger.info(`Found storage records: ${documents.length}`)
 
-        const idsToRemove: ObjectId[] = []
+        const idsToRemove: mongo.ObjectId[] = []
         const tasks: Promise<void>[] = documents.map(async (document: UserDocumentStorageModel) => {
             const { _id: id, encryptedData } = document
             const data: StoredBirthCertificateData = await this.crypto.decryptData(encryptedData)
@@ -166,7 +150,7 @@ export default class UserDocumentStorageService {
         await Promise.all(tasks)
 
         this.logger.info(`Found storage records to remove: ${idsToRemove.length}`)
-        if (idsToRemove.length) {
+        if (idsToRemove.length > 0) {
             const removeQuery: FilterQuery<UserDocumentStorageModel> = { _id: { $in: idsToRemove } }
             const { deletedCount } = await userDocumentStorageModel.deleteMany(removeQuery)
 
@@ -174,7 +158,7 @@ export default class UserDocumentStorageService {
         }
     }
 
-    async removeFromStorageByHashData(userIdentifier: string, documentType: DocumentType, hashData: string): Promise<void> {
+    async removeFromStorageByHashData(userIdentifier: string, documentType: string, hashData: string): Promise<void> {
         const { deletedCount }: { deletedCount?: number } = await userDocumentStorageModel.deleteOne({
             userIdentifier,
             documentType,
@@ -189,11 +173,7 @@ export default class UserDocumentStorageService {
             userIdentifier,
             mobileUid,
             documentType: {
-                $in: [
-                    DocumentType.LocalVaccinationCertificate,
-                    DocumentType.ChildLocalVaccinationCertificate,
-                    DocumentType.InternationalVaccinationCertificate,
-                ],
+                $in: ['local-vaccination-certificate', 'child-local-vaccination-certificate', 'international-vaccination-certificate'],
             },
         }
 
@@ -204,7 +184,7 @@ export default class UserDocumentStorageService {
 
     async removeCovidCertificateFromStorage(
         userIdentifier: string,
-        documentType: DocumentType,
+        documentType: string,
         mobileUid: string,
         types: VaccinationCertificateType[],
         birthCertificateId?: string,
@@ -215,28 +195,26 @@ export default class UserDocumentStorageService {
             documentType,
         }
         const storedCertificates: UserDocumentStorageModel[] = await userDocumentStorageModel.find(query)
+        const idsToDeleteUnfiltered = await Promise.all(
+            storedCertificates.map(async ({ _id: id, encryptedData }: UserDocumentStorageModel) => {
+                const medicalData: StoredMedicalData = await this.crypto.decryptData(encryptedData)
 
-        const idsToDelete: string[] = (
-            await Promise.all(
-                storedCertificates.map(async ({ _id: id, encryptedData }: UserDocumentStorageModel) => {
-                    const medicalData: StoredMedicalData = await this.crypto.decryptData(encryptedData)
+                const toSkip: boolean = birthCertificateId
+                    ? medicalData.documentIdentifier !== birthCertificateId
+                    : medicalData.documentType === 'birth-certificate'
+                if (toSkip) {
+                    return
+                }
 
-                    const toSkip: boolean = birthCertificateId
-                        ? medicalData.documentIdentifier !== birthCertificateId
-                        : medicalData.documentType === DocumentType.BirthCertificate
-                    if (toSkip) {
-                        return
-                    }
+                const type = this.getCertificateType(medicalData)
+                if (!type || !types.includes(type)) {
+                    return
+                }
 
-                    const type = this.getCertificateType(medicalData)
-                    if (!type || !types.includes(type)) {
-                        return
-                    }
-
-                    return id
-                }),
-            )
-        ).filter(Boolean)
+                return id
+            }),
+        )
+        const idsToDelete: string[] = idsToDeleteUnfiltered.filter(Boolean)
 
         const deleteQuery: FilterQuery<UserDocumentStorageModel> = { _id: { $in: idsToDelete } }
         const { deletedCount }: { deletedCount?: number } = await userDocumentStorageModel.deleteMany(deleteQuery)
@@ -244,7 +222,7 @@ export default class UserDocumentStorageService {
         this.logger.info('Remove user data from storage result', { deletedCount, documentType, types })
     }
 
-    async hasStorageDocument(userIdentifier: string, mobileUid: string, documentType: DocumentType, id: string): Promise<boolean> {
+    async hasStorageDocument(userIdentifier: string, mobileUid: string, documentType: string, id: string): Promise<boolean> {
         const storageDataByDocumentTypes = await this.getDecryptedDataFromStorage(userIdentifier, {
             mobileUid,
             documentTypes: [documentType],

@@ -1,6 +1,4 @@
-import { Document } from 'mongoose'
-
-import { DocumentType } from '@diia-inhouse/types'
+import { Document } from '@diia-inhouse/db'
 
 export interface DocumentTypeSetting {
     documentTypeOrder: number
@@ -8,9 +6,11 @@ export interface DocumentTypeSetting {
         [key: string]: number
     }
     hiddenDocuments?: string[]
+    /** Overrides defaultHidden field in documentSettings of document service */
+    hiddenDocumentType?: boolean
 }
 
-export type DocumentTypeSettings = { [key in DocumentType]?: DocumentTypeSetting }
+export type DocumentTypeSettings = { [key in string]?: DocumentTypeSetting | unknown }
 
 export interface UserDocumentSettings extends DocumentTypeSettings {
     userIdentifier: string

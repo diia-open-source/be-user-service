@@ -1,5 +1,4 @@
-import { FilterQuery } from 'mongoose'
-
+import { FilterQuery } from '@diia-inhouse/db'
 import { AccessDeniedError } from '@diia-inhouse/errors'
 
 import serviceUserModel from '@models/serviceUser'

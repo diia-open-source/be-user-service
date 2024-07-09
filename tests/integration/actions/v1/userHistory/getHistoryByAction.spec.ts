@@ -1,9 +1,10 @@
-import { FilterQuery, UpdateQuery } from 'mongoose'
-
 import { IdentifierService } from '@diia-inhouse/crypto'
+import { FilterQuery, UpdateQuery } from '@diia-inhouse/db'
 import { UserSession } from '@diia-inhouse/types'
 
 import GetHistoryByActionAction from '@actions/v1/userHistory/getHistoryByAction'
+
+import DocumentsService from '@services/documents'
 
 import userSharingHistoryItemModel from '@models/userSharingHistoryItem'
 import userSigningHistoryItemModel from '@models/userSigningHistoryItem'
@@ -52,6 +53,9 @@ describe(`Action ${GetHistoryByActionAction.name}`, () => {
 
         const { sharingId, acquirer } = await acquirersSharingStatusEventMock.handle(session, headers, UserHistoryItemStatus.Processing)
 
+        jest.spyOn(app.container.resolve<DocumentsService>('documentsService'), 'getDocumentNames').mockResolvedValueOnce([
+            'driver-license-name',
+        ])
         const { total, history } = await getHistoryByActionAction.handler({ params: { action: HistoryAction.Sharing }, session, headers })
         const [item]: HistoryItem[] = history
 
@@ -61,11 +65,11 @@ describe(`Action ${GetHistoryByActionAction.name}`, () => {
             status: UserHistoryItemStatus.Processing,
             recipient: { name: acquirer.name, address: acquirer.address },
             date: expect.any(String),
-            documents: [],
+            documents: ['driver-license-name'],
         })
 
         const query: FilterQuery<UserSharingHistoryItemModel> = { sharingId }
-        const record: UserSharingHistoryItemModel | null = await userSharingHistoryItemModel.findOneAndDelete(query).lean()
+        const record = await userSharingHistoryItemModel.findOneAndDelete(query).lean()
 
         expect(record).toMatchObject<UserSharingHistoryItem>({
             userIdentifier: session.user.identifier,
@@ -103,7 +107,7 @@ describe(`Action ${GetHistoryByActionAction.name}`, () => {
         })
 
         const query: FilterQuery<UserSigningHistoryItemModel> = { resourceId }
-        const record: UserSigningHistoryItemModel | null = await userSigningHistoryItemModel.findOneAndDelete(query).lean()
+        const record = await userSigningHistoryItemModel.findOneAndDelete(query).lean()
 
         expect(record).toMatchObject<UserSigningHistoryItem>({
             userIdentifier: session.user.identifier,
@@ -131,6 +135,9 @@ describe(`Action ${GetHistoryByActionAction.name}`, () => {
         }
 
         await userSharingHistoryItemModel.updateOne(query, modifier)
+        jest.spyOn(app.container.resolve<DocumentsService>('documentsService'), 'getDocumentNames').mockResolvedValueOnce([
+            'driver-license-name',
+        ])
 
         const { total, history } = await getHistoryByActionAction.handler({ params: { action: HistoryAction.Sharing }, session, headers })
         const [item]: HistoryItem[] = history
@@ -141,10 +148,10 @@ describe(`Action ${GetHistoryByActionAction.name}`, () => {
             status: UserHistoryItemStatus.Refuse,
             recipient: { name: acquirer.name, address: acquirer.address },
             date: expect.any(String),
-            documents: [],
+            documents: ['driver-license-name'],
         })
 
-        const record: UserSharingHistoryItemModel | null = await userSharingHistoryItemModel.findOneAndDelete(query).lean()
+        const record = await userSharingHistoryItemModel.findOneAndDelete(query).lean()
 
         expect(record).toMatchObject<UserSharingHistoryItem>({
             userIdentifier: session.user.identifier,
@@ -189,7 +196,7 @@ describe(`Action ${GetHistoryByActionAction.name}`, () => {
             purpose: offer.name,
         })
 
-        const record: UserSigningHistoryItemModel | null = await userSigningHistoryItemModel.findOneAndDelete(query).lean()
+        const record = await userSigningHistoryItemModel.findOneAndDelete(query).lean()
 
         expect(record).toMatchObject<UserSigningHistoryItem>({
             userIdentifier: session.user.identifier,
@@ -217,6 +224,9 @@ describe(`Action ${GetHistoryByActionAction.name}`, () => {
         }
 
         await userSharingHistoryItemModel.updateOne(query, modifier)
+        jest.spyOn(app.container.resolve<DocumentsService>('documentsService'), 'getDocumentNames').mockResolvedValueOnce([
+            'driver-license-name',
+        ])
 
         const { total, history } = await getHistoryByActionAction.handler({ params: { action: HistoryAction.Sharing }, session, headers })
         const [item]: HistoryItem[] = history
@@ -227,10 +237,10 @@ describe(`Action ${GetHistoryByActionAction.name}`, () => {
             status: UserHistoryItemStatus.Done,
             recipient: { name: acquirer.name, address: acquirer.address },
             date: expect.any(String),
-            documents: [],
+            documents: ['driver-license-name'],
         })
 
-        const record: UserSharingHistoryItemModel | null = await userSharingHistoryItemModel.findOneAndDelete(query).lean()
+        const record = await userSharingHistoryItemModel.findOneAndDelete(query).lean()
 
         expect(record).toMatchObject<UserSharingHistoryItem>({
             userIdentifier: session.user.identifier,
@@ -271,7 +281,7 @@ describe(`Action ${GetHistoryByActionAction.name}`, () => {
             purpose: offer.name,
         })
 
-        const record: UserSigningHistoryItemModel | null = await userSigningHistoryItemModel.findOneAndDelete(query).lean()
+        const record = await userSigningHistoryItemModel.findOneAndDelete(query).lean()
 
         expect(record).toMatchObject<UserSigningHistoryItem>({
             userIdentifier: session.user.identifier,

@@ -1,9 +1,8 @@
-import { ObjectId } from 'mongodb'
-
+import { mongo } from '@diia-inhouse/db'
 import { PlatformType } from '@diia-inhouse/types'
 
 export interface EventPayload {
-    messageId: ObjectId
+    messageId: mongo.ObjectId
     platformTypes: PlatformType[]
     useExpirations: boolean
 }

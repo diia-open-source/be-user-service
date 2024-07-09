@@ -1,5 +1,5 @@
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocumentType, OwnerType } from '@diia-inhouse/types'
+import { OwnerType } from '@diia-inhouse/types'
 
 import GetUserDocumentsAction from '@actions/v1/userDocument/getUserDocuments'
 
@@ -10,14 +10,14 @@ describe(`Action ${GetUserDocumentsAction.name}`, () => {
     const headers = testKit.session.getHeaders()
     const userDocumentServiceMock = mockInstance(UserDocumentService)
 
-    const getUserDocumentsAction = new GetUserDocumentsAction(userDocumentServiceMock)
+    const getUserDocumentsAction = new GetUserDocumentsAction(userDocumentServiceMock, [])
 
     describe('method `handler`', () => {
         it('should return user documents', async () => {
             const args = {
                 params: {
                     userIdentifier: 'userIdentifier',
-                    documentType: DocumentType.DriverLicense,
+                    documentType: 'driver-license',
                     mobileUid: headers.mobileUid,
                     activeOnly: true,
                 },
@@ -28,7 +28,7 @@ describe(`Action ${GetUserDocumentsAction.name}`, () => {
             const userDocuments = [
                 {
                     userIdentifier: 'userIdentifier',
-                    documentType: DocumentType.DriverLicense,
+                    documentType: 'driver-license',
                     documentIdentifier: 'documentIdentifier',
                     ownerType: OwnerType.owner,
                     notifications: {},

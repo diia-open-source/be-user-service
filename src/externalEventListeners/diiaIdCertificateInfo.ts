@@ -1,5 +1,7 @@
-import { EventBusListener, ExternalEvent } from '@diia-inhouse/diia-queue'
+import { EventBusListener } from '@diia-inhouse/diia-queue'
 import { ValidationSchema } from '@diia-inhouse/validators'
+
+import { ExternalEvent } from '@interfaces/queue'
 
 export default class DiiaIdCertificateInfoEventListener implements EventBusListener {
     readonly event: ExternalEvent = ExternalEvent.DiiaIdCertificateInfo

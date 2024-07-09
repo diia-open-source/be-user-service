@@ -1,13 +1,13 @@
 /* eslint-disable no-await-in-loop */
-import { ObjectId } from 'bson'
-
-import { EventBus, InternalEvent, TaskListener } from '@diia-inhouse/diia-queue'
+import { mongo } from '@diia-inhouse/db'
+import { EventBus, TaskListener } from '@diia-inhouse/diia-queue'
 import { Logger, PlatformType } from '@diia-inhouse/types'
 import { ValidationSchema } from '@diia-inhouse/validators'
 
 import UserProfileService from '@services/userProfile'
 
 import { AppConfig } from '@interfaces/config'
+import { InternalEvent } from '@interfaces/queue'
 import { UserIdentifiersWithLastId } from '@interfaces/services/userProfile'
 import { ServiceTask } from '@interfaces/tasks'
 import { EventPayload } from '@interfaces/tasks/createNotificationsBatches'
@@ -28,7 +28,7 @@ export default class CreateNotificationsBatchesTask implements TaskListener {
     readonly name: string = ServiceTask.CREATE_NOTIFICATIONS_BATCHES
 
     readonly validationRules: ValidationSchema = {
-        messageId: { type: 'objectId' },
+        messageId: { type: 'string' },
         platformTypes: {
             type: 'array',
             items: { type: 'string', enum: Object.values(PlatformType) },
@@ -40,7 +40,7 @@ export default class CreateNotificationsBatchesTask implements TaskListener {
         const { messageId, platformTypes, useExpirations } = payload
 
         let skip = 0
-        let lastId: ObjectId | undefined
+        let lastId: mongo.ObjectId | undefined
         // eslint-disable-next-line no-constant-condition
         while (true) {
             this.logger.debug('Start aggregating userIdentifiers', { skip })
@@ -51,14 +51,14 @@ export default class CreateNotificationsBatchesTask implements TaskListener {
             const queryItemsTime: number = end - start
 
             this.logger.debug('Ended aggregating userIdentifiers', { identifiers: userIdentifiers.length, queryItemsTime, skip })
-            if (!userIdentifiers.length || !nextLastId) {
+            if (userIdentifiers.length === 0 || !nextLastId) {
                 this.logger.debug('Ended aggregating notifications batches')
 
                 break
             }
 
             const publishResult: boolean = await this.eventBus.publish(InternalEvent.UserSendMassNotifications, {
-                messageId,
+                messageId: new mongo.ObjectId(messageId),
                 platformTypes,
                 useExpirations,
                 userIdentifiers,

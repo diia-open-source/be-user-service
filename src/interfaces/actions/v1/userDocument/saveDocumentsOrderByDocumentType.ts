@@ -1,10 +1,10 @@
-import { DocumentType, UserActionArguments } from '@diia-inhouse/types'
+import { UserActionArguments } from '@diia-inhouse/types'
 
 import { SaveDocumentsOrderByDocumentTypeRequest } from '@interfaces/services/userDocumentSettings'
 
 export interface CustomActionArguments extends UserActionArguments {
     params: {
-        documentType: DocumentType
+        documentType: string
         documentsOrder: SaveDocumentsOrderByDocumentTypeRequest[]
     }
 }

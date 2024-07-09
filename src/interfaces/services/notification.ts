@@ -65,3 +65,7 @@ export interface PushNotificationCampaignEstimations {
     subscriptionBatches: number
     targetUsersCount: number
 }
+
+export enum MessageActionType {
+    DiiaId = 'diiaId',
+}

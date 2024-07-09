@@ -21,7 +21,7 @@ export default class GetEncryptedDataFromStorageAction implements AppAction {
         mobileUid: { type: 'string', optional: true },
         documentTypes: {
             type: 'array',
-            items: { type: 'string', enum: this.userDocumentStorageService.storageDocumentTypes },
+            items: { type: 'string' },
             optional: true,
         },
     }

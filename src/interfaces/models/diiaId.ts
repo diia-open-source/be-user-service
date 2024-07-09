@@ -1,4 +1,4 @@
-import { Document } from 'mongoose'
+import { Document } from '@diia-inhouse/db'
 
 import { IdentityDocumentType } from '@interfaces/services/documents'
 

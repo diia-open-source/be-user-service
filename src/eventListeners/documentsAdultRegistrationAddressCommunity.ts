@@ -1,4 +1,4 @@
-import { EventBusListener, InternalEvent } from '@diia-inhouse/diia-queue'
+import { EventBusListener } from '@diia-inhouse/diia-queue'
 import { Gender, Logger } from '@diia-inhouse/types'
 import { ValidationSchema } from '@diia-inhouse/validators'
 
@@ -6,6 +6,7 @@ import AddressService from '@services/address'
 import UserProfileService from '@services/userProfile'
 
 import { EventPayload } from '@interfaces/eventListeners/documentsAdultRegistrationAddressCommunity'
+import { InternalEvent } from '@interfaces/queue'
 
 export default class DocumentsAdultRegistrationAddressCommunityEventListener implements EventBusListener {
     constructor(

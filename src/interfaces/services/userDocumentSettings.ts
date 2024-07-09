@@ -1,8 +1,8 @@
-import { DiiaOfficeProfileData, DocumentType, ProfileFeature } from '@diia-inhouse/types'
+import { DiiaOfficeProfileData, ProfileFeature, SessionType } from '@diia-inhouse/types'
 
 export interface DocumentTypeWithOrder {
     order: number
-    documentType: DocumentType
+    documentType: string
 }
 
 export interface SaveDocumentsOrderByDocumentTypeRequest {
@@ -11,7 +11,7 @@ export interface SaveDocumentsOrderByDocumentTypeRequest {
 }
 
 export interface UserDocumentsOrderResponse {
-    documentType: DocumentType
+    documentType: string
     documentIdentifiers?: string[]
 }
 
@@ -21,3 +21,10 @@ export interface UserDocumentsOrderParams {
         [ProfileFeature.office]?: DiiaOfficeProfileData
     }
 }
+
+export interface DocumentVisibilitySettings {
+    hiddenDocuments: string[]
+    hiddenDocumentType: boolean
+}
+
+export type DocumentsDefaultOrder = Partial<Record<SessionType, { items: string[] }>>

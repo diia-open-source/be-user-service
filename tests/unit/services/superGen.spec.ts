@@ -2,7 +2,7 @@ import { MoleculerService } from '@diia-inhouse/diia-app'
 
 import { IdentifierService } from '@diia-inhouse/crypto'
 import { mockInstance } from '@diia-inhouse/test'
-import { ActionVersion, EResidentTokenData, IdentityDocumentType, SessionType } from '@diia-inhouse/types'
+import { ActionVersion, EResidentTokenData, SessionType } from '@diia-inhouse/types'
 import { utils } from '@diia-inhouse/utils'
 
 import SuperGenService from '@services/superGen'
@@ -10,7 +10,7 @@ import SuperGenService from '@services/superGen'
 import SessionGenerator from '@tests/mocks/sessionGenerator'
 
 import { DiiaIdAgreementGenerationData, EResidentDiiaIdAgreementGenerationData } from '@interfaces/services/diiaId'
-import { IdentityDocument } from '@interfaces/services/documents'
+import { IdentityDocument, IdentityDocumentType } from '@interfaces/services/documents'
 import { GenerationResult } from '@interfaces/services/superGen'
 
 describe(`Service ${SuperGenService.name}`, () => {

@@ -1,7 +1,7 @@
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocStatus, DocumentType, DurationMs, OwnerType } from '@diia-inhouse/types'
+import { DocStatus, DurationMs, OwnerType } from '@diia-inhouse/types'
 
 import AddDocumentsInProfileEventListener from '@src/eventListeners/addDocumentsInProfile'
 
@@ -16,14 +16,14 @@ describe(`Event listener ${AddDocumentsInProfileEventListener.name}`, () => {
     const subscriptionService = mockInstance(SubscriptionService)
     const userDocumentService = mockInstance(UserDocumentService)
 
-    const eventListener = new AddDocumentsInProfileEventListener(analyticsService, userDocumentService, subscriptionService)
+    const eventListener = new AddDocumentsInProfileEventListener(analyticsService, userDocumentService, subscriptionService, [])
 
     it('should call updateDocument and updateDocumentsSubscriptions with right parameters', async () => {
         const { session, headers } = testKit.session.getUserActionArguments()
         const { mobileUid } = headers
         const { user } = session
         const { identifier: userIdentifier } = user
-        const documentType = DocumentType.DriverLicense
+        const documentType = 'driver-license'
         const document = {
             docId: randomUUID(),
             docStatus: DocStatus.Ok,

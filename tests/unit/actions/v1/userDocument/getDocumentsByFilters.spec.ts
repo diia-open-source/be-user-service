@@ -1,5 +1,5 @@
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocumentType, OwnerType } from '@diia-inhouse/types'
+import { OwnerType } from '@diia-inhouse/types'
 
 import GetDocumentsByFilters from '@actions/v1/userDocument/getDocumentsByFilters'
 
@@ -10,7 +10,7 @@ describe(`Action ${GetDocumentsByFilters.name}`, () => {
     const headers = testKit.session.getHeaders()
     const userDocumentServiceMock = mockInstance(UserDocumentService)
 
-    const getDocumentsByFilters = new GetDocumentsByFilters(userDocumentServiceMock)
+    const getDocumentsByFilters = new GetDocumentsByFilters(userDocumentServiceMock, [])
 
     describe('method `handler`', () => {
         it('should return documents by filter', async () => {
@@ -18,7 +18,7 @@ describe(`Action ${GetDocumentsByFilters.name}`, () => {
                 params: {
                     filters: [
                         {
-                            documentType: DocumentType.DriverLicense,
+                            documentType: 'driver-license',
                             documentIdentifier: 'documentIdentifier',
                             docStatus: [1, 2],
                             ownerType: OwnerType.owner,
@@ -33,7 +33,7 @@ describe(`Action ${GetDocumentsByFilters.name}`, () => {
             const documents = [
                 {
                     userIdentifier: testKit.session.getUserSession().user.identifier,
-                    documentType: DocumentType.DriverLicense,
+                    documentType: 'driver-license',
                     documentIdentifier: 'documentIdentifier',
                     ownerType: OwnerType.owner,
                     notifications: {},

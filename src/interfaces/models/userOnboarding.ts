@@ -1,4 +1,4 @@
-import { Document } from 'mongoose'
+import { Document } from '@diia-inhouse/db'
 
 export interface UserOnboarding {
     mobileUid: string

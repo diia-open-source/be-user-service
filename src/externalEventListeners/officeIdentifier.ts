@@ -1,13 +1,13 @@
 import { IdentifierService } from '@diia-inhouse/crypto'
-import { EventBusListener, ExternalEvent } from '@diia-inhouse/diia-queue'
-import { DocumentType, Logger, ProfileFeature } from '@diia-inhouse/types'
+import { EventBusListener } from '@diia-inhouse/diia-queue'
+import { DiiaOfficeStatus, Logger, ProfileFeature } from '@diia-inhouse/types'
 import { ValidationSchema } from '@diia-inhouse/validators'
 
 import DocumentsService from '@services/documents'
 import UserProfileService from '@services/userProfile'
 
 import { EventPayload } from '@interfaces/externalEventListeners/officeIdentifier'
-import { DiiaOfficeStatus } from '@interfaces/models/userProfile'
+import { ExternalEvent } from '@interfaces/queue'
 
 export default class OfficeIdentifierEventListener implements EventBusListener {
     constructor(
@@ -63,8 +63,8 @@ export default class OfficeIdentifierEventListener implements EventBusListener {
         const identifier = this.identifier.createIdentifier(rnokpp)
 
         await this.userProfileService.setProfileFeature(identifier, ProfileFeature.office, { ...profile, status })
-        if (status !== DiiaOfficeStatus.Active) {
-            await this.documentsService.expireDocument(identifier, DocumentType.OfficialCertificate)
+        if (status !== DiiaOfficeStatus.ACTIVE) {
+            await this.documentsService.expireDocument(identifier, 'official-certificate')
         }
     }
 }

@@ -1,11 +1,12 @@
 {
-    "extends": "@diia-inhouse/configs/tsconfig",
+    "extends": "@diia-inhouse/configs/tsconfig/tsconfig.esm.json",
     "compilerOptions": {
         "plugins": [{ "transform": "@diia-inhouse/diia-app/dist/plugins/openapi" }],
         "outDir": "dist",
         "declarationDir": "dist/types",
         "baseUrl": "./",
         "strict": true,
+        "resolveJsonModule": true,
         "paths": {
             "@services/*": ["src/services/*"],
             "@providers/*": ["src/providers/*"],

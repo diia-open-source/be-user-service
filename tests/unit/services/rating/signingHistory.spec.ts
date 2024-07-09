@@ -1,10 +1,10 @@
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
 import { DateTime } from 'luxon'
 
 import { DiiaIdServiceCode, RatingCategory } from '@diia-inhouse/analytics'
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { MessageActionSubtype, MessageActionType, PlatformType, TemplateStub } from '@diia-inhouse/types'
+import { MessageActionSubtype, PlatformType, TemplateStub } from '@diia-inhouse/types'
 
 import AnalyticsService from '@services/analytics'
 import RatingSigningHistoryService from '@services/rating/signingHistory'
@@ -99,7 +99,7 @@ describe(`Service RatingSigningHistoryService`, () => {
                 notificationParams: {
                     templateParams: { [TemplateStub.ShortText]: 'Поділіться враженнями та досвідом використання Дія.Підпису.' },
                     action: {
-                        type: MessageActionType.DiiaId,
+                        type: 'diiaId',
                         subtype: MessageActionSubtype.authorization,
                     },
                     appVersions: {
@@ -130,8 +130,9 @@ describe(`Service RatingSigningHistoryService`, () => {
                 statusHistory: [{ status: UserHistoryItemStatus.Done, date: new Date() }],
                 resourceId: randomUUID(),
             }
+            const undefinedValue = undefined
 
-            jest.spyOn(analyticsService, 'getRatingForm').mockResolvedValueOnce(undefined)
+            jest.spyOn(analyticsService, 'getRatingForm').mockResolvedValueOnce(undefinedValue)
 
             expect(await service.getRatingForm(model, session.user.identifier)).toBeUndefined()
             expect(analyticsService.getRatingForm).toHaveBeenCalledWith({

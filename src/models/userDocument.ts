@@ -1,6 +1,5 @@
-import { Model, Schema, SchemaDefinition, model, models } from 'mongoose'
-
-import { DocumentType, OwnerType } from '@diia-inhouse/types'
+import { Model, Schema, SchemaDefinition, model, models } from '@diia-inhouse/db'
+import { OwnerType } from '@diia-inhouse/types'
 
 import { UserDocument, UserDocumentsNotifications } from '@interfaces/models/userDocument'
 import { ComparedTo, UserCompoundDocument } from '@interfaces/services/documents'
@@ -8,15 +7,15 @@ import { MessageTemplateCode } from '@interfaces/services/notification'
 
 const notificationsSchemaDefinition: SchemaDefinition<UserDocumentsNotifications> = {}
 
-Object.values(MessageTemplateCode).forEach((value: MessageTemplateCode) => {
+for (const value of Object.values(MessageTemplateCode)) {
     notificationsSchemaDefinition[value] = { type: Date }
-})
+}
 
 const notificationsSchema = new Schema<UserDocumentsNotifications>(notificationsSchemaDefinition, { _id: false })
 
 const userCompoundDocumentSchema = new Schema<UserCompoundDocument>(
     {
-        documentType: { type: String, enum: Object.values(DocumentType), required: true },
+        documentType: { type: String, required: true },
         documentIdentifier: { type: String, required: true },
     },
     {
@@ -26,7 +25,7 @@ const userCompoundDocumentSchema = new Schema<UserCompoundDocument>(
 
 const comparedToSchema = new Schema<ComparedTo>(
     {
-        documentType: { type: String, enum: Object.values(DocumentType), required: true },
+        documentType: { type: String, required: true },
         fullNameHash: { type: String, required: true },
     },
     {
@@ -38,7 +37,7 @@ const userDocumentSchema = new Schema<UserDocument>(
     {
         userIdentifier: { type: String, required: true },
         mobileUid: { type: String, index: true },
-        documentType: { type: String, enum: Object.values(DocumentType), required: true },
+        documentType: { type: String, required: true },
         documentSubType: { type: String },
         documentIdentifier: { type: String, required: true, index: true },
         normalizedDocumentIdentifier: { type: String, index: true },

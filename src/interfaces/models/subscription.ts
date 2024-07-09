@@ -1,6 +1,4 @@
-import { Document } from 'mongoose'
-
-import { DocumentType } from '@diia-inhouse/types'
+import { Document } from '@diia-inhouse/db'
 
 export enum SubscriptionType {
     Push = 'push',
@@ -20,7 +18,7 @@ export enum PublicServiceCode {
 
 export type SubscriptionItems = Record<string, boolean>
 
-export type DocumentsSubs = Partial<Record<DocumentType, SubscriptionItems>>
+export type DocumentsSubs = Record<string, SubscriptionItems>
 
 export type PublicServicesSubs = Record<PublicServiceCode, SubscriptionItems>
 

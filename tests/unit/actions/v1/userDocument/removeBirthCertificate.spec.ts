@@ -1,5 +1,4 @@
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocumentType } from '@diia-inhouse/types'
 
 import RemoveBirthCertificateAction from '@actions/v1/userDocument/removeBirthCertificate'
 
@@ -15,7 +14,7 @@ describe(`Action ${RemoveBirthCertificateAction.name}`, () => {
     describe('method `handler`', () => {
         it('should successfully remove birth certificate', async () => {
             const args = {
-                params: { documentType: DocumentType.BirthCertificate, documentId: 'documentId' },
+                params: { documentType: 'birth-certificate', documentId: 'documentId' },
                 session: testKit.session.getUserSession(),
                 headers,
             }

@@ -1,12 +1,13 @@
 import moment from 'moment'
 
-import { EventBusListener, InternalEvent } from '@diia-inhouse/diia-queue'
+import { EventBusListener } from '@diia-inhouse/diia-queue'
 import { Gender, PlatformType } from '@diia-inhouse/types'
 import { ValidationSchema } from '@diia-inhouse/validators'
 
 import EResidentProfileService from '@services/eResidentProfile'
 
 import { EventPayload } from '@interfaces/eventListeners/authCreateOrUpdateEResidentProfile'
+import { InternalEvent } from '@interfaces/queue'
 
 export default class AuthCreateOrUpdateEResidentProfileEventListener implements EventBusListener {
     constructor(private readonly eResidentProfileService: EResidentProfileService) {}
@@ -33,9 +34,6 @@ export default class AuthCreateOrUpdateEResidentProfileEventListener implements 
 
         const dateOfBirth: Date = new Date(moment(birthDay, 'DD.MM.YYYY').valueOf())
 
-        await Promise.all([
-            // subscriptionService.setPublicServiceSubscriptions(userIdentifier, itn),
-            this.eResidentProfileService.createOrUpdateProfile({ identifier: userIdentifier, gender, birthDay: dateOfBirth }, headers),
-        ])
+        await this.eResidentProfileService.createOrUpdateProfile({ identifier: userIdentifier, gender, birthDay: dateOfBirth }, headers)
     }
 }

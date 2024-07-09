@@ -1,5 +1,4 @@
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocumentType } from '@diia-inhouse/types'
 
 import GetDocumentsOrderAction from '@actions/v1/userDocument/getDocumentsOrder'
 
@@ -23,7 +22,7 @@ describe(`Action ${GetDocumentsOrderAction.name}`, () => {
                 headers,
             }
 
-            const userDocumentsOrderResponse = [{ documentType: DocumentType.ForeignPassport }]
+            const userDocumentsOrderResponse = [{ documentType: 'foreign-passport' }]
 
             jest.spyOn(userDocumentServiceMock, 'getDocumentsOrder').mockResolvedValueOnce(userDocumentsOrderResponse)
 

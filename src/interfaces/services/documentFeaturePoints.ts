@@ -1,12 +1,10 @@
-import { DocumentType } from '@diia-inhouse/types'
-
 export interface CheckPointsResult {
-    documentType: DocumentType
+    documentType: string
     documentIdentifier: string
 }
 
 export interface GetPointsResult {
-    documentType: DocumentType
+    documentType: string
     documentIdentifier: string
     points: number[]
 }

@@ -1,12 +1,10 @@
-import { Document } from 'mongoose'
-
-import { DocumentType } from '@diia-inhouse/types'
+import { Document } from '@diia-inhouse/db'
 
 export interface UserDocumentStorage {
     userIdentifier: string
     mobileUid?: string
     hashData: string
-    documentType: DocumentType
+    documentType: string
     encryptedData: string
     encryptedPhoto?: string
     encryptedDocPhoto?: string

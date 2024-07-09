@@ -1,5 +1,5 @@
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocumentType, Gender } from '@diia-inhouse/types'
+import { Gender } from '@diia-inhouse/types'
 
 import GetUsersFilterCoveragesAction from '@actions/v1/userInfo/getUsersFilterCoverage'
 
@@ -10,7 +10,7 @@ describe(`Action ${GetUsersFilterCoveragesAction.name}`, () => {
     const headers = testKit.session.getHeaders()
     const userProfileServiceMock = mockInstance(UserProfileService)
 
-    const getUsersFilterCoveragesAction = new GetUsersFilterCoveragesAction(userProfileServiceMock)
+    const getUsersFilterCoveragesAction = new GetUsersFilterCoveragesAction(userProfileServiceMock, [])
 
     describe('method `handler`', () => {
         it('should return user filter coverage', async () => {
@@ -31,10 +31,10 @@ describe(`Action ${GetUsersFilterCoveragesAction.name}`, () => {
                         },
                         documents: [
                             {
-                                type: DocumentType.InternalPassport,
+                                type: 'internal-passport',
                             },
                             {
-                                type: DocumentType.DriverLicense,
+                                type: 'driver-license',
                             },
                         ],
                     },

@@ -1,5 +1,5 @@
-import { randomUUID } from 'crypto'
-import Stream from 'stream'
+import { randomUUID } from 'node:crypto'
+import Stream from 'node:stream'
 
 const userProfileModelMock = {
     aggregate: jest.fn(),
@@ -19,18 +19,18 @@ jest.mock('@models/userProfile', () => ({
     __esModule: true,
 }))
 
-import { ObjectId } from 'bson'
 import moment from 'moment'
 import nock from 'nock'
 
 import { IdentifierService } from '@diia-inhouse/crypto'
+import { mongo } from '@diia-inhouse/db'
 import Logger from '@diia-inhouse/diia-logger'
-import { EventBus, ExternalEvent, ExternalEventBus, InternalEvent } from '@diia-inhouse/diia-queue'
+import { EventBus, ExternalEventBus } from '@diia-inhouse/diia-queue'
 import { InternalServerError, ModelNotFoundError } from '@diia-inhouse/errors'
 import TestKit, { mockInstance } from '@diia-inhouse/test'
 import {
+    DiiaOfficeStatus,
     DocStatus,
-    DocumentType,
     DurationMs,
     Gender,
     HttpStatusCode,
@@ -50,13 +50,16 @@ import userDocumentModel from '@models/userDocument'
 import UserProfileDataMapper from '@dataMappers/userProfileDataMapper'
 
 import { AppConfig } from '@interfaces/config'
-import { CitizenshipSource, DiiaOfficeProfile, DiiaOfficeStatus, UserProfile, UserProfileCitizenship } from '@interfaces/models/userProfile'
+import { CitizenshipSource, DiiaOfficeProfile, UserProfile, UserProfileCitizenship } from '@interfaces/models/userProfile'
+import { ExternalEvent, InternalEvent } from '@interfaces/queue'
 import { MessageTemplateCode, NotificationAppVersionsByPlatformType } from '@interfaces/services/notification'
 import { UserFilter } from '@interfaces/services/userProfile'
 
 const externalEventBusMock = {
     publish: jest.fn(),
 }
+
+const undefinedValue = undefined
 
 describe(`Service ${UserProfileService.name}`, () => {
     const testKit = new TestKit()
@@ -98,8 +101,8 @@ describe(`Service ${UserProfileService.name}`, () => {
                 birthDay: new Date(Date.now() - DurationMs.Month * 12 * 18),
             }
 
-            userProfileModelMock.findOne.mockResolvedValueOnce(undefined)
-            jest.spyOn(unregisteredOfficeProfileService, 'getUnregisteredProfile').mockResolvedValueOnce(undefined)
+            userProfileModelMock.findOne.mockResolvedValueOnce(undefinedValue)
+            jest.spyOn(unregisteredOfficeProfileService, 'getUnregisteredProfile').mockResolvedValueOnce(undefinedValue)
 
             await userProfileService.createOrUpdateProfile(userProfile, headers, itn)
 
@@ -124,10 +127,10 @@ describe(`Service ${UserProfileService.name}`, () => {
                 unitId: randomUUID(),
                 scopes: [],
                 isOrganizationAdmin: false,
-                status: DiiaOfficeStatus.Active,
+                status: DiiaOfficeStatus.ACTIVE,
             }
 
-            userProfileModelMock.findOne.mockResolvedValueOnce(undefined)
+            userProfileModelMock.findOne.mockResolvedValueOnce(undefinedValue)
             jest.spyOn(unregisteredOfficeProfileService, 'getUnregisteredProfile').mockResolvedValueOnce(unregisteredOfficeProfile)
             userProfileModelMock.updateOne.mockResolvedValue({ matchedCount: 0 })
 
@@ -182,7 +185,7 @@ describe(`Service ${UserProfileService.name}`, () => {
                 unitId: randomUUID(),
                 scopes: [],
                 isOrganizationAdmin: false,
-                status: DiiaOfficeStatus.Active,
+                status: DiiaOfficeStatus.ACTIVE,
             }
 
             jest.spyOn(unregisteredOfficeProfileService, 'getUnregisteredProfile').mockResolvedValueOnce(unregisteredOfficeProfile)
@@ -211,7 +214,7 @@ describe(`Service ${UserProfileService.name}`, () => {
         it('should not set profile if it does not exists for user', async () => {
             const userIdentifier = randomUUID()
 
-            jest.spyOn(unregisteredOfficeProfileService, 'getUnregisteredProfile').mockResolvedValue(undefined)
+            jest.spyOn(unregisteredOfficeProfileService, 'getUnregisteredProfile').mockResolvedValue(undefinedValue)
             jest.spyOn(unregisteredOfficeProfileService, 'addUnregisteredProfile').mockClear()
             jest.spyOn(unregisteredOfficeProfileService, 'removeUnregisteredProfile').mockClear()
 
@@ -263,7 +266,7 @@ describe(`Service ${UserProfileService.name}`, () => {
             const userIdentifier = randomUUID()
 
             appConfig.profileFeatures.isEnabled = true
-            userProfileModelMock.findOne.mockResolvedValueOnce(undefined)
+            userProfileModelMock.findOne.mockResolvedValueOnce(undefinedValue)
 
             await expect(userProfileService.getUserProfileFeatures(userIdentifier, [])).rejects.toThrow(
                 new ModelNotFoundError(userProfileModelMock.modelName, ''),
@@ -280,7 +283,7 @@ describe(`Service ${UserProfileService.name}`, () => {
                     unitId: randomUUID(),
                     scopes: [randomUUID()],
                     isOrganizationAdmin: false,
-                    status: DiiaOfficeStatus.Active,
+                    status: DiiaOfficeStatus.ACTIVE,
                 },
             }
             const userProfile = {
@@ -334,7 +337,7 @@ describe(`Service ${UserProfileService.name}`, () => {
                 unitId: randomUUID(),
                 scopes: [],
                 isOrganizationAdmin: false,
-                status: DiiaOfficeStatus.Active,
+                status: DiiaOfficeStatus.ACTIVE,
             }
 
             userProfileModelMock.updateOne.mockResolvedValue({ matchedCount: 1 })
@@ -367,7 +370,7 @@ describe(`Service ${UserProfileService.name}`, () => {
                 unitId: randomUUID(),
                 scopes: [],
                 isOrganizationAdmin: false,
-                status: DiiaOfficeStatus.Active,
+                status: DiiaOfficeStatus.ACTIVE,
             }
 
             userProfileModelMock.updateOne.mockResolvedValue({ matchedCount: 0 })
@@ -460,11 +463,11 @@ describe(`Service ${UserProfileService.name}`, () => {
             const limit = testKit.random.getRandomInt(1, 100)
             const userProfiles = [
                 {
-                    _id: new ObjectId(),
+                    _id: new mongo.ObjectId(),
                     identifier: randomUUID(),
                 },
                 {
-                    _id: new ObjectId(),
+                    _id: new mongo.ObjectId(),
                     identifier: randomUUID(),
                 },
             ]
@@ -488,17 +491,17 @@ describe(`Service ${UserProfileService.name}`, () => {
             const limit = testKit.random.getRandomInt(1, 100)
             const userProfiles = [
                 {
-                    _id: new ObjectId(),
+                    _id: new mongo.ObjectId(),
                     identifier: randomUUID(),
                 },
                 {
-                    _id: new ObjectId(),
+                    _id: new mongo.ObjectId(),
                     identifier: randomUUID(),
                 },
             ]
             const expectedIdentifiers = userProfiles.map(({ identifier }) => identifier)
             const expectedNextLastId = userProfiles[1]._id
-            const lastId = new ObjectId()
+            const lastId = new mongo.ObjectId()
 
             userProfileModelMock.aggregate.mockResolvedValueOnce(userProfiles)
 
@@ -533,7 +536,7 @@ describe(`Service ${UserProfileService.name}`, () => {
         it('should return false if profile does not exists', async () => {
             const userIdentifier = randomUUID()
 
-            userProfileModelMock.findOne.mockResolvedValueOnce(undefined)
+            userProfileModelMock.findOne.mockResolvedValueOnce(undefinedValue)
 
             const result = await userProfileService.hasUserProfile(userIdentifier)
 
@@ -554,9 +557,9 @@ describe(`Service ${UserProfileService.name}`, () => {
             }
             const expectedAge = moment().diff(birthDay, 'years')
             const documents = {
-                [DocumentType.DriverLicense]: 1,
-                [DocumentType.VehicleLicense]: 3,
-                [DocumentType.UId]: 1,
+                'driver-license': 1,
+                'vehicle-license': 3,
+                'u-id': 1,
             }
 
             appConfig.profileFeatures.isEnabled = true
@@ -585,15 +588,15 @@ describe(`Service ${UserProfileService.name}`, () => {
                         unitId: randomUUID(),
                         scopes: [randomUUID()],
                         isOrganizationAdmin: false,
-                        status: DiiaOfficeStatus.Active,
+                        status: DiiaOfficeStatus.ACTIVE,
                     },
                 },
             }
             const expectedAge = moment().diff(birthDay, 'years')
             const documents = {
-                [DocumentType.DriverLicense]: 1,
-                [DocumentType.VehicleLicense]: 3,
-                [DocumentType.UId]: 1,
+                'driver-license': 1,
+                'vehicle-license': 3,
+                'u-id': 1,
             }
 
             appConfig.profileFeatures.isEnabled = false
@@ -624,15 +627,15 @@ describe(`Service ${UserProfileService.name}`, () => {
                         unitId: randomUUID(),
                         scopes: [randomUUID()],
                         isOrganizationAdmin: false,
-                        status: DiiaOfficeStatus.Suspended,
+                        status: DiiaOfficeStatus.SUSPENDED,
                     },
                 },
             }
             const expectedAge = moment().diff(birthDay, 'years')
             const documents = {
-                [DocumentType.DriverLicense]: 1,
-                [DocumentType.VehicleLicense]: 3,
-                [DocumentType.UId]: 1,
+                'driver-license': 1,
+                'vehicle-license': 3,
+                'u-id': 1,
             }
 
             appConfig.profileFeatures.isEnabled = true
@@ -662,15 +665,15 @@ describe(`Service ${UserProfileService.name}`, () => {
                         unitId: randomUUID(),
                         scopes: [randomUUID()],
                         isOrganizationAdmin: false,
-                        status: DiiaOfficeStatus.Active,
+                        status: DiiaOfficeStatus.ACTIVE,
                     },
                 },
             }
             const expectedAge = moment().diff(birthDay, 'years')
             const documents = {
-                [DocumentType.DriverLicense]: 1,
-                [DocumentType.VehicleLicense]: 3,
-                [DocumentType.UId]: 1,
+                'driver-license': 1,
+                'vehicle-license': 3,
+                'u-id': 1,
             }
 
             appConfig.profileFeatures.isEnabled = true
@@ -742,7 +745,7 @@ describe(`Service ${UserProfileService.name}`, () => {
             const userIdentifier = randomUUID()
             const source = CitizenshipSource.BankAccount
 
-            userProfileModelMock.findOne.mockResolvedValueOnce(undefined)
+            userProfileModelMock.findOne.mockResolvedValueOnce(undefinedValue)
 
             await expect(userProfileService.getUserCitizenship(userIdentifier, source)).rejects.toThrow(
                 new ModelNotFoundError(userProfileModelMock.modelName, ''),
@@ -853,9 +856,9 @@ describe(`Service ${UserProfileService.name}`, () => {
         it('should return percent', async () => {
             const gender = testKit.session.getGender()
             const userFilter: UserFilter = { gender }
-            const estimatedDocumentCount = testKit.random.getRandomInt(10, 1000)
+            const estimatedDocumentCount = testKit.random.getRandomInt(20, 1000)
             const usersCount = testKit.random.getRandomInt(1, 100)
-            const percent = parseFloat(((usersCount / estimatedDocumentCount) * 100).toFixed(2))
+            const percent = Number.parseFloat(((usersCount / estimatedDocumentCount) * 100).toFixed(2))
             const size = Math.floor(estimatedDocumentCount * 0.05)
 
             userProfileModelMock.estimatedDocumentCount.mockResolvedValueOnce(estimatedDocumentCount)
@@ -884,7 +887,7 @@ describe(`Service ${UserProfileService.name}`, () => {
 
             expect(userProfileModelMock.estimatedDocumentCount).toHaveBeenCalled()
             expect(userProfileModelMock.count).toHaveBeenCalledWith('usersCount')
-            expect(result).toEqual({ percent: NaN })
+            expect(result).toEqual({ percent: Number.NaN })
         })
     })
 
@@ -893,7 +896,7 @@ describe(`Service ${UserProfileService.name}`, () => {
             const gender = testKit.session.getGender()
             const userFilter: UserFilter = { gender }
             const templateCode = MessageTemplateCode.DriverLicenseDataChanged
-            const userIdentifiers = [...Array(appConfig.notifications.targetBatchSize)].map(() => randomUUID())
+            const userIdentifiers = Array.from({ length: appConfig.notifications.targetBatchSize }).map(() => randomUUID())
 
             appConfig.notifications.isEnabled = true
             userProfileModelMock.aggregate.mockReturnValueOnce(userProfileModelMock)
@@ -989,7 +992,7 @@ describe(`Service ${UserProfileService.name}`, () => {
         ])('should subscribe users to topics by user identifiers link when %s', async (_msg, targetUsersCount, getExpectedLastPublish) => {
             const { targetBatchSize } = appConfig.notifications
             const userIdentifiersLink = 'https://user-identifiers.link'
-            const userIdentifiers: string[] = [...Array(targetUsersCount)].map(() => randomUUID())
+            const userIdentifiers: string[] = Array.from({ length: targetUsersCount }).map(() => randomUUID())
             const filter = { gender: Gender.female, childrenAmount: 5, userIdentifiersLink }
             const channel: string = randomUUID()
             const topicsBatch = testKit.random.getRandomInt(1, targetUsersCount)
@@ -1040,7 +1043,7 @@ describe(`Service ${UserProfileService.name}`, () => {
             const { targetBatchSize } = appConfig.notifications
             const itnsLink = 'https://user-identifiers.link'
             const targetUsersCount = targetBatchSize * testKit.random.getRandomInt(1, 100) * 2 + 1
-            const userItns = [...Array(targetUsersCount)].map(() =>
+            const userItns = Array.from({ length: targetUsersCount }).map(() =>
                 testKit.session.generateItn(testKit.session.getBirthDate(), testKit.session.getGender(), false),
             )
             const filter = { gender: Gender.female, childrenAmount: 5, itnsLink }
@@ -1129,7 +1132,7 @@ describe(`Service ${UserProfileService.name}`, () => {
                                         as: 'document',
                                         cond: {
                                             $and: [
-                                                { $eq: ['$$document.documentType', DocumentType.BirthCertificate] },
+                                                { $eq: ['$$document.documentType', 'birth-certificate'] },
                                                 { $ne: ['$$document.docStatus', DocStatus.NotFound] },
                                             ],
                                         },
@@ -1143,7 +1146,7 @@ describe(`Service ${UserProfileService.name}`, () => {
             ],
             [
                 'filter has documents',
-                { documents: [{ type: DocumentType.InternalPassport }, { type: DocumentType.ResidencePermitTemporary }] },
+                { documents: [{ type: 'internal-passport' }, { type: 'residence-permit-temporary' }] },
                 [
                     {
                         $lookup: {
@@ -1155,7 +1158,7 @@ describe(`Service ${UserProfileService.name}`, () => {
                     },
                     {
                         $match: {
-                            'documents.documentType': { $in: [DocumentType.InternalPassport, DocumentType.ResidencePermitTemporary] },
+                            'documents.documentType': { $in: ['internal-passport', 'residence-permit-temporary'] },
                             'documents.docStatus': { $ne: DocStatus.NotFound },
                         },
                     },
@@ -1167,7 +1170,7 @@ describe(`Service ${UserProfileService.name}`, () => {
                     gender: Gender.female,
                     childrenAmount: 5,
                     age: { to: 60 },
-                    documents: [{ type: DocumentType.ForeignPassport }, { type: DocumentType.PensionCard }],
+                    documents: [{ type: 'foreign-passport' }, { type: 'pension-card' }],
                 },
                 [
                     { $match: { gender: Gender.female, birthDay: { $gte: expect.any(Date) } } },
@@ -1181,7 +1184,7 @@ describe(`Service ${UserProfileService.name}`, () => {
                     },
                     {
                         $match: {
-                            'documents.documentType': { $in: [DocumentType.ForeignPassport, DocumentType.PensionCard] },
+                            'documents.documentType': { $in: ['foreign-passport', 'pension-card'] },
                             'documents.docStatus': { $ne: DocStatus.NotFound },
                         },
                     },
@@ -1194,7 +1197,7 @@ describe(`Service ${UserProfileService.name}`, () => {
                                         as: 'document',
                                         cond: {
                                             $and: [
-                                                { $eq: ['$$document.documentType', DocumentType.BirthCertificate] },
+                                                { $eq: ['$$document.documentType', 'birth-certificate'] },
                                                 { $ne: ['$$document.docStatus', DocStatus.NotFound] },
                                             ],
                                         },
@@ -1209,7 +1212,7 @@ describe(`Service ${UserProfileService.name}`, () => {
         ])('should subscribe users to topics by identifiers from user profile when %s', async (_msg, filter, expectedQuery) => {
             const { targetBatchSize } = appConfig.notifications
             const targetUsersCount = targetBatchSize * testKit.random.getRandomInt(1, 100) * 2 + 1
-            const userIdentifiers = [...Array(targetUsersCount)].map(() => randomUUID())
+            const userIdentifiers = Array.from({ length: targetUsersCount }).map(() => randomUUID())
             const channel = randomUUID()
             const topicsBatch = testKit.random.getRandomInt(1, targetUsersCount)
             const campaignId = randomUUID()
@@ -1263,7 +1266,7 @@ describe(`Service ${UserProfileService.name}`, () => {
         it('should subscribe users to topics by identifiers from user profile when topicsBatch was not passed', async () => {
             const { targetBatchSize } = appConfig.notifications
             const targetUsersCount = targetBatchSize * testKit.random.getRandomInt(1, 100) * 2 + 1
-            const userIdentifiers = [...Array(targetUsersCount)].map(() => randomUUID())
+            const userIdentifiers = Array.from({ length: targetUsersCount }).map(() => randomUUID())
             const channel = randomUUID()
             const campaignId = randomUUID()
             const filter = { gender: Gender.male }
@@ -1317,7 +1320,7 @@ describe(`Service ${UserProfileService.name}`, () => {
         it('should subscribe users to topics by identifiers from user profile when appVersions was not passed', async () => {
             const { targetBatchSize } = appConfig.notifications
             const targetUsersCount = targetBatchSize * testKit.random.getRandomInt(1, 100) * 2 + 1
-            const userIdentifiers = [...Array(targetUsersCount)].map(() => randomUUID())
+            const userIdentifiers = Array.from({ length: targetUsersCount }).map(() => randomUUID())
             const channel = randomUUID()
             const topicsBatch = testKit.random.getRandomInt(1, targetUsersCount)
             const campaignId = randomUUID()
@@ -1368,7 +1371,7 @@ describe(`Service ${UserProfileService.name}`, () => {
         it('should subscribe users to topics by identifiers from user profile when appVersions and campaignId was not passed', async () => {
             const { targetBatchSize } = appConfig.notifications
             const targetUsersCount = targetBatchSize * testKit.random.getRandomInt(1, 100) * 2 + 1
-            const userIdentifiers = [...Array(targetUsersCount)].map(() => randomUUID())
+            const userIdentifiers = Array.from({ length: targetUsersCount }).map(() => randomUUID())
             const channel = randomUUID()
             const topicsBatch = testKit.random.getRandomInt(1, targetUsersCount)
             const filter = { gender: Gender.female }

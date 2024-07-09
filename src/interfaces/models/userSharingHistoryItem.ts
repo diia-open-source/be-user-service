@@ -1,7 +1,4 @@
-import { ObjectId } from 'bson'
-import { Document } from 'mongoose'
-
-import { DocumentType } from '@diia-inhouse/types'
+import { Document, mongo } from '@diia-inhouse/db'
 
 import { UserHistoryItemStatus } from '@interfaces/services/userHistory'
 
@@ -11,7 +8,7 @@ export interface StatusHistoryItem {
 }
 
 export interface SharingHistoryAcquirer {
-    id: ObjectId
+    id: mongo.ObjectId
     name: string
     address: string
 }
@@ -27,7 +24,7 @@ export interface UserSharingHistoryItem {
     sharingId: string
     status: UserHistoryItemStatus
     statusHistory: StatusHistoryItem[]
-    documents: DocumentType[]
+    documents: string[]
     date: Date
     acquirer: SharingHistoryAcquirer
     offer?: SharingHistoryOffer

@@ -1,6 +1,6 @@
 import { v4 as uuid } from 'uuid'
 
-import { AppAction } from '@diia-inhouse/diia-app'
+import { GrpcAppAction } from '@diia-inhouse/diia-app'
 
 import { IdentifierService } from '@diia-inhouse/crypto'
 import { ActionVersion, SessionType } from '@diia-inhouse/types'
@@ -11,12 +11,14 @@ import DiiaIdService from '@services/diiaId'
 import UserSigningHistoryService from '@services/userSigningHistory'
 
 import { ActionResult, CustomActionArguments } from '@interfaces/actions/v2/diiaId/hashFilesToSign'
-import { HashedFile } from '@interfaces/externalEventListeners/diiaIdHashFiles'
 import { DiiaIdSignType } from '@interfaces/externalEventListeners/diiaIdSignHashesInit'
 import { SignAlgo } from '@interfaces/models/diiaId'
 import { UserHistoryItemStatus } from '@interfaces/services/userHistory'
 
-export default class HashFilesToSignAction implements AppAction {
+/**
+ * Extract hashes from files and init signing.
+ */
+export default class HashFilesToSignAction implements GrpcAppAction {
     constructor(
         private readonly diiaIdService: DiiaIdService,
         private readonly userSigningHistoryService: UserSigningHistoryService,
@@ -71,13 +73,13 @@ export default class HashFilesToSignAction implements AppAction {
             headers: { mobileUid, platformType, platformVersion },
         } = args
         const { identifier: userIdentifier } = user
-        const sessionId: string = this.identifier.createIdentifier(mobileUid)
-        const currentDate: Date = new Date()
+        const sessionId = this.identifier.createIdentifier(mobileUid)
+        const currentDate = new Date()
         const noSigningTime = options?.noSigningTime
         const noContentTimestamp = options?.noContentTimestamp
 
         try {
-            const hashedFiles: HashedFile[] = await this.diiaIdService.hashFilesToSign(user, mobileUid, files, signAlgo, options)
+            const hashedFiles = await this.diiaIdService.hashFilesToSign(user, mobileUid, files, signAlgo, options)
 
             await this.userSigningHistoryService.upsertItem({
                 userIdentifier,

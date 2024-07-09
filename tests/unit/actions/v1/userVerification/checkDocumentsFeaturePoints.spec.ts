@@ -1,5 +1,4 @@
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocumentType } from '@diia-inhouse/types'
 
 import CheckDocumentsFeaturePointsAction from '@actions/v1/userVerification/checkDocumentsFeaturePoints'
 
@@ -22,7 +21,7 @@ describe(`Action ${CheckDocumentsFeaturePointsAction.name}`, () => {
 
             const checkPointsResult = [
                 {
-                    documentType: DocumentType.InternalPassport,
+                    documentType: 'internal-passport',
                     documentIdentifier: 'documentIdentifier',
                 },
             ]

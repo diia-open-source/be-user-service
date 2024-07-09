@@ -1,10 +1,10 @@
 import { DocumentDecryptedData } from '@diia-inhouse/crypto'
-import { DocumentType, ServiceActionArguments } from '@diia-inhouse/types'
+import { ServiceActionArguments } from '@diia-inhouse/types'
 
 export interface CustomActionArguments extends ServiceActionArguments {
     params: {
         userIdentifier: string
-        documentType: DocumentType
+        documentType: string
         dataToEncrypt: DocumentDecryptedData
         photoToEncrypt?: string
         docPhotoToEncrypt?: string

@@ -1,9 +1,8 @@
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
-import { ObjectId } from 'bson'
-
+import { mongo } from '@diia-inhouse/db'
 import Logger from '@diia-inhouse/diia-logger'
-import { EventBus, InternalEvent } from '@diia-inhouse/diia-queue'
+import { EventBus } from '@diia-inhouse/diia-queue'
 import { mockInstance } from '@diia-inhouse/test'
 import { PlatformType } from '@diia-inhouse/types'
 
@@ -12,6 +11,7 @@ import CreateNotificationsBatchesTask from '@src/tasks/createNotificationsBatche
 import UserProfileService from '@services/userProfile'
 
 import { AppConfig } from '@interfaces/config'
+import { InternalEvent } from '@interfaces/queue'
 import { UserIdentifiersWithLastId } from '@interfaces/services/userProfile'
 
 const mockEventBus = <EventBus>(<unknown>{
@@ -32,15 +32,20 @@ describe(`Task ${CreateNotificationsBatchesTask.name}`, () => {
     it.each([
         [
             `one ${InternalEvent.UserSendMassNotifications} event when count of found user identifiers is less than notificationsBatchSize`,
-            { messageId: new ObjectId(), useExpirations: false, platformTypes: [PlatformType.Android, PlatformType.Huawei] },
-            [{ userIdentifiers: [...Array(notificationsBatchSize - 1)].map(() => randomUUID()), nextLastId: new ObjectId() }],
+            { messageId: new mongo.ObjectId(), useExpirations: false, platformTypes: [PlatformType.Android, PlatformType.Huawei] },
+            [
+                {
+                    userIdentifiers: Array.from({ length: notificationsBatchSize - 1 }).map(() => randomUUID()),
+                    nextLastId: new mongo.ObjectId(),
+                },
+            ],
         ],
         [
             `multiple ${InternalEvent.UserSendMassNotifications} event when count of found user identifiers is greater than notificationsBatchSize`,
-            { messageId: new ObjectId(), useExpirations: false, platformTypes: [PlatformType.Android, PlatformType.Huawei] },
-            [...Array(5)].map(() => ({
-                userIdentifiers: [...Array(notificationsBatchSize)].map(() => randomUUID()),
-                nextLastId: new ObjectId(),
+            { messageId: new mongo.ObjectId(), useExpirations: false, platformTypes: [PlatformType.Android, PlatformType.Huawei] },
+            Array.from({ length: 5 }).map(() => ({
+                userIdentifiers: Array.from({ length: notificationsBatchSize }).map(() => randomUUID()),
+                nextLastId: new mongo.ObjectId(),
             })),
         ],
     ])(`should publish %s`, async (_msg, params, getUserIdentifiersResponses: UserIdentifiersWithLastId[]) => {
@@ -48,8 +53,8 @@ describe(`Task ${CreateNotificationsBatchesTask.name}`, () => {
         const createNotificationsBatchesTask = new CreateNotificationsBatchesTask(userProfileService, config, mockEventBus, logger)
         const { messageId, useExpirations, platformTypes } = params
 
-        for (let i = 0; i < getUserIdentifiersResponses.length; i++) {
-            jest.spyOn(userProfileService, 'getUserIdentifiersByPlatformTypes').mockResolvedValueOnce(getUserIdentifiersResponses[i])
+        for (const getUserIdentifiersResponse of getUserIdentifiersResponses) {
+            jest.spyOn(userProfileService, 'getUserIdentifiersByPlatformTypes').mockResolvedValueOnce(getUserIdentifiersResponse)
         }
 
         jest.spyOn(userProfileService, 'getUserIdentifiersByPlatformTypes').mockResolvedValueOnce({ userIdentifiers: [] })
@@ -76,14 +81,14 @@ describe(`Task ${CreateNotificationsBatchesTask.name}`, () => {
     it('should log error if result was not returned from publish', async () => {
         const userProfileService = mockInstance(UserProfileService)
         const createNotificationsBatchesTask = new CreateNotificationsBatchesTask(userProfileService, config, mockEventBus, logger)
-        const messageId = new ObjectId()
+        const messageId = new mongo.ObjectId()
         const useExpirations = true
         const platformTypes = [PlatformType.Android, PlatformType.Huawei]
         const params = { messageId, useExpirations, platformTypes }
-        const nextLastId = new ObjectId()
+        const nextLastId = new mongo.ObjectId()
 
         jest.spyOn(userProfileService, 'getUserIdentifiersByPlatformTypes').mockResolvedValueOnce({
-            userIdentifiers: [...Array(notificationsBatchSize - 1)].map(() => randomUUID()),
+            userIdentifiers: Array.from({ length: notificationsBatchSize - 1 }).map(() => randomUUID()),
             nextLastId,
         })
         jest.spyOn(userProfileService, 'getUserIdentifiersByPlatformTypes').mockResolvedValueOnce({ userIdentifiers: [] })

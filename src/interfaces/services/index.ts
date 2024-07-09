@@ -15,20 +15,6 @@ export enum ProcessCode {
     FailedSubscribeCreditHistory = 25101002,
     FailedUnsubscribeCreditHistory = 25101003,
     UnsubscribedCreditHistory = 25101004,
-    PermissionToUseDocPhotoRequired = 58101001,
-    ManualUpdateUnavailable = 58101002,
-    HideMarriageRecord = 58101003,
-    MarriageRecordHidden = 58101004,
-    HideDivorceRecord = 58101005,
-    DivorceRecordHidden = 58101006,
-    HideNameChangeRecord = 58101007,
-    NameChangeRecordHidden = 58101008,
-    HideChildBirthRecord = 58101009,
-    ChildBirthRecordHidden = 58101010,
-    UserBirthRecordNotFound = 58101011,
-    InvalidItn = 58101012,
-    ActRecordInvalidAge = 58101013,
-    DracsRegistryError = 58201001,
 }
 
 export enum AttentionMessageParameterType {

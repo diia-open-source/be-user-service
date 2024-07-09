@@ -1,6 +1,14 @@
-import { DocStatus, DocumentType, DocumentTypeCamelCase, OwnerType, UserDocumentSubtype } from '@diia-inhouse/types'
+import { DocStatus, OwnerType } from '@diia-inhouse/types'
 
-import { DocumentItem } from '@src/generated'
+export enum UserDocumentSubtype {
+    Permanent = 'permanent',
+    IssuedFirst = 'issuedFirst',
+    Recovery = 'recovery',
+    Vaccination = 'vaccination',
+    Test = 'test',
+    Pupil = 'pupil',
+    Student = 'student',
+}
 
 export interface VehicleLicenseUserDocumentData {
     brand: string
@@ -11,7 +19,7 @@ export interface VehicleLicenseUserDocumentData {
 export type UserDocumentData = VehicleLicenseUserDocumentData
 
 export interface ComparedTo {
-    documentType: DocumentType
+    documentType: string
     fullNameHash: string
 }
 
@@ -40,7 +48,7 @@ export interface UserProfileDocument {
 }
 
 export interface UserCompoundDocument {
-    documentType: DocumentType
+    documentType: string
     documentIdentifier: string
 }
 
@@ -80,14 +88,3 @@ export interface IdentityDocument {
 export interface BirthCertificate {
     id: string
 }
-
-export interface GetDocumentsRequest {
-    documents?: DocumentWithETagRequest[]
-}
-
-export interface DocumentWithETagRequest {
-    type: DocumentTypeCamelCase
-    eTag?: string
-}
-
-export type DocumentsResponse = Partial<Record<DocumentTypeCamelCase, DocumentItem>>

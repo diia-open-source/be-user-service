@@ -1,5 +1,4 @@
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocumentType } from '@diia-inhouse/types'
 
 import GetFeaturePointsAction from '@actions/v1/userVerification/getFeaturePoints'
 
@@ -20,7 +19,7 @@ describe(`Action ${GetFeaturePointsAction.name}`, () => {
                 headers,
             }
 
-            const featurePoints = [{ documentType: DocumentType.EResidency, documentIdentifier: 'documentIdentifier', points: [10, 10] }]
+            const featurePoints = [{ documentType: 'e-residency', documentIdentifier: 'documentIdentifier', points: [10, 10] }]
 
             jest.spyOn(documentFeaturePointsServiceMock, 'getFeaturePoints').mockResolvedValueOnce(featurePoints)
 

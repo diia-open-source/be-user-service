@@ -1,5 +1,5 @@
-import { EventBusListener, InternalEvent } from '@diia-inhouse/diia-queue'
-import { DocumentType, PlatformType } from '@diia-inhouse/types'
+import { EventBusListener } from '@diia-inhouse/diia-queue'
+import { PlatformType } from '@diia-inhouse/types'
 import { ValidationSchema } from '@diia-inhouse/validators'
 
 import { userProfileDocumentValidationSchema } from '@src/validation'
@@ -9,37 +9,41 @@ import SubscriptionService from '@services/subscription'
 import UserDocumentService from '@services/userDocument'
 
 import { EventPayload } from '@interfaces/eventListeners/addDocumentsInProfile'
+import { InternalEvent } from '@interfaces/queue'
 
 export default class AddDocumentsInProfileEventListener implements EventBusListener {
     constructor(
         private readonly analyticsService: AnalyticsService,
         private readonly userDocumentService: UserDocumentService,
         private readonly subscriptionService: SubscriptionService,
-    ) {}
+        private readonly documentTypes: string[],
+    ) {
+        this.validationRules = {
+            userIdentifier: { type: 'string' },
+            documentType: { type: 'string', enum: this.documentTypes },
+            documents: {
+                type: 'array',
+                items: {
+                    type: 'object',
+                    props: userProfileDocumentValidationSchema,
+                },
+            },
+            headers: {
+                type: 'object',
+                props: {
+                    mobileUid: { type: 'string', optional: true },
+                    platformType: { type: 'string', enum: Object.values(PlatformType), optional: true },
+                    platformVersion: { type: 'string', optional: true },
+                    appVersion: { type: 'string', optional: true },
+                },
+            },
+            removeMissingDocuments: { type: 'boolean' },
+        }
+    }
 
     readonly event: InternalEvent = InternalEvent.DocumentsAddDocumentsInProfile
 
-    readonly validationRules: ValidationSchema<EventPayload> = {
-        userIdentifier: { type: 'string' },
-        documentType: { type: 'string', enum: Object.values(DocumentType) },
-        documents: {
-            type: 'array',
-            items: {
-                type: 'object',
-                props: userProfileDocumentValidationSchema,
-            },
-        },
-        headers: {
-            type: 'object',
-            props: {
-                mobileUid: { type: 'string', optional: true },
-                platformType: { type: 'string', enum: Object.values(PlatformType), optional: true },
-                platformVersion: { type: 'string', optional: true },
-                appVersion: { type: 'string', optional: true },
-            },
-        },
-        removeMissingDocuments: { type: 'boolean' },
-    }
+    readonly validationRules: ValidationSchema<EventPayload>
 
     async handler(message: EventPayload): Promise<void> {
         const {

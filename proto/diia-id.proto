@@ -1,0 +1,118 @@
+syntax = "proto3";
+
+package ua.gov.diia.diiaid;
+option java_multiple_files = true;
+option java_package = "ua.gov.diia.diiaid";
+
+enum SignAlgo {
+    DSTU = 0;
+    ECDSA = 1;
+}
+
+message HashFilesToSignRequest {
+    repeated FileToHash files = 1;
+    string publicService = 2;
+    string applicationId = 3;
+    repeated string documents = 4;
+    SigningHistoryRecipient recipient = 5;
+    optional HashFilesToSignOptions options = 6;
+    SignAlgo signAlgo = 7;
+}
+
+message HashFilesToSignResponse {
+    repeated HashedFile hashedFiles = 1;
+}
+
+message HashFileToSignRequest {
+    string processId = 1;
+    FileToHash file = 2;
+    SignAlgo signAlgo = 3;
+}
+
+message HashFileToSignResponse {
+    HashedFile hashedFile = 1;
+}
+
+message ValidateHashSignaturesRequest {
+    repeated SignedFileHash files = 1;
+    string publicService = 2;
+    string applicationId = 3;
+    repeated string documents = 4;
+    SigningHistoryRecipient recipient = 5;
+    optional bool returnOriginals = 6;
+    SignAlgo signAlgo = 7;
+}
+
+message ValidateHashSignaturesResponse {
+    repeated FileIntegrityResult checkResults = 1;
+}
+
+message ValidateSignedFileHashesRequest {
+    repeated SignedFile files = 1;
+    string publicService = 2;
+    string applicationId = 3;
+    repeated string documents = 4;
+    SigningHistoryRecipient recipient = 5;
+}
+
+message InitDiiaIdHashesSigningRequest {
+    string publicService = 1;
+    string applicationId = 2;
+    repeated string documents = 3;
+    SigningHistoryRecipient recipient = 4;
+    SignAlgo signAlgo = 5;
+    optional int32 signType = 6;
+    optional bool noSigningTime = 7;
+    optional bool noContentTimestamp = 8;
+    optional string processId = 9;
+}
+
+message FileToHash {
+    string name = 1;
+    string file = 2;
+    optional bool isRequireInternalSign = 3;
+}
+
+message SignedFileHash {
+    string name = 1;
+    string hash = 2;
+    string signature = 3;
+}
+
+message SignedFile {
+    string name = 1;
+    string data = 2;
+    string signature = 3;
+}
+
+message SigningHistoryRecipient {
+    string name = 1;
+    string address = 2;
+}
+
+message HashFilesToSignOptions {
+    optional int32 signType = 1;
+    optional bool noSigningTime = 2;
+    optional bool noContentTimestamp = 3;
+}
+
+message HashedFile {
+    string name = 1;
+    string hash = 2;
+}
+
+message FileIntegrityResult {
+    string name = 1;
+    bool checked = 2;
+    optional string originalFileBase64 = 3;
+}
+
+message HasDiiaIdIdentifierRequest {
+    string userIdentifier = 1;
+    optional string mobileUidToExclude = 2;
+    optional string mobileUid = 3;
+}
+
+message HasDiiaIdIdentifierResponse {
+    bool hasDiiaIdIdentifierResult = 1;
+}

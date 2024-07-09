@@ -1,10 +1,8 @@
-import { ObjectId } from 'bson'
-import { Document } from 'mongoose'
-
+import { Document, mongo } from '@diia-inhouse/db'
 import { PlatformType } from '@diia-inhouse/types'
 
 export interface Distribution {
-    messageId: ObjectId
+    messageId: mongo.ObjectId
     platformTypes: PlatformType[]
 }
 

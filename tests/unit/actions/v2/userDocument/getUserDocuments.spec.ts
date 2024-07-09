@@ -1,5 +1,5 @@
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocumentType, OwnerType } from '@diia-inhouse/types'
+import { OwnerType } from '@diia-inhouse/types'
 
 import GetUserDocumentsAction from '@actions/v2/userDocument/getUserDocuments'
 
@@ -9,14 +9,14 @@ describe(`Action ${GetUserDocumentsAction.name}`, () => {
     const testKit = new TestKit()
     const userDocumentService = mockInstance(UserDocumentService)
 
-    const action = new GetUserDocumentsAction(userDocumentService)
+    const action = new GetUserDocumentsAction(userDocumentService, [])
 
     describe('Method `handler`', () => {
         it('should return user documents by filters', async () => {
             const args = {
                 params: {
                     userIdentifier: 'userIdentifier',
-                    filters: [{ documentType: DocumentType.BirthCertificate, docStatus: [1], ownerType: OwnerType.owner, docId: 'docId' }],
+                    filters: [{ documentType: 'birth-certificate', docStatus: [1], ownerType: OwnerType.owner, docId: 'docId' }],
                 },
                 session: testKit.session.getUserSession(),
                 headers: testKit.session.getHeaders(),
@@ -25,7 +25,7 @@ describe(`Action ${GetUserDocumentsAction.name}`, () => {
             const documents = [
                 {
                     userIdentifier: 'userIdentifier',
-                    documentType: DocumentType.BirthCertificate,
+                    documentType: 'birth-certificate',
                     documentIdentifier: 'documentIdentifier',
                     ownerType: OwnerType.owner,
                     notifications: {},

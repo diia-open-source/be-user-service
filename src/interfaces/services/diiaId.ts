@@ -1,5 +1,5 @@
 import { DiiaIdSignType } from '@interfaces/externalEventListeners/diiaIdSignHashesInit'
-import { SignAlgo } from '@interfaces/models/diiaId'
+import { DiiaIdModel, SignAlgo } from '@interfaces/models/diiaId'
 import { AttentionMessage } from '@interfaces/services'
 import { IdentityDocumentType } from '@interfaces/services/documents'
 
@@ -112,6 +112,17 @@ export interface AreSignedFileHashesValidParams {
     validateDiiaIdAction?: boolean
     returnOriginals?: boolean
     signAlgo: SignAlgo
+}
+
+export interface InitHashesSigningParams {
+    userIdentifier: string
+    mobileUid: string
+    signAlgo: SignAlgo
+    signType?: DiiaIdSignType
+    noSigningTime?: boolean
+    noContentTimestamp?: boolean
+    processId?: string
+    diiaId?: DiiaIdModel
 }
 
 export interface AreSignedFileHashesValidResult {

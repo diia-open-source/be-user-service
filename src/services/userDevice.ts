@@ -1,5 +1,4 @@
-import { UpdateResult } from 'mongodb'
-
+import { mongo } from '@diia-inhouse/db'
 import { ActHeaders, Logger } from '@diia-inhouse/types'
 
 import userDeviceModel from '@models/userDevice'
@@ -21,7 +20,7 @@ export default class UserDeviceService {
     }
 
     async unassignDevice(mobileUid: string, userIdentifier: string): Promise<void> {
-        const { modifiedCount }: UpdateResult = await userDeviceModel.updateOne(
+        const { modifiedCount }: mongo.UpdateResult = await userDeviceModel.updateOne(
             { mobileUid, userIdentifier },
             { $unset: { userIdentifier: 1 } },
         )

@@ -1,6 +1,6 @@
 import { AppAction } from '@diia-inhouse/diia-app'
 
-import { ActionVersion, DocumentType, SessionType } from '@diia-inhouse/types'
+import { ActionVersion, SessionType } from '@diia-inhouse/types'
 import { ValidationSchema } from '@diia-inhouse/validators'
 
 import UserDocumentStorageService from '@services/userDocumentStorage'
@@ -17,7 +17,7 @@ export default class RemoveBirthCertificateAction implements AppAction {
     readonly name: string = 'removeBirthCertificate'
 
     readonly validationRules: ValidationSchema = {
-        documentType: { type: 'string', enum: [DocumentType.BirthCertificate] },
+        documentType: { type: 'string', enum: ['birth-certificate'] },
         documentId: { type: 'string' },
     }
 

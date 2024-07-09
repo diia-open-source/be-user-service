@@ -1,16 +1,14 @@
-import { randomUUID } from 'crypto'
-
-import { FilterQuery, UpdateQuery } from 'mongoose'
+import { randomUUID } from 'node:crypto'
 
 const uuidV4Stub = jest.fn()
 
 jest.mock('uuid', () => ({ v4: uuidV4Stub }))
 
+import { FilterQuery, UpdateQuery } from '@diia-inhouse/db'
 import DiiaLogger from '@diia-inhouse/diia-logger'
-import { ExternalCommunicator, ExternalEvent } from '@diia-inhouse/diia-queue'
+import { ExternalCommunicator } from '@diia-inhouse/diia-queue'
 import { ModelNotFoundError } from '@diia-inhouse/errors'
 import { mockInstance } from '@diia-inhouse/test'
-import { DocumentType } from '@diia-inhouse/types'
 
 const documentFeaturePointsModel = {
     find: jest.fn(),
@@ -28,6 +26,9 @@ import DocumentFeaturePointsService from '@services/documentFeaturePoints'
 import DocumentFeaturePointsDataMapper from '@dataMappers/documentFeaturePointsDataMapper'
 
 import { DocumentFeaturePointsModel } from '@interfaces/models/documentFeaturePoints'
+import { ExternalEvent } from '@interfaces/queue'
+
+const undefinedValue = undefined
 
 describe(`Service ${DocumentFeaturePointsService.name}`, () => {
     const documentFeaturePointsDataMapper = new DocumentFeaturePointsDataMapper()
@@ -48,7 +49,7 @@ describe(`Service ${DocumentFeaturePointsService.name}`, () => {
 
             const result = [
                 {
-                    documentType: DocumentType.BirthCertificate,
+                    documentType: 'birth-certificate',
                     documentIdentifier: 'documentIdentifier',
                 },
             ]
@@ -56,7 +57,7 @@ describe(`Service ${DocumentFeaturePointsService.name}`, () => {
             const documentFeaturePoints = [
                 {
                     userIdentifier: 'userIdentifier',
-                    documentType: DocumentType.BirthCertificate,
+                    documentType: 'birth-certificate',
                     documentIdentifier: 'documentIdentifier',
                     requestId: 'requestId',
                 },
@@ -73,7 +74,7 @@ describe(`Service ${DocumentFeaturePointsService.name}`, () => {
         it('should return array of feature pointsm', async () => {
             // eslint-disable-next-line @typescript-eslint/naming-convention
             const feature_points = [10, 10]
-            const documentType = DocumentType.BirthCertificate
+            const documentType = 'birth-certificate'
             const documentIdentifier = 'documentIdentifier'
             const photo = 'photo'
 
@@ -91,7 +92,7 @@ describe(`Service ${DocumentFeaturePointsService.name}`, () => {
 
     describe('method: `createDocumentFeaturePointsEntity`', () => {
         it('should successfully create document feature points entity', async () => {
-            const documentType = DocumentType.BirthCertificate
+            const documentType = 'birth-certificate'
             const documentIdentifier = 'documentIdentifier'
             const photo = 'photo'
 
@@ -123,7 +124,7 @@ describe(`Service ${DocumentFeaturePointsService.name}`, () => {
         it('should throw ModelNotFoundError if document not found', async () => {
             const err = new ModelNotFoundError(documentFeaturePointsModel.modelName, requestId)
 
-            jest.spyOn(documentFeaturePointsModel, 'findOneAndUpdate').mockResolvedValueOnce(undefined)
+            jest.spyOn(documentFeaturePointsModel, 'findOneAndUpdate').mockResolvedValueOnce(undefinedValue)
 
             await documentFeaturePointsService.attachFeaturePoints(requestId, points)
 
@@ -138,7 +139,7 @@ describe(`Service ${DocumentFeaturePointsService.name}`, () => {
 
             jest.spyOn(documentFeaturePointsModel, 'findOneAndUpdate').mockResolvedValueOnce(<DocumentFeaturePointsModel>{
                 userIdentifier,
-                documentType: DocumentType.BirthCertificate,
+                documentType: 'birth-certificate',
                 documentIdentifier: 'documentIdentifier',
                 requestId,
             })
@@ -151,7 +152,7 @@ describe(`Service ${DocumentFeaturePointsService.name}`, () => {
 
     describe('method: `removeDocumentFeaturePoints`', () => {
         it('should successfully remove document feature points', async () => {
-            const documentType = DocumentType.BirthCertificate
+            const documentType = 'birth-certificate'
             const documentIdentifier = 'documentIdentifier'
 
             const query: FilterQuery<DocumentFeaturePointsModel> = { userIdentifier, documentType, documentIdentifier }
@@ -181,7 +182,7 @@ describe(`Service ${DocumentFeaturePointsService.name}`, () => {
             const documentFeaturePoints = [
                 {
                     userIdentifier: 'userIdentifier',
-                    documentType: DocumentType.BirthCertificate,
+                    documentType: 'birth-certificate',
                     documentIdentifier: 'documentIdentifier',
                     requestId: 'requestId',
                     points: [10, 10],
@@ -190,7 +191,7 @@ describe(`Service ${DocumentFeaturePointsService.name}`, () => {
 
             const result = [
                 {
-                    documentType: DocumentType.BirthCertificate,
+                    documentType: 'birth-certificate',
                     documentIdentifier: 'documentIdentifier',
                     points: [10, 10],
                 },

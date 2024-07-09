@@ -1,12 +1,13 @@
 import { IdentifierService } from '@diia-inhouse/crypto'
-import { EventBusListener, ExternalEvent } from '@diia-inhouse/diia-queue'
-import { DocumentType, ProfileFeature } from '@diia-inhouse/types'
+import { EventBusListener } from '@diia-inhouse/diia-queue'
+import { ProfileFeature } from '@diia-inhouse/types'
 import { ValidationSchema } from '@diia-inhouse/validators'
 
 import DocumentsService from '@services/documents'
 import UserProfileService from '@services/userProfile'
 
 import { EventPayload } from '@interfaces/externalEventListeners/officeIdentifierRemoved'
+import { ExternalEvent } from '@interfaces/queue'
 
 export default class OfficeIdentifierRemovedEventListener implements EventBusListener {
     constructor(
@@ -36,6 +37,6 @@ export default class OfficeIdentifierRemovedEventListener implements EventBusLis
         const identifier = this.identifier.createIdentifier(rnokpp)
 
         await this.userProfileService.removeProfileFeature(identifier, ProfileFeature.office)
-        await this.documentsService.expireDocument(identifier, DocumentType.OfficialCertificate)
+        await this.documentsService.expireDocument(identifier, 'official-certificate')
     }
 }

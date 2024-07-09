@@ -8,9 +8,7 @@ package ua.gov.diia.user.userdocuments;
 option java_multiple_files = true;
 option java_package = "ua.gov.diia.user.userdocuments";
 
-message HasDocumentsFilter {
-  repeated DocumentFilter oneOf = 1;
-}
+message HasDocumentsFilter { repeated DocumentFilter oneOf = 1; }
 
 message HasDocumentsRequest {
   string userIdentifier = 1;
@@ -70,4 +68,38 @@ message ComparedTo {
 message UserCompoundDocument {
   string documentType = 1;
   string documentIdentifier = 2;
+}
+
+message UpdateDocumentVisibilityReq {
+  string userIdentifier = 1;
+  string documentType = 2;
+  repeated string hideDocuments = 3;
+  repeated string unhideDocuments = 4;
+  optional bool hideDocumentType = 5;
+}
+
+message GetUserDocumentSettingsReq {
+  string userIdentifier = 1;
+  repeated string features = 2;
+  map<string, DocumentTypesList> documentsDefaultOrder = 3;
+
+  message DocumentTypesList {
+    repeated string items = 1;
+  }
+}
+
+message GetUserDocumentSettingsRes {
+  repeated DocumentVisibilitySettingsItem documentVisibilitySettings = 1;
+  repeated DocumentOrderSettingsItem documentOrderSettings = 2;
+}
+
+message DocumentVisibilitySettingsItem {
+  string documentType = 1;
+  repeated string hiddenDocuments = 2;
+  optional bool hiddenDocumentType = 3;
+}
+
+message DocumentOrderSettingsItem {
+  string documentType = 1;
+  repeated string documentIdentifiers = 2;
 }

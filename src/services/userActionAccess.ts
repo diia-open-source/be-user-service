@@ -46,7 +46,7 @@ export default class UserActionAccessService {
         const storeKey = this.getStoreKey(userIdentifier, actionAccessType)
         const actionAccessCount = await this.store.get(storeKey)
 
-        return actionAccessCount ? parseInt(actionAccessCount, 10) : 0
+        return actionAccessCount ? Number.parseInt(actionAccessCount, 10) : 0
     }
 
     private async setUserActionAccessCount(

@@ -1,6 +1,6 @@
 import { AppAction } from '@diia-inhouse/diia-app'
 
-import { EventBus, InternalEvent } from '@diia-inhouse/diia-queue'
+import { EventBus } from '@diia-inhouse/diia-queue'
 import { BadRequestError, InternalServerError } from '@diia-inhouse/errors'
 import { ActionVersion, SessionType } from '@diia-inhouse/types'
 import { ValidationSchema } from '@diia-inhouse/validators'
@@ -8,6 +8,7 @@ import { ValidationSchema } from '@diia-inhouse/validators'
 import NotificationService from '@services/notification'
 
 import { ActionResult, CustomActionArguments } from '@interfaces/actions/v1/startSendingSilentPushes'
+import { InternalEvent } from '@interfaces/queue'
 
 export default class StartSendingSilentPushesAction implements AppAction {
     constructor(

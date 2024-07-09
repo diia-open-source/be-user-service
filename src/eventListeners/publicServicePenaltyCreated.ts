@@ -1,4 +1,4 @@
-import { EventBus, EventBusListener, InternalEvent, MessagePayload } from '@diia-inhouse/diia-queue'
+import { EventBus, EventBusListener, MessagePayload } from '@diia-inhouse/diia-queue'
 import { Logger } from '@diia-inhouse/types'
 import { ValidationSchema } from '@diia-inhouse/validators'
 
@@ -6,6 +6,7 @@ import AnalyticsService from '@services/analytics'
 import UserDocumentService from '@services/userDocument'
 
 import { EventPayload, IdentifiedPenalty } from '@interfaces/eventListeners/publicServicePenaltyCreated'
+import { InternalEvent } from '@interfaces/queue'
 import { AnalyticsActionType, AnalyticsCategory, AnalyticsData } from '@interfaces/services/analytics'
 
 export default class PublicServicePenaltyCreatedEventListener implements EventBusListener {

@@ -1,5 +1,4 @@
-import { ObjectId } from 'bson'
-import { Document } from 'mongoose'
+import { Document, mongo } from '@diia-inhouse/db'
 
 import { SignAlgo } from '@interfaces/models/diiaId'
 import { PublicServiceCode } from '@interfaces/models/subscription'
@@ -13,7 +12,7 @@ export interface StatusHistoryItem {
 }
 
 export interface SigningHistoryAcquirer {
-    id: ObjectId
+    id: mongo.ObjectId
     name: string
     address: string
 }

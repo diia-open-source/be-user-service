@@ -1,10 +1,8 @@
-import { Readable, Transform, Writable, pipeline as streamsPipeline } from 'stream'
-import { pipeline as streamsPipelineAsync } from 'stream/promises'
+import { Readable, Transform, Writable, pipeline as streamsPipeline } from 'node:stream'
+import { pipeline as streamsPipelineAsync } from 'node:stream/promises'
 
-import { ObjectId } from 'bson'
 import got from 'got'
 import moment from 'moment'
-import { FilterQuery, PipelineStage, ProjectionType, UpdateQuery } from 'mongoose'
 import { parser } from 'stream-json'
 import { streamArray } from 'stream-json/streamers/StreamArray'
 import Batch from 'stream-json/utils/Batch'
@@ -12,9 +10,19 @@ import { v4 as uuidv4 } from 'uuid'
 
 import { AnalyticsActionResult } from '@diia-inhouse/analytics'
 import { IdentifierService } from '@diia-inhouse/crypto'
-import { EventBus, ExternalEvent, ExternalEventBus, InternalEvent } from '@diia-inhouse/diia-queue'
+import { FilterQuery, PipelineStage, ProjectionType, UpdateQuery, mongo } from '@diia-inhouse/db'
+import { EventBus, ExternalEventBus } from '@diia-inhouse/diia-queue'
 import { BadRequestError, InternalServerError, ModelNotFoundError } from '@diia-inhouse/errors'
-import { ActHeaders, DocStatus, DocumentType, DurationMs, Logger, PlatformType, ProfileFeature, UserTokenData } from '@diia-inhouse/types'
+import {
+    ActHeaders,
+    DiiaOfficeStatus,
+    DocStatus,
+    DurationMs,
+    Logger,
+    PlatformType,
+    ProfileFeature,
+    UserTokenData,
+} from '@diia-inhouse/types'
 
 import NotificationService from '@services/notification'
 import UnregisteredOfficeProfile from '@services/unregisteredOfficeProfile'
@@ -31,13 +39,12 @@ import { UserDocument } from '@interfaces/models/userDocument'
 import {
     CitizenshipSource,
     DiiaOfficeProfile,
-    DiiaOfficeStatus,
     UserProfile,
     UserProfileCitizenship,
     UserProfileFeatures,
     UserProfileModel,
-    UserProfileSettings,
 } from '@interfaces/models/userProfile'
+import { ExternalEvent, InternalEvent } from '@interfaces/queue'
 import { MessageTemplateCode, NotificationAppVersionsByPlatformType, PushTopic, TemplateParams } from '@interfaces/services/notification'
 import { UserDocumentTypesCounts } from '@interfaces/services/userDocument'
 import {
@@ -132,9 +139,9 @@ export default class UserProfileService {
 
         const projection: Record<string, number> = {}
 
-        requestedFeatures.forEach((feature) => {
+        for (const feature of requestedFeatures) {
             projection[`features.${feature}`] = 1
-        })
+        }
 
         const { features = {} } = await this.getUserProfile(userIdentifier, projection)
 
@@ -190,7 +197,7 @@ export default class UserProfileService {
     async getUserIdentifiersByPlatformTypes(
         platformTypes: PlatformType[],
         limit: number,
-        lastId?: ObjectId,
+        lastId?: mongo.ObjectId,
     ): Promise<UserIdentifiersWithLastId> {
         const query: FilterQuery<UserProfileModel> = {}
         if (lastId) {
@@ -203,11 +210,9 @@ export default class UserProfileService {
 
         const pipeline: PipelineStage[] = [{ $match: query }, { $limit: limit }, { $project: { identifier: 1, _id: 1 } }]
 
-        const userIdentifiers: { identifier: string; _id: ObjectId }[] = await userProfileModel.aggregate(pipeline)
-        let nextLastId: ObjectId | undefined
-        if (userIdentifiers.length) {
-            nextLastId = userIdentifiers[userIdentifiers.length - 1]._id
-        }
+        const userIdentifiers: { identifier: string; _id: mongo.ObjectId }[] = await userProfileModel.aggregate(pipeline)
+        const nextLast = userIdentifiers.length > 0 && userIdentifiers.at(-1)
+        const nextLastId: mongo.ObjectId | undefined = nextLast ? nextLast._id : undefined
 
         return {
             userIdentifiers: userIdentifiers.map(({ identifier }: { identifier: string }) => identifier),
@@ -219,7 +224,7 @@ export default class UserProfileService {
         const query: FilterQuery<UserProfileModel> = { identifier: userIdentifier }
         const userProfile = await userProfileModel.findOne(query)
 
-        return !!userProfile
+        return Boolean(userProfile)
     }
 
     async getUserFilterInfo(userIdentifier: string): Promise<UserInfoForFilters> {
@@ -228,13 +233,13 @@ export default class UserProfileService {
             this.lazyUserDocumentService().getUserDocumentTypesCounts(userIdentifier),
         ])
 
-        const { gender, birthDay } = userProfile
+        const { gender, birthDay, features } = userProfile
 
         let organizationId: string | undefined
-        if (userProfile.features?.[ProfileFeature.office] && this.config.profileFeatures.isEnabled) {
-            const { status, organizationId: userOrgId } = userProfile.features[ProfileFeature.office]
+        if (features?.[ProfileFeature.office] && this.config.profileFeatures.isEnabled) {
+            const { status, organizationId: userOrgId } = features[ProfileFeature.office]
 
-            if (status === DiiaOfficeStatus.Active) {
+            if (status === DiiaOfficeStatus.ACTIVE) {
                 organizationId = userOrgId
             }
         }
@@ -265,12 +270,6 @@ export default class UserProfileService {
         }
 
         return userProfile.citizenship?.[source]
-    }
-
-    async getUserSettings(userIdentifier: string): Promise<UserProfileSettings | undefined> {
-        const userProfile = await userProfileModel.findOne({ identifier: userIdentifier })
-
-        return userProfile?.settings
     }
 
     async updateUserCitizenship(userIdentifier: string, source: CitizenshipSource, sourceId: string): Promise<void> {
@@ -342,7 +341,7 @@ export default class UserProfileService {
             .count(countName)
         const usersCount: number = userFilterCount?.usersCount || 0
 
-        const percent: number = parseFloat(((usersCount / profilesCount) * 100).toFixed(2))
+        const percent: number = Number.parseFloat(((usersCount / profilesCount) * 100).toFixed(2))
 
         return { percent }
     }
@@ -544,7 +543,7 @@ export default class UserProfileService {
         }
 
         if (documents?.length) {
-            const requiredDocuments: DocumentType[] = documents.map(({ type }: UserFilterDocument) => type)
+            const requiredDocuments: string[] = documents.map(({ type }: UserFilterDocument) => type)
 
             pipeline.push({
                 $match: {
@@ -565,7 +564,7 @@ export default class UserProfileService {
                                     as: 'document',
                                     cond: {
                                         $and: [
-                                            { $eq: ['$$document.documentType', DocumentType.BirthCertificate] },
+                                            { $eq: ['$$document.documentType', 'birth-certificate'] },
                                             { $ne: ['$$document.docStatus', DocStatus.NotFound] },
                                         ],
                                     },

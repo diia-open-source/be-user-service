@@ -1,6 +1,6 @@
 import { AppAction } from '@diia-inhouse/diia-app'
 
-import { ActionVersion, DocumentType, SessionType } from '@diia-inhouse/types'
+import { ActionVersion, SessionType } from '@diia-inhouse/types'
 import { ValidationSchema } from '@diia-inhouse/validators'
 
 import UserDocumentSettingsService from '@services/userDocumentSettings'
@@ -8,7 +8,23 @@ import UserDocumentSettingsService from '@services/userDocumentSettings'
 import { ActionResult, CustomActionArguments } from '@interfaces/actions/v2/userDocument/saveDocumentTypesOrder'
 
 export default class SaveDocumentTypesOrderAction implements AppAction {
-    constructor(private readonly userDocumentSettingsService: UserDocumentSettingsService) {}
+    constructor(
+        private readonly userDocumentSettingsService: UserDocumentSettingsService,
+        private readonly documentTypes: string[],
+    ) {
+        this.validationRules = {
+            documentsOrder: {
+                type: 'array',
+                items: {
+                    type: 'object',
+                    props: {
+                        documentType: { type: 'string', enum: this.documentTypes },
+                        order: { type: 'number', min: 1 },
+                    },
+                },
+            },
+        }
+    }
 
     readonly sessionType: SessionType = SessionType.User
 
@@ -16,18 +32,7 @@ export default class SaveDocumentTypesOrderAction implements AppAction {
 
     readonly name: string = 'saveDocumentTypesOrder'
 
-    readonly validationRules: ValidationSchema = {
-        documentsOrder: {
-            type: 'array',
-            items: {
-                type: 'object',
-                props: {
-                    documentType: { type: 'string', enum: Object.values(DocumentType) },
-                    order: { type: 'number', min: 1 },
-                },
-            },
-        },
-    }
+    readonly validationRules: ValidationSchema
 
     async handler(args: CustomActionArguments): Promise<ActionResult> {
         const {

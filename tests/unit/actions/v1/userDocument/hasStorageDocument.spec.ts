@@ -1,5 +1,4 @@
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocumentType } from '@diia-inhouse/types'
 
 import HasStorageDocumentAction from '@actions/v1/userDocument/hasStorageDocument'
 
@@ -10,7 +9,7 @@ describe(`Action ${HasStorageDocumentAction.name}`, () => {
     const headers = testKit.session.getHeaders()
     const userDocumentStorageServiceMock = mockInstance(UserDocumentStorageService)
 
-    const hasStorageDocumentAction = new HasStorageDocumentAction(userDocumentStorageServiceMock)
+    const hasStorageDocumentAction = new HasStorageDocumentAction(userDocumentStorageServiceMock, [])
 
     describe('method `handler`', () => {
         it('should return true if document already exists in storage', async () => {
@@ -18,7 +17,7 @@ describe(`Action ${HasStorageDocumentAction.name}`, () => {
                 params: {
                     userIdentifier: 'userIdentifier',
                     mobileUid: headers.mobileUid,
-                    documentType: DocumentType.TaxpayerCard,
+                    documentType: 'taxpayer-card',
                     id: 'id',
                 },
                 session: testKit.session.getUserSession(),

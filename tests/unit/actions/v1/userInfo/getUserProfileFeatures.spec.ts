@@ -1,11 +1,9 @@
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { ProfileFeature } from '@diia-inhouse/types'
+import { DiiaOfficeStatus, ProfileFeature } from '@diia-inhouse/types'
 
 import GetUserProfileFeaturesAction from '@actions/v1/userInfo/getUserProfileFeatures'
 
 import UserProfileService from '@services/userProfile'
-
-import { DiiaOfficeStatus } from '@interfaces/models/userProfile'
 
 describe(`Action ${GetUserProfileFeaturesAction.name}`, () => {
     const testKit = new TestKit()
@@ -28,7 +26,7 @@ describe(`Action ${GetUserProfileFeaturesAction.name}`, () => {
                 unitId: 'unit123',
                 scopes: ['scope1', 'scope2'],
                 isOrganizationAdmin: true,
-                status: DiiaOfficeStatus.Active,
+                status: DiiaOfficeStatus.ACTIVE,
             }
 
             const mockUserProfileFeatures = {

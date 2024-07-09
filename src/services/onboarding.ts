@@ -1,6 +1,6 @@
 import { compare as compareSemver } from 'compare-versions'
-import { FilterQuery } from 'mongoose'
 
+import { FilterQuery } from '@diia-inhouse/db'
 import { PlatformType, SessionType } from '@diia-inhouse/types'
 
 import newFeaturesModel from '@models/newFeatures'
@@ -110,14 +110,15 @@ export default class OnboardingService {
             [PlatformType.Browser]: [],
         }
 
-        onboardings.forEach((item) => {
+        for (const item of onboardings) {
             this.cachedOnboardingsByPlatformType![item.platformType].push(item)
-        })
-        Object.values(PlatformType).forEach((type) => {
+        }
+
+        for (const type of Object.values(PlatformType)) {
             this.cachedOnboardingsByPlatformType![type] = this.cachedOnboardingsByPlatformType![type].sort(
                 (a: OnboardingModel, b: OnboardingModel) => (compareSemver(a.appVersion, b.appVersion, '>') ? 1 : -1),
             )
-        })
+        }
 
         return this.cachedOnboardingsByPlatformType[platformType]
     }
@@ -151,14 +152,15 @@ export default class OnboardingService {
             [PlatformType.Browser]: [],
         }
 
-        newFeatures.forEach((item) => {
+        for (const item of newFeatures) {
             this.cachedNewFeaturesByPlatformType![item.platformType].push(item)
-        })
-        Object.values(PlatformType).forEach((type) => {
+        }
+
+        for (const type of Object.values(PlatformType)) {
             this.cachedNewFeaturesByPlatformType![type] = this.cachedNewFeaturesByPlatformType![type].sort(
                 (a: NewFeaturesModel, b: NewFeaturesModel) => (compareSemver(a.appVersion, b.appVersion, '>') ? 1 : -1),
             )
-        })
+        }
 
         return this.cachedNewFeaturesByPlatformType[platformType]
     }

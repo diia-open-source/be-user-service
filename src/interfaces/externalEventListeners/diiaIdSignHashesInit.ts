@@ -18,6 +18,7 @@ export interface DiiaIdSignHashesInitRequest {
         signType?: DiiaIdSignType
         noSigningTime?: boolean
         noContentTimestamp?: boolean
+        processId?: string
     }
 }
 

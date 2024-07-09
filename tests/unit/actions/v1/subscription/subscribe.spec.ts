@@ -1,5 +1,4 @@
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocumentType } from '@diia-inhouse/types'
 
 import SubscribeAction from '@actions/v1/subscription/subscribe'
 
@@ -12,14 +11,14 @@ describe(`Action ${SubscribeAction.name}`, () => {
     const headers = testKit.session.getHeaders()
     const subscriptionServiceMock = mockInstance(SubscriptionService)
 
-    const subscribeAction = new SubscribeAction(subscriptionServiceMock)
+    const subscribeAction = new SubscribeAction(subscriptionServiceMock, [])
 
     describe('method `handler`', () => {
         it('should return true if successfully set subscription', async () => {
             const args = {
                 params: {
                     subscriptionType: SubscriptionType.Push,
-                    documentType: DocumentType.EResidentPassport,
+                    documentType: 'e-resident-passport',
                     documentSubscriptionId: 'documentSubscriptionId',
                 },
                 session: testKit.session.getUserSession(),

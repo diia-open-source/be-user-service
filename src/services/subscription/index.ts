@@ -1,8 +1,7 @@
-import { FilterQuery, UpdateQuery } from 'mongoose'
-
 import { IdentifierService } from '@diia-inhouse/crypto'
+import { FilterQuery, UpdateQuery } from '@diia-inhouse/db'
 import { BadRequestError, ModelNotFoundError, NotFoundError } from '@diia-inhouse/errors'
-import { DocumentType, Logger, UserActionHeaders } from '@diia-inhouse/types'
+import { Logger, UserActionHeaders } from '@diia-inhouse/types'
 
 import AnalyticsService from '@services/analytics'
 import CreditHistoryStrategyService from '@services/subscription/strategies/creditHistory'
@@ -162,7 +161,7 @@ export default class SubscriptionService {
 
     async updateDocumentsSubscriptions(
         userIdentifier: string,
-        documentType: DocumentType,
+        documentType: string,
         documents: UserProfileDocument[],
         headers?: AnalyticsHeaders,
     ): Promise<void> {
@@ -175,8 +174,8 @@ export default class SubscriptionService {
 
         const subscriptionType: SubscriptionType = SubscriptionType.Push
 
-        Object.keys(subscription[subscriptionType].documents[documentType] || {}).forEach((subscriptionIdentifier: string) => {
-            const isDocStillAvailable = !!documents.find(({ documentIdentifier }) => subscriptionIdentifier === documentIdentifier)
+        for (const subscriptionIdentifier of Object.keys(subscription[subscriptionType].documents[documentType] || {})) {
+            const isDocStillAvailable = documents.some(({ documentIdentifier }) => subscriptionIdentifier === documentIdentifier)
 
             if (!isDocStillAvailable) {
                 unsetModifier[`${subscriptionType}.${SubscriptionSubType.Documents}.${documentType}.${subscriptionIdentifier}`] = 1
@@ -194,9 +193,9 @@ export default class SubscriptionService {
                     headers,
                 )
             }
-        })
+        }
 
-        if (Object.keys(unsetModifier).length) {
+        if (Object.keys(unsetModifier).length > 0) {
             await subscriptionModel.updateOne({ userIdentifier }, { $unset: unsetModifier })
         }
     }
@@ -255,7 +254,7 @@ export default class SubscriptionService {
     async getSubscribedDocuments(
         userIdentifier: string,
         subscriptionType: SubscriptionType.Push,
-        documentType: DocumentType,
+        documentType: string,
     ): Promise<string[] | undefined> {
         const subscription = await subscriptionModel.findOne({ userIdentifier })
         if (!subscription) {
@@ -269,11 +268,11 @@ export default class SubscriptionService {
 
         const subscribedDocumentIdentifiers: string[] = []
 
-        Object.keys(documentTypeSubscription).forEach((documentIdentifier: string) => {
-            if (documentTypeSubscription[documentIdentifier]) {
+        for (const [documentIdentifier, subscriptionByDocumentType] of Object.entries(documentTypeSubscription)) {
+            if (subscriptionByDocumentType) {
                 subscribedDocumentIdentifiers.push(documentIdentifier)
             }
-        })
+        }
 
         return subscribedDocumentIdentifiers
     }

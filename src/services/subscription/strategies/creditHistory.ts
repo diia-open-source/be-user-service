@@ -1,5 +1,4 @@
-import { UpdateQuery } from 'mongoose'
-
+import { UpdateQuery } from '@diia-inhouse/db'
 import { ServiceUnavailableError } from '@diia-inhouse/errors'
 import { Logger } from '@diia-inhouse/types'
 

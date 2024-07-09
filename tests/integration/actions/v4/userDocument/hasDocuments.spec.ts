@@ -1,7 +1,7 @@
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
 import { IdentifierService } from '@diia-inhouse/crypto'
-import { DocStatus, DocumentType, OwnerType } from '@diia-inhouse/types'
+import { DocStatus, OwnerType } from '@diia-inhouse/types'
 
 import HasDocumentsAction from '@actions/v4/userDocument/hasDocuments'
 
@@ -47,13 +47,13 @@ describe(`Action ${HasDocumentsAction.name}`, () => {
                 docStatus,
             }
 
-            await userDocumentService.addDocument(userIdentifier, DocumentType.InternalPassport, document, mobileUid, headers)
+            await userDocumentService.addDocument(userIdentifier, 'internal-passport', document, mobileUid, headers)
 
             const { hasDocuments } = await hasDocumentsAction.handler({
                 headers,
                 params: {
                     userIdentifier,
-                    filters: [[{ documentType: DocumentType.InternalPassport }]],
+                    filters: [[{ documentType: 'internal-passport' }]],
                 },
             })
 
@@ -73,13 +73,13 @@ describe(`Action ${HasDocumentsAction.name}`, () => {
                 docStatus,
             }
 
-            await userDocumentService.addDocument(userIdentifier, DocumentType.InternalPassport, document, mobileUid, headers)
+            await userDocumentService.addDocument(userIdentifier, 'internal-passport', document, mobileUid, headers)
 
             const { hasDocuments } = await hasDocumentsAction.handler({
                 headers,
                 params: {
                     userIdentifier,
-                    filters: [[{ documentType: DocumentType.InternalPassport, docStatus: [docStatus, DocStatus.Deleting] }]],
+                    filters: [[{ documentType: 'internal-passport', docStatus: [docStatus, DocStatus.Deleting] }]],
                 },
             })
 
@@ -100,13 +100,13 @@ describe(`Action ${HasDocumentsAction.name}`, () => {
                 docStatus,
             }
 
-            await userDocumentService.addDocument(userIdentifier, DocumentType.InternalPassport, document, mobileUid, headers)
+            await userDocumentService.addDocument(userIdentifier, 'internal-passport', document, mobileUid, headers)
 
             const { hasDocuments } = await hasDocumentsAction.handler({
                 headers,
                 params: {
                     userIdentifier,
-                    filters: [[{ documentType: DocumentType.InternalPassport, docStatus: [DocStatus.Ok] }]],
+                    filters: [[{ documentType: 'internal-passport', docStatus: [DocStatus.Ok] }]],
                 },
             })
 

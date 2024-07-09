@@ -1,0 +1,10 @@
+node_modules
+tsconfig-test.json
+coverage
+.vscode
+README.md
+Dockerfile
+jest.config.js
+.gitlab-ci.yml
+.git
+.gitignore

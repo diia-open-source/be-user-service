@@ -1,7 +1,6 @@
-import { ObjectId } from 'bson'
 import * as moment from 'moment'
-import { FilterQuery, UpdateQuery } from 'mongoose'
 
+import { FilterQuery, UpdateQuery, mongo } from '@diia-inhouse/db'
 import Logger from '@diia-inhouse/diia-logger'
 import { AccessDeniedError } from '@diia-inhouse/errors'
 import TestKit, { mockInstance } from '@diia-inhouse/test'
@@ -80,7 +79,7 @@ describe(`Service ${OtpService.name}`, () => {
                 isDeleted: false,
             }
 
-            const idToKeep = new ObjectId()
+            const idToKeep = new mongo.ObjectId()
             const query: FilterQuery<OtpModel> = { mobileUid: headers.mobileUid, _id: { $ne: idToKeep } }
             const modifier: UpdateQuery<OtpModel> = { isDeleted: true }
 
@@ -119,11 +118,12 @@ describe(`Service ${OtpService.name}`, () => {
     describe('method: `verifyOtp`', () => {
         const userIdentifier = user.identifier
         const mobileUid = headers.mobileUid
+        const undefinedValue = undefined
 
         it('should return false if otp not found', async () => {
             const query: FilterQuery<OtpModel> = { userIdentifier, mobileUid, isDeleted: false }
 
-            jest.spyOn(otpModelMock, 'findOne').mockResolvedValueOnce(undefined)
+            jest.spyOn(otpModelMock, 'findOne').mockResolvedValueOnce(undefinedValue)
 
             expect(await otpService.verifyOtp(1, userIdentifier, mobileUid)).toBeFalsy()
             expect(otpModelMock.findOne).toHaveBeenCalledWith(query)

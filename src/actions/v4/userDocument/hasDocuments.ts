@@ -1,6 +1,6 @@
 import { AppAction } from '@diia-inhouse/diia-app'
 
-import { ActionVersion, DocumentType, OwnerType, SessionType } from '@diia-inhouse/types'
+import { ActionVersion, OwnerType, SessionType } from '@diia-inhouse/types'
 import { ValidationSchema } from '@diia-inhouse/validators'
 
 import UserDocumentService from '@services/userDocument'
@@ -9,7 +9,27 @@ import { ActionResult, CustomActionArguments } from '@interfaces/actions/v4/user
 
 /** @deprecated use v5 version because of typo in v4 */
 export default class HasDocumentsAction implements AppAction {
-    constructor(private readonly userDocumentService: UserDocumentService) {}
+    constructor(
+        private readonly userDocumentService: UserDocumentService,
+        private readonly documentTypes: string[],
+    ) {
+        this.validationRules = {
+            userIdentifier: { type: 'string' },
+            filters: {
+                type: 'array',
+                items: {
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        props: {
+                            documentType: { type: 'string', enum: this.documentTypes },
+                            ownerType: { type: 'string', enum: Object.values(OwnerType), optional: true },
+                        },
+                    },
+                },
+            },
+        }
+    }
 
     readonly sessionType: SessionType = SessionType.User
 
@@ -17,22 +37,7 @@ export default class HasDocumentsAction implements AppAction {
 
     readonly name: string = 'hasDocuments'
 
-    readonly validationRules: ValidationSchema = {
-        userIdentifier: { type: 'string' },
-        filters: {
-            type: 'array',
-            items: {
-                type: 'array',
-                items: {
-                    type: 'object',
-                    props: {
-                        documentType: { type: 'string', enum: Object.values(DocumentType) },
-                        ownerType: { type: 'string', enum: Object.values(OwnerType), optional: true },
-                    },
-                },
-            },
-        },
-    }
+    readonly validationRules: ValidationSchema
 
     async handler(args: CustomActionArguments): Promise<ActionResult> {
         const {

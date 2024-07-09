@@ -1,5 +1,4 @@
 import TestKit, { mockInstance } from '@diia-inhouse/test'
-import { DocumentType } from '@diia-inhouse/types'
 
 import RemoveUserDocumentByIdAction from '@actions/v1/userDocument/removeUserDocumentById'
 
@@ -19,6 +18,7 @@ describe(`Action ${RemoveUserDocumentByIdAction.name}`, () => {
         analyticsServiceMock,
         subscriptionServiceMock,
         userDocumentStorageServiceMock,
+        [],
     )
 
     describe('method `handler`', () => {
@@ -26,7 +26,7 @@ describe(`Action ${RemoveUserDocumentByIdAction.name}`, () => {
             const args = {
                 params: {
                     userIdentifier: 'userIdentifier',
-                    documentType: DocumentType.DriverLicense,
+                    documentType: 'driver-license',
                     documentId: 'documentId',
                     mobileUid: headers.mobileUid,
                 },

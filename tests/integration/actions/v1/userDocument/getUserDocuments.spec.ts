@@ -1,5 +1,5 @@
 import { IdentifierService } from '@diia-inhouse/crypto'
-import { AppUserActionHeaders, DocStatus, DocumentType, OwnerType } from '@diia-inhouse/types'
+import { AppUserActionHeaders, DocStatus, OwnerType } from '@diia-inhouse/types'
 
 import GetUserDocumentsAction from '@actions/v1/userDocument/getUserDocuments'
 
@@ -68,9 +68,9 @@ describe(`Action ${GetUserDocumentsAction.name}`, () => {
         }
 
         await Promise.all([
-            userDocumentService.addDocument(userIdentifier, DocumentType.InternalPassport, internalPassport, mobileUid, headers),
-            userDocumentService.addDocument(userIdentifier, DocumentType.InternalPassport, internalPassportNotFound, mobileUid, headers),
-            userDocumentService.addDocument(userIdentifier, DocumentType.DriverLicense, driverLicense, mobileUid, headers),
+            userDocumentService.addDocument(userIdentifier, 'internal-passport', internalPassport, mobileUid, headers),
+            userDocumentService.addDocument(userIdentifier, 'internal-passport', internalPassportNotFound, mobileUid, headers),
+            userDocumentService.addDocument(userIdentifier, 'driver-license', driverLicense, mobileUid, headers),
         ])
 
         const { documents } = await getUserDocumentsAction.handler({ headers, params: { userIdentifier } })
@@ -106,14 +106,14 @@ describe(`Action ${GetUserDocumentsAction.name}`, () => {
         }
 
         await Promise.all([
-            userDocumentService.addDocument(userIdentifier, DocumentType.InternalPassport, internalPassport, mobileUid, headers),
-            userDocumentService.addDocument(userIdentifier, DocumentType.InternalPassport, internalPassportNotFound, mobileUid, headers),
-            userDocumentService.addDocument(userIdentifier, DocumentType.DriverLicense, driverLicense, mobileUid, headers),
+            userDocumentService.addDocument(userIdentifier, 'internal-passport', internalPassport, mobileUid, headers),
+            userDocumentService.addDocument(userIdentifier, 'internal-passport', internalPassportNotFound, mobileUid, headers),
+            userDocumentService.addDocument(userIdentifier, 'driver-license', driverLicense, mobileUid, headers),
         ])
 
         const { documents } = await getUserDocumentsAction.handler({
             headers,
-            params: { userIdentifier, documentType: DocumentType.InternalPassport },
+            params: { userIdentifier, documentType: 'internal-passport' },
         })
 
         expect(documents).toHaveLength(1)
@@ -138,8 +138,8 @@ describe(`Action ${GetUserDocumentsAction.name}`, () => {
         }
 
         await Promise.all([
-            userDocumentService.addDocument(userIdentifier, DocumentType.InternalPassport, internalPassport, mobileUid, headers),
-            userDocumentService.addDocument(userIdentifier, DocumentType.DriverLicense, driverLicense, mobileUid, headers),
+            userDocumentService.addDocument(userIdentifier, 'internal-passport', internalPassport, mobileUid, headers),
+            userDocumentService.addDocument(userIdentifier, 'driver-license', driverLicense, mobileUid, headers),
         ])
 
         const { documents } = await getUserDocumentsAction.handler({ headers, params: { userIdentifier, activeOnly: false } })

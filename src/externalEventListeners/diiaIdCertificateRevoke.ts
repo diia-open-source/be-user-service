@@ -1,10 +1,11 @@
-import { EventBusListener, ExternalEvent } from '@diia-inhouse/diia-queue'
+import { EventBusListener } from '@diia-inhouse/diia-queue'
 import { BadRequestError } from '@diia-inhouse/errors'
 import { ValidationSchema } from '@diia-inhouse/validators'
 
 import DiiaIdService from '@services/diiaId'
 
 import { EventPayload } from '@interfaces/externalEventListeners/diiaIdCertificateRevoke'
+import { ExternalEvent } from '@interfaces/queue'
 
 export default class DiiaIdCertificateRevokeEventListener implements EventBusListener {
     constructor(private readonly diiaIdService: DiiaIdService) {}

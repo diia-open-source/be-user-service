@@ -491,6 +491,7 @@ ASALocalRun/
 src/env/index.ts
 /documents/*
  
+# Private gitlab token
 .npmrc
  
 # IntelliJ IDEA project files

@@ -1,7 +1,6 @@
-import { ObjectId } from 'bson'
-
+import { mongo } from '@diia-inhouse/db'
 import DiiaLogger from '@diia-inhouse/diia-logger'
-import { EventBus, InternalEvent, Task } from '@diia-inhouse/diia-queue'
+import { EventBus, Task } from '@diia-inhouse/diia-queue'
 import { BadRequestError, ModelNotFoundError } from '@diia-inhouse/errors'
 import TestKit, { mockInstance } from '@diia-inhouse/test'
 import { PlatformType } from '@diia-inhouse/types'
@@ -11,6 +10,7 @@ import StartSendingMessageNotificationsAction from '@actions/v1/startSendingMess
 import DistributionService from '@services/distribution'
 import NotificationService from '@services/notification'
 
+import { InternalEvent } from '@interfaces/queue'
 import { ServiceTask } from '@interfaces/tasks'
 
 describe(`Action ${StartSendingMessageNotificationsAction.name}`, () => {
@@ -31,8 +31,9 @@ describe(`Action ${StartSendingMessageNotificationsAction.name}`, () => {
     )
 
     describe('method `handler`', () => {
-        const messageId = new ObjectId()
-        const distributionId = new ObjectId()
+        const messageObjectId = new mongo.ObjectId()
+        const messageId = messageObjectId.toString()
+        const distributionId = new mongo.ObjectId()
         const args = {
             params: {
                 messageId,
@@ -48,19 +49,19 @@ describe(`Action ${StartSendingMessageNotificationsAction.name}`, () => {
 
             await expect(startSendingMessageNotificationsAction.handler(args)).rejects.toEqual(new ModelNotFoundError('Message', messageId))
 
-            expect(notificationServiceMock.isMessageExists).toHaveBeenCalledWith(messageId)
+            expect(notificationServiceMock.isMessageExists).toHaveBeenCalledWith(messageObjectId)
         })
 
         it('should throw BadRequestError if not found available platform type to send notifications', async () => {
             jest.spyOn(notificationServiceMock, 'isMessageExists').mockResolvedValueOnce(true)
-            jest.spyOn(distributionServiceMock, 'createOrUpdate').mockResolvedValueOnce([new ObjectId(), []])
+            jest.spyOn(distributionServiceMock, 'createOrUpdate').mockResolvedValueOnce([new mongo.ObjectId(), []])
 
             await expect(startSendingMessageNotificationsAction.handler(args)).rejects.toEqual(
                 new BadRequestError('No available platform type to send notifications'),
             )
 
-            expect(notificationServiceMock.isMessageExists).toHaveBeenCalledWith(messageId)
-            expect(distributionServiceMock.createOrUpdate).toHaveBeenCalledWith(messageId, args.params.platformTypes)
+            expect(notificationServiceMock.isMessageExists).toHaveBeenCalledWith(messageObjectId)
+            expect(distributionServiceMock.createOrUpdate).toHaveBeenCalledWith(messageObjectId, args.params.platformTypes)
         })
 
         it('should throw Error if failed to publish task to the queue', async () => {
@@ -75,10 +76,10 @@ describe(`Action ${StartSendingMessageNotificationsAction.name}`, () => {
                 new Error('Failed to publish task to the queue'),
             )
 
-            expect(notificationServiceMock.isMessageExists).toHaveBeenCalledWith(messageId)
-            expect(distributionServiceMock.createOrUpdate).toHaveBeenCalledWith(messageId, args.params.platformTypes)
+            expect(notificationServiceMock.isMessageExists).toHaveBeenCalledWith(messageObjectId)
+            expect(distributionServiceMock.createOrUpdate).toHaveBeenCalledWith(messageObjectId, args.params.platformTypes)
             expect(taskMock.publish).toHaveBeenCalledWith(ServiceTask.CREATE_NOTIFICATIONS_BATCHES, {
-                messageId,
+                messageId: messageObjectId,
                 platformTypes: [PlatformType.Android, PlatformType.Huawei],
                 useExpirations: args.params.useExpirations,
             })
@@ -95,10 +96,10 @@ describe(`Action ${StartSendingMessageNotificationsAction.name}`, () => {
 
             expect(await startSendingMessageNotificationsAction.handler(args)).toMatchObject({ distributionId })
 
-            expect(notificationServiceMock.isMessageExists).toHaveBeenCalledWith(messageId)
-            expect(distributionServiceMock.createOrUpdate).toHaveBeenCalledWith(messageId, args.params.platformTypes)
+            expect(notificationServiceMock.isMessageExists).toHaveBeenCalledWith(messageObjectId)
+            expect(distributionServiceMock.createOrUpdate).toHaveBeenCalledWith(messageObjectId, args.params.platformTypes)
             expect(taskMock.publish).toHaveBeenCalledWith(ServiceTask.CREATE_NOTIFICATIONS_BATCHES, {
-                messageId,
+                messageId: messageObjectId,
                 platformTypes: [PlatformType.Android, PlatformType.Huawei],
                 useExpirations: args.params.useExpirations,
             })
@@ -116,10 +117,10 @@ describe(`Action ${StartSendingMessageNotificationsAction.name}`, () => {
 
             expect(await startSendingMessageNotificationsAction.handler(args)).toMatchObject({ distributionId })
 
-            expect(notificationServiceMock.isMessageExists).toHaveBeenCalledWith(messageId)
-            expect(distributionServiceMock.createOrUpdate).toHaveBeenCalledWith(messageId, args.params.platformTypes)
+            expect(notificationServiceMock.isMessageExists).toHaveBeenCalledWith(messageObjectId)
+            expect(distributionServiceMock.createOrUpdate).toHaveBeenCalledWith(messageObjectId, args.params.platformTypes)
             expect(taskMock.publish).toHaveBeenCalledWith(ServiceTask.CREATE_NOTIFICATIONS_BATCHES, {
-                messageId,
+                messageId: messageObjectId,
                 platformTypes: [PlatformType.Android, PlatformType.Huawei],
                 useExpirations: args.params.useExpirations,
             })

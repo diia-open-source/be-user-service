@@ -1,7 +1,6 @@
-import { ObjectId } from 'bson'
-
 import { MoleculerService } from '@diia-inhouse/diia-app'
 
+import { mongo } from '@diia-inhouse/db'
 import { NotificationServiceClient } from '@diia-inhouse/notification-service-client'
 import { ActHeaders, ActionVersion, Logger, SessionType, UserTokenData } from '@diia-inhouse/types'
 
@@ -21,7 +20,7 @@ export default class NotificationService {
         private readonly notificationServiceClient: NotificationServiceClient,
     ) {}
 
-    async isMessageExists(messageId: ObjectId): Promise<boolean> {
+    async isMessageExists(messageId: mongo.ObjectId): Promise<boolean> {
         return await this.moleculer.act(
             this.serviceName,
             {

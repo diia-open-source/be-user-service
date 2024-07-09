@@ -1,13 +1,13 @@
 import moment from 'moment'
-import { FilterQuery, UpdateQuery } from 'mongoose'
 import { v4 as uuid } from 'uuid'
 
 import { IdentifierService } from '@diia-inhouse/crypto'
-import { ExternalCommunicator, ExternalEvent, ExternalEventBus } from '@diia-inhouse/diia-queue'
+import { FilterQuery, UpdateQuery } from '@diia-inhouse/db'
+import { ExternalCommunicator, ExternalEventBus } from '@diia-inhouse/diia-queue'
 import { EnvService } from '@diia-inhouse/env'
 import { AccessDeniedError, ApiError, InternalServerError, ModelNotFoundError, ServiceUnavailableError } from '@diia-inhouse/errors'
 import { I18nService } from '@diia-inhouse/i18n'
-import { AppUser, AppUserActionHeaders, DocumentType, HttpStatusCode, Logger, SessionType, UserTokenData } from '@diia-inhouse/types'
+import { AppUser, AppUserActionHeaders, HttpStatusCode, Logger, SessionType, UserTokenData } from '@diia-inhouse/types'
 import { utils } from '@diia-inhouse/utils'
 
 import AuthService from '@services/auth'
@@ -18,6 +18,7 @@ import UserSigningHistoryService from '@services/userSigningHistory'
 
 import diiaIdModel from '@models/diiaId'
 
+import { DiiaIdHashFileRequest, DiiaIdHashFileResponse } from '@interfaces/externalEventListeners/diiaIdHashFile'
 import { DiiaIdHashFilesRequest, DiiaIdHashFilesResponse, FileToHash, HashedFile } from '@interfaces/externalEventListeners/diiaIdHashFiles'
 import {
     DiiaIdHashFilesIntegrityRequest,
@@ -28,9 +29,10 @@ import {
     DiiaIdSignDpsPackagePrepareResponse,
     TaxReportDao,
 } from '@interfaces/externalEventListeners/diiaIdSignDpsPackagePrepare'
-import { DiiaIdSignHashesInitRequest, DiiaIdSignType } from '@interfaces/externalEventListeners/diiaIdSignHashesInit'
+import { DiiaIdSignHashesInitRequest } from '@interfaces/externalEventListeners/diiaIdSignHashesInit'
 import { Locales } from '@interfaces/locales'
 import { DiiaId, DiiaIdModel, SignAlgo } from '@interfaces/models/diiaId'
+import { ExternalEvent } from '@interfaces/queue'
 import { AttentionMessageParameterType, ProcessCode } from '@interfaces/services'
 import { AuthSchemaCode } from '@interfaces/services/auth'
 import {
@@ -48,6 +50,7 @@ import {
     DiiaIdResponse,
     FileIntegrityResult,
     HashFilesToSignOptions,
+    InitHashesSigningParams,
 } from '@interfaces/services/diiaId'
 import { IdentityDocument, IdentityDocumentType, Passport } from '@interfaces/services/documents'
 import { EResidentDiiaIdInfoRequest } from '@interfaces/services/eResidentDiiaIdConfirmation'
@@ -193,10 +196,10 @@ export default class DiiaIdService {
         try {
             const passport: Passport = await this.documentsService.getPassportToProcess(user)
             const { docNumber, lastNameUA, firstNameUA, middleNameUA, photo, sign } = passport
-            const { creationDate, expirationDate } = diiaId
+            const { creationDate, expirationDate, identifier } = diiaId
 
             return {
-                identifier: diiaId.identifier,
+                identifier,
                 creationDate: moment(creationDate).format(this.dateFormat),
                 expirationDate: moment(expirationDate).format(this.dateFormat),
                 passport: {
@@ -229,7 +232,7 @@ export default class DiiaIdService {
             this.getDiiaId(userIdentifier, mobileUid, signAlgo),
             this.userSigningHistoryService.countHistory(userIdentifier),
         ])
-        const hasSigningHistory = !!totalHistory
+        const hasSigningHistory = Boolean(totalHistory)
 
         if (!this.isDiiaIdActive(diiaId)) {
             return {
@@ -272,7 +275,7 @@ export default class DiiaIdService {
         const hasAnyDiiaIdTypeAvailable = availableDiiaIds.some((diiaId) => this.isDiiaIdActive(diiaId))
 
         const totalHistory = await this.userSigningHistoryService.countHistory(userIdentifier)
-        const hasSigningHistory = !!totalHistory
+        const hasSigningHistory = Boolean(totalHistory)
 
         if (!hasAnyDiiaIdTypeAvailable) {
             return {
@@ -349,8 +352,17 @@ export default class DiiaIdService {
         }
     }
 
-    async hasIdentifier(userIdentifier: string, mobileUidToFilter: string): Promise<boolean> {
-        const query: FilterQuery<DiiaIdModel> = { userIdentifier, isDeleted: false, mobileUid: { $ne: mobileUidToFilter } }
+    async hasIdentifier(userIdentifier: string, mobileUidToExclude?: string, mobileUid?: string): Promise<boolean> {
+        let query: FilterQuery<DiiaIdModel> = { userIdentifier, isDeleted: false }
+
+        if (mobileUidToExclude) {
+            query = { ...query, mobileUid: { $ne: mobileUidToExclude } }
+        }
+
+        if (mobileUid) {
+            query = { ...query, mobileUid }
+        }
+
         const diiaId = await diiaIdModel.findOne(query)
         if (!diiaId) {
             return false
@@ -429,6 +441,20 @@ export default class DiiaIdService {
         this.logger.info('Updated diia id entity with unsuccess revoking', { eventUuid, modifiedCount, error })
     }
 
+    async hashFileToSign(file: FileToHash, signAlgo: SignAlgo, processId: string): Promise<HashedFile> {
+        const request: DiiaIdHashFileRequest = {
+            processId,
+            file,
+            signAlgo,
+        }
+        const response = await this.external.receive<DiiaIdHashFileResponse>(ExternalEvent.DiiaIdHashFile, request)
+        if (!response) {
+            throw new ServiceUnavailableError(`Missing [${ExternalEvent.DiiaIdHashFile}] response`)
+        }
+
+        return response.hash
+    }
+
     async hashFilesToSign(
         user: UserTokenData,
         mobileUid: string,
@@ -461,7 +487,15 @@ export default class DiiaIdService {
             throw new ServiceUnavailableError(`Missing [${ExternalEvent.DiiaIdHashFiles}] response`)
         }
 
-        await this.initHashesSigning(userIdentifier, mobileUid, signAlgo, signType, noSigningTime, noContentTimestamp, diiaId)
+        await this.initHashesSigning({
+            userIdentifier,
+            mobileUid,
+            signAlgo,
+            signType,
+            noSigningTime,
+            noContentTimestamp,
+            diiaId,
+        })
 
         return response.hashes
     }
@@ -568,15 +602,16 @@ export default class DiiaIdService {
         return { areValid, checkResults }
     }
 
-    async initHashesSigning(
-        userIdentifier: string,
-        mobileUid: string,
-        signAlgo: SignAlgo,
-        signType?: DiiaIdSignType,
-        noSigningTime?: boolean,
-        noContentTimestamp?: boolean,
-        optionalDiiaId?: DiiaIdModel,
-    ): Promise<boolean> {
+    async initHashesSigning({
+        userIdentifier,
+        mobileUid,
+        signAlgo,
+        signType,
+        noSigningTime,
+        noContentTimestamp,
+        processId,
+        diiaId: optionalDiiaId,
+    }: InitHashesSigningParams): Promise<boolean> {
         const diiaId = optionalDiiaId || (await this.getDiiaId(userIdentifier, mobileUid, signAlgo))
         if (!diiaId) {
             throw new ModelNotFoundError(diiaIdModel.modelName, userIdentifier)
@@ -597,17 +632,15 @@ export default class DiiaIdService {
                 signType,
                 noSigningTime,
                 noContentTimestamp,
+                processId,
             },
         }
 
-        return await this.externalEventBus.publish(
-            ExternalEvent.DiiaIdSignHashesInit,
-            <Record<string, unknown>>(<unknown>signHashesInitRequest),
-        )
+        return await this.externalEventBus.publish(ExternalEvent.DiiaIdSignHashesInit, signHashesInitRequest)
     }
 
-    async softDeleteDiiaIdByIdentityDocument(userIdentifier: string, mobileUid: string, documentType: DocumentType): Promise<void> {
-        const isIdentityDocument: boolean = Object.values(<DocumentType>(<unknown>IdentityDocumentType)).includes(documentType)
+    async softDeleteDiiaIdByIdentityDocument(userIdentifier: string, mobileUid: string, documentType: string): Promise<void> {
+        const isIdentityDocument: boolean = Object.values(<string>(<unknown>IdentityDocumentType)).includes(documentType)
         if (!isIdentityDocument) {
             return
         }
@@ -634,6 +667,7 @@ export default class DiiaIdService {
             }),
         )
 
+        // eslint-disable-next-line unicorn/prefer-native-coercion-functions
         return nullableDiiaIds.filter((diiaId): diiaId is DiiaIdModel => Boolean(diiaId))
     }
 
@@ -844,9 +878,9 @@ export default class DiiaIdService {
     private async getIdentityDocument(user: AppUser, unavailableProcessCode: ProcessCode): Promise<IdentityDocument | never> {
         try {
             return await this.documentsService.getIdentityDocument(user)
-        } catch (e) {
-            return utils.handleError(e, (err) => {
-                const code = err.getCode()
+        } catch (err) {
+            return utils.handleError(err, (handledError) => {
+                const code = handledError.getCode()
                 const processCode = code === HttpStatusCode.NOT_FOUND ? ProcessCode.NoRequiredDocument : unavailableProcessCode
 
                 throw new ApiError('Identity document not received', code, {}, processCode)

@@ -1,7 +1,6 @@
-import { UpdateQuery } from 'mongoose'
-
 import { IdentifierService } from '@diia-inhouse/crypto'
-import { EventBusListener, ExternalEvent } from '@diia-inhouse/diia-queue'
+import { UpdateQuery } from '@diia-inhouse/db'
+import { EventBusListener } from '@diia-inhouse/diia-queue'
 import { HttpStatusCode, Logger } from '@diia-inhouse/types'
 import { ValidationSchema } from '@diia-inhouse/validators'
 
@@ -13,6 +12,7 @@ import UbchProvider from '@providers/creditHistory/ubch'
 import { EventPayload } from '@interfaces/externalEventListeners/ubkiCreditInfo'
 import { SubscriptionModel } from '@interfaces/models/subscription'
 import { UbchResponseData } from '@interfaces/providers/creditHistory/ubch'
+import { ExternalEvent } from '@interfaces/queue'
 
 export default class UbkiCreditInfoEventListener implements EventBusListener {
     private readonly creditHistoryStrategyService: CreditHistoryStrategyService

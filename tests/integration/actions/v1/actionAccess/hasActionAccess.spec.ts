@@ -1,5 +1,5 @@
 import { StoreService } from '@diia-inhouse/redis'
-import TestKit from '@diia-inhouse/test/*'
+import TestKit from '@diia-inhouse/test'
 
 import HasActionAccessAction from '@src/actions/v1/actionAccess/hasActionAccess'
 

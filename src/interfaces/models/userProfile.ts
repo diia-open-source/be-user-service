@@ -1,6 +1,5 @@
-import { Document } from 'mongoose'
-
-import { Gender, ProfileFeature } from '@diia-inhouse/types'
+import { Document } from '@diia-inhouse/db'
+import { DiiaOfficeStatus, Gender, ProfileFeature } from '@diia-inhouse/types'
 
 export enum CitizenshipSource {
     BankAccount = 'bankAccount',
@@ -16,10 +15,6 @@ export interface UserProfileFeatures {
     [ProfileFeature.office]?: DiiaOfficeProfile
 }
 
-export interface UserProfileSettings {
-    myInfoUsePassportPhoto?: boolean
-}
-
 export interface UserProfile {
     identifier: string
     gender: Gender
@@ -27,7 +22,6 @@ export interface UserProfile {
     citizenship?: Record<CitizenshipSource, UserProfileCitizenship>
     communityCode?: string
     features?: UserProfileFeatures
-    settings?: UserProfileSettings
 }
 
 export interface DiiaOfficeProfile {
@@ -40,12 +34,6 @@ export interface DiiaOfficeProfile {
     isOrganizationAdmin: boolean
     status: DiiaOfficeStatus
     googleWorkspace?: string
-}
-
-export enum DiiaOfficeStatus {
-    Active = 'ACTIVE',
-    Suspended = 'SUSPENDED',
-    Dismissed = 'DISMISSED',
 }
 
 export interface UserProfileModel extends UserProfile, Document {}

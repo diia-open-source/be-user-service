@@ -1,7 +1,7 @@
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
 import DiiaLogger from '@diia-inhouse/diia-logger'
-import { EventBus, InternalEvent } from '@diia-inhouse/diia-queue'
+import { EventBus } from '@diia-inhouse/diia-queue'
 import TestKit, { mockInstance } from '@diia-inhouse/test'
 
 import PublicServicePenaltyCreatedEventListener from '@src/eventListeners/publicServicePenaltyCreated'
@@ -10,6 +10,7 @@ import AnalyticsService from '@services/analytics'
 import UserDocumentService from '@services/userDocument'
 
 import { EventPayload } from '@interfaces/eventListeners/publicServicePenaltyCreated'
+import { InternalEvent } from '@interfaces/queue'
 import { AnalyticsActionType, AnalyticsCategory } from '@interfaces/services/analytics'
 
 describe('PublicServicePenaltyCreatedEventListener', () => {
@@ -32,6 +33,7 @@ describe('PublicServicePenaltyCreatedEventListener', () => {
         const penaltyId = randomUUID()
         const vehicleLicenseIdentifier = 'vehicle-license-identifier'
         const fixingDate = new Date()
+        const undefinedValue = undefined
 
         it.each([
             [
@@ -82,7 +84,7 @@ describe('PublicServicePenaltyCreatedEventListener', () => {
                     penaltyId,
                 },
                 (): void => {
-                    jest.spyOn(userDocumentServiceMock, 'identifyPenaltyOwner').mockResolvedValueOnce(undefined)
+                    jest.spyOn(userDocumentServiceMock, 'identifyPenaltyOwner').mockResolvedValueOnce(undefinedValue)
                 },
                 (): void => {
                     expect(userDocumentServiceMock.identifyPenaltyOwner).toHaveBeenCalledWith('vehicle-license-identifier', fixingDate)

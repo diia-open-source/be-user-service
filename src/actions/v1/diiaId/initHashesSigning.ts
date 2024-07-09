@@ -9,6 +9,11 @@ import { ActionResult, CustomActionArguments } from '@interfaces/actions/v1/diia
 import { DiiaIdSignType } from '@interfaces/externalEventListeners/diiaIdSignHashesInit'
 import { SignAlgo } from '@interfaces/models/diiaId'
 
+/**
+ * Same as initDiiaIdHashesSigning.v2, but without signing history.
+ *
+ * Use case: signing has multiple recipients, so signing history should be handled separately for each recipient.
+ */
 export default class InitHashesSigningAction implements AppAction {
     constructor(private readonly diiaIdService: DiiaIdService) {}
 
@@ -35,14 +40,14 @@ export default class InitHashesSigningAction implements AppAction {
         } = args
 
         return {
-            success: await this.diiaIdService.initHashesSigning(
+            success: await this.diiaIdService.initHashesSigning({
                 userIdentifier,
                 mobileUid,
                 signAlgo,
                 signType,
                 noSigningTime,
                 noContentTimestamp,
-            ),
+            }),
         }
     }
 }

@@ -1,4 +1,4 @@
-import { Schema } from 'mongoose'
+import { Schema } from '@diia-inhouse/db'
 
 import { OnboardingBoard, OnboardingButtonAction } from '@interfaces/models/onboarding'
 

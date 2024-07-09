@@ -14,6 +14,8 @@ jest.mock('@models/eResidentProfile', () => eresidentProfileModel)
 import EResidentDeviceService from '@services/eResidentDevice'
 import EResidentProfileService from '@services/eResidentProfile'
 
+const undefinedValue = undefined
+
 describe(`Service ${EResidentProfileService.name}`, () => {
     const now = new Date()
     const testKit = new TestKit()
@@ -57,7 +59,7 @@ describe(`Service ${EResidentProfileService.name}`, () => {
                 birthDay: new Date(),
             }
 
-            jest.spyOn(eresidentProfileModel, 'findOne').mockResolvedValueOnce(undefined)
+            jest.spyOn(eresidentProfileModel, 'findOne').mockResolvedValueOnce(undefinedValue)
             jest.spyOn(eresidentProfileModel, 'create').mockResolvedValueOnce(true)
             jest.spyOn(eResidentDeviceServiceMock, 'updateDevice').mockResolvedValueOnce()
 

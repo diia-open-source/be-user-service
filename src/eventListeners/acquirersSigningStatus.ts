@@ -1,11 +1,13 @@
 import { IdentifierService } from '@diia-inhouse/crypto'
-import { EventBusListener, InternalEvent, QueueMessageMetaData } from '@diia-inhouse/diia-queue'
+import { mongo } from '@diia-inhouse/db'
+import { EventBusListener, QueueMessageMetaData } from '@diia-inhouse/diia-queue'
 import { ValidationSchema } from '@diia-inhouse/validators'
 
 import UserSigningHistoryService from '@services/userSigningHistory'
 
 import { EventPayload } from '@interfaces/eventListeners/acquirersSigningStatus'
 import { SignAlgo } from '@interfaces/models/diiaId'
+import { InternalEvent } from '@interfaces/queue'
 import { UserHistoryItemStatus } from '@interfaces/services/userHistory'
 import { UpsertItemParams } from '@interfaces/services/userSigningHistory'
 
@@ -34,7 +36,7 @@ export default class AcquirersSigningStatusEventListener implements EventBusList
         acquirer: {
             type: 'object',
             props: {
-                id: { type: 'objectId' },
+                id: { type: 'string' },
                 name: { type: 'string' },
                 address: { type: 'string' },
             },
@@ -75,7 +77,7 @@ export default class AcquirersSigningStatusEventListener implements EventBusList
             status,
             documents,
             date,
-            acquirer,
+            acquirer: { ...acquirer, id: new mongo.ObjectId(acquirer.id) },
             offer,
         }
 

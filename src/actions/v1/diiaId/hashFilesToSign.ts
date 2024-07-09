@@ -6,10 +6,14 @@ import { ValidationSchema } from '@diia-inhouse/validators'
 import DiiaIdService from '@services/diiaId'
 
 import { ActionResult, CustomActionArguments } from '@interfaces/actions/v1/diiaId/hashFilesToSign'
-import { HashedFile } from '@interfaces/externalEventListeners/diiaIdHashFiles'
 import { DiiaIdSignType } from '@interfaces/externalEventListeners/diiaIdSignHashesInit'
 import { SignAlgo } from '@interfaces/models/diiaId'
 
+/**
+ * Same as hashFilesToSign.v2, but without signing history.
+ *
+ * Use case: signing has multiple recipients, so signing history should be handled separately for each recipient.
+ */
 export default class HashFilesToSignAction implements AppAction {
     constructor(private readonly diiaIdService: DiiaIdService) {}
 
@@ -50,7 +54,7 @@ export default class HashFilesToSignAction implements AppAction {
             session: { user },
         } = args
 
-        const hashedFiles: HashedFile[] = await this.diiaIdService.hashFilesToSign(user, mobileUid, files, signAlgo, options)
+        const hashedFiles = await this.diiaIdService.hashFilesToSign(user, mobileUid, files, signAlgo, options)
 
         return { hashedFiles }
     }

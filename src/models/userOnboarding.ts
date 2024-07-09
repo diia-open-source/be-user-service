@@ -1,4 +1,4 @@
-import { Model, Schema, model, models } from 'mongoose'
+import { Model, Schema, model, models } from '@diia-inhouse/db'
 
 import { UserOnboarding } from '@interfaces/models/userOnboarding'
 

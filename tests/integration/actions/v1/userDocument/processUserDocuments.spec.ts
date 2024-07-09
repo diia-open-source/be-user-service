@@ -1,9 +1,9 @@
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
-import { asClass } from 'awilix'
+import { asClass } from '@diia-inhouse/diia-app'
 
 import TestKit from '@diia-inhouse/test'
-import { DocStatus, DocumentType, OwnerType } from '@diia-inhouse/types'
+import { DocStatus, OwnerType } from '@diia-inhouse/types'
 
 import ProcessUserDocumentsAction from '@src/actions/v1/userDocument/processUserDocuments'
 
@@ -44,8 +44,8 @@ describe(`Action ${ProcessUserDocumentsAction.name}`, () => {
                 const {
                     user: { identifier: userIdentifier },
                 } = testKit.session.getUserSession()
-                const sourceDocType = DocumentType.DriverLicense
-                const docTypeToCompare = DocumentType.InternalPassport
+                const sourceDocType = 'driver-license'
+                const docTypeToCompare = 'internal-passport'
                 const comparingMap: UserDocumentService['comparingMap'] = {
                     [sourceDocType]: [docTypeToCompare],
                 }
@@ -82,8 +82,8 @@ describe(`Action ${ProcessUserDocumentsAction.name}`, () => {
                 const {
                     user: { identifier: userIdentifier },
                 } = testKit.session.getUserSession()
-                const sourceDocType = DocumentType.DriverLicense
-                const docTypeToCompare = DocumentType.InternalPassport
+                const sourceDocType = 'driver-license'
+                const docTypeToCompare = 'internal-passport'
                 const comparingMap: UserDocumentService['comparingMap'] = {
                     [sourceDocType]: [docTypeToCompare],
                 }
@@ -121,8 +121,8 @@ describe(`Action ${ProcessUserDocumentsAction.name}`, () => {
                 const {
                     user: { identifier: userIdentifier },
                 } = testKit.session.getUserSession()
-                const sourceDocType = DocumentType.DriverLicense
-                const docTypesToCompare = [DocumentType.InternalPassport, DocumentType.ForeignPassport]
+                const sourceDocType = 'driver-license'
+                const docTypesToCompare = ['internal-passport', 'foreign-passport']
                 const comparingMap: UserDocumentService['comparingMap'] = {
                     [sourceDocType]: docTypesToCompare,
                 }
@@ -144,7 +144,7 @@ describe(`Action ${ProcessUserDocumentsAction.name}`, () => {
                 // Act
                 const processedUserDocuments = await processUserDocumentsAction.handler({
                     headers: testKit.session.getHeaders(),
-                    params: { userIdentifier, documentTypes: [DocumentType.ForeignPassport] },
+                    params: { userIdentifier, documentTypes: ['foreign-passport'] },
                 })
 
                 // Assert
@@ -152,7 +152,7 @@ describe(`Action ${ProcessUserDocumentsAction.name}`, () => {
                     userIdentifier,
                 })
 
-                expect(processedUserDocuments).toEqual([[sourceDocType, DocumentType.InternalPassport]])
+                expect(processedUserDocuments).toEqual([[sourceDocType, 'internal-passport']])
             })
         })
 
@@ -162,8 +162,8 @@ describe(`Action ${ProcessUserDocumentsAction.name}`, () => {
                 const {
                     user: { identifier: userIdentifier },
                 } = testKit.session.getUserSession()
-                const sourceDocType = DocumentType.DriverLicense
-                const docTypeToCompare = DocumentType.InternalPassport
+                const sourceDocType = 'driver-license'
+                const docTypeToCompare = 'internal-passport'
                 const comparingMap: UserDocumentService['comparingMap'] = {
                     [sourceDocType]: [docTypeToCompare],
                 }
@@ -185,7 +185,7 @@ describe(`Action ${ProcessUserDocumentsAction.name}`, () => {
                 // Act
                 const processedUserDocuments = await processUserDocumentsAction.handler({
                     headers: testKit.session.getHeaders(),
-                    params: { userIdentifier, documentTypes: [DocumentType.BirthCertificate] },
+                    params: { userIdentifier, documentTypes: ['birth-certificate'] },
                 })
 
                 // Assert
@@ -201,8 +201,8 @@ describe(`Action ${ProcessUserDocumentsAction.name}`, () => {
                 const {
                     user: { identifier: userIdentifier },
                 } = testKit.session.getUserSession()
-                const sourceDocType = DocumentType.DriverLicense
-                const docTypeToCompare = DocumentType.InternalPassport
+                const sourceDocType = 'driver-license'
+                const docTypeToCompare = 'internal-passport'
                 const comparingMap: UserDocumentService['comparingMap'] = {
                     [sourceDocType]: [docTypeToCompare],
                 }
@@ -240,8 +240,8 @@ describe(`Action ${ProcessUserDocumentsAction.name}`, () => {
                 const {
                     user: { identifier: userIdentifier },
                 } = testKit.session.getUserSession()
-                const sourceDocType = DocumentType.DriverLicense
-                const docTypeToCompare = DocumentType.InternalPassport
+                const sourceDocType = 'driver-license'
+                const docTypeToCompare = 'internal-passport'
                 const comparingMap: UserDocumentService['comparingMap'] = {
                     [sourceDocType]: [docTypeToCompare],
                 }
@@ -277,7 +277,7 @@ describe(`Action ${ProcessUserDocumentsAction.name}`, () => {
     })
 
     describe('specific processing strategies', () => {
-        describe(`${DocumentType.DriverLicense} strategy`, () => {
+        describe(`${'driver-license'} strategy`, () => {
             describe(`notification ${MessageTemplateCode.DriverLicenseDataChanged}`, () => {
                 describe('when send', () => {
                     it('should send when "compared to" document is absent and hashes mismatched', async () => {
@@ -288,7 +288,7 @@ describe(`Action ${ProcessUserDocumentsAction.name}`, () => {
                         const [driverLicense, internalPassport]: UserDocument[] = [
                             {
                                 userIdentifier,
-                                documentType: DocumentType.DriverLicense,
+                                documentType: 'driver-license',
                                 documentIdentifier: randomUUID(),
                                 ownerType: OwnerType.owner,
                                 docStatus: DocStatus.Ok,
@@ -297,7 +297,7 @@ describe(`Action ${ProcessUserDocumentsAction.name}`, () => {
                             },
                             {
                                 userIdentifier,
-                                documentType: DocumentType.InternalPassport,
+                                documentType: 'internal-passport',
                                 documentIdentifier: randomUUID(),
                                 ownerType: OwnerType.owner,
                                 docStatus: DocStatus.Ok,
@@ -312,7 +312,7 @@ describe(`Action ${ProcessUserDocumentsAction.name}`, () => {
                         // Act
                         await processUserDocumentsAction.handler({
                             headers: testKit.session.getHeaders(),
-                            params: { userIdentifier, documentTypes: [DocumentType.DriverLicense] },
+                            params: { userIdentifier, documentTypes: ['driver-license'] },
                         })
 
                         // Assert
@@ -323,7 +323,7 @@ describe(`Action ${ProcessUserDocumentsAction.name}`, () => {
                         })
                         const sourceDoc = await userDocumentModel.findOne({
                             userIdentifier,
-                            documentType: DocumentType.DriverLicense,
+                            documentType: 'driver-license',
                             documentIdentifier: driverLicense.documentIdentifier,
                         })
 
@@ -332,7 +332,7 @@ describe(`Action ${ProcessUserDocumentsAction.name}`, () => {
                         })
 
                         expect(sourceDoc).toMatchObject<Partial<UserDocument>>({
-                            comparedTo: { documentType: DocumentType.InternalPassport, fullNameHash: internalPassport.fullNameHash! },
+                            comparedTo: { documentType: 'internal-passport', fullNameHash: internalPassport.fullNameHash! },
                         })
                     })
 
@@ -344,20 +344,20 @@ describe(`Action ${ProcessUserDocumentsAction.name}`, () => {
                         const [driverLicense, internalPassport]: UserDocument[] = [
                             {
                                 userIdentifier,
-                                documentType: DocumentType.DriverLicense,
+                                documentType: 'driver-license',
                                 documentIdentifier: randomUUID(),
                                 ownerType: OwnerType.owner,
                                 docStatus: DocStatus.Ok,
                                 fullNameHash: randomUUID(),
                                 notifications: {},
                                 comparedTo: {
-                                    documentType: DocumentType.InternalPassport,
+                                    documentType: 'internal-passport',
                                     fullNameHash: randomUUID(),
                                 },
                             },
                             {
                                 userIdentifier,
-                                documentType: DocumentType.InternalPassport,
+                                documentType: 'internal-passport',
                                 documentIdentifier: randomUUID(),
                                 ownerType: OwnerType.owner,
                                 docStatus: DocStatus.Ok,
@@ -372,7 +372,7 @@ describe(`Action ${ProcessUserDocumentsAction.name}`, () => {
                         // Act
                         await processUserDocumentsAction.handler({
                             headers: testKit.session.getHeaders(),
-                            params: { userIdentifier, documentTypes: [DocumentType.InternalPassport] },
+                            params: { userIdentifier, documentTypes: ['internal-passport'] },
                         })
 
                         // Assert
@@ -383,7 +383,7 @@ describe(`Action ${ProcessUserDocumentsAction.name}`, () => {
                         })
                         const sourceDoc = await userDocumentModel.findOne({
                             userIdentifier,
-                            documentType: DocumentType.DriverLicense,
+                            documentType: 'driver-license',
                             documentIdentifier: driverLicense.documentIdentifier,
                         })
 
@@ -392,7 +392,7 @@ describe(`Action ${ProcessUserDocumentsAction.name}`, () => {
                         })
 
                         expect(sourceDoc).toMatchObject<Partial<UserDocument>>({
-                            comparedTo: { documentType: DocumentType.InternalPassport, fullNameHash: internalPassport.fullNameHash! },
+                            comparedTo: { documentType: 'internal-passport', fullNameHash: internalPassport.fullNameHash! },
                         })
                     })
                 })
@@ -407,7 +407,7 @@ describe(`Action ${ProcessUserDocumentsAction.name}`, () => {
                         const [driverLicense, internalPassport]: UserDocument[] = [
                             {
                                 userIdentifier,
-                                documentType: DocumentType.DriverLicense,
+                                documentType: 'driver-license',
                                 documentIdentifier: randomUUID(),
                                 ownerType: OwnerType.owner,
                                 docStatus: DocStatus.Ok,
@@ -416,7 +416,7 @@ describe(`Action ${ProcessUserDocumentsAction.name}`, () => {
                             },
                             {
                                 userIdentifier,
-                                documentType: DocumentType.InternalPassport,
+                                documentType: 'internal-passport',
                                 documentIdentifier: randomUUID(),
                                 ownerType: OwnerType.owner,
                                 docStatus: DocStatus.Ok,
@@ -431,14 +431,14 @@ describe(`Action ${ProcessUserDocumentsAction.name}`, () => {
                         // Act
                         await processUserDocumentsAction.handler({
                             headers: testKit.session.getHeaders(),
-                            params: { userIdentifier, documentTypes: [DocumentType.DriverLicense] },
+                            params: { userIdentifier, documentTypes: ['driver-license'] },
                         })
 
                         // Assert
                         expect(createNotificationSpy).toHaveBeenCalledTimes(0)
                         const sourceDoc = await userDocumentModel.findOne({
                             userIdentifier,
-                            documentType: DocumentType.DriverLicense,
+                            documentType: 'driver-license',
                             documentIdentifier: driverLicense.documentIdentifier,
                         })
 
@@ -447,7 +447,7 @@ describe(`Action ${ProcessUserDocumentsAction.name}`, () => {
                         })
 
                         expect(sourceDoc).toMatchObject<Partial<UserDocument>>({
-                            comparedTo: { documentType: DocumentType.InternalPassport, fullNameHash: internalPassport.fullNameHash! },
+                            comparedTo: { documentType: 'internal-passport', fullNameHash: internalPassport.fullNameHash! },
                         })
                     })
 
@@ -460,20 +460,20 @@ describe(`Action ${ProcessUserDocumentsAction.name}`, () => {
                         const [driverLicense, internalPassport]: UserDocument[] = [
                             {
                                 userIdentifier,
-                                documentType: DocumentType.DriverLicense,
+                                documentType: 'driver-license',
                                 documentIdentifier: randomUUID(),
                                 ownerType: OwnerType.owner,
                                 docStatus: DocStatus.Ok,
                                 fullNameHash: randomUUID(),
                                 notifications: {},
                                 comparedTo: {
-                                    documentType: DocumentType.InternalPassport,
+                                    documentType: 'internal-passport',
                                     fullNameHash: docToCompareFullNameHash,
                                 },
                             },
                             {
                                 userIdentifier,
-                                documentType: DocumentType.InternalPassport,
+                                documentType: 'internal-passport',
                                 documentIdentifier: randomUUID(),
                                 ownerType: OwnerType.owner,
                                 docStatus: DocStatus.Ok,
@@ -488,7 +488,7 @@ describe(`Action ${ProcessUserDocumentsAction.name}`, () => {
                         // Act
                         await processUserDocumentsAction.handler({
                             headers: testKit.session.getHeaders(),
-                            params: { userIdentifier, documentTypes: [DocumentType.InternalPassport] },
+                            params: { userIdentifier, documentTypes: ['internal-passport'] },
                         })
 
                         await userDocumentModel.deleteMany({
@@ -507,7 +507,7 @@ describe(`Action ${ProcessUserDocumentsAction.name}`, () => {
                         const [driverLicense, internalPassport]: UserDocument[] = [
                             {
                                 userIdentifier,
-                                documentType: DocumentType.DriverLicense,
+                                documentType: 'driver-license',
                                 documentIdentifier: randomUUID(),
                                 ownerType: OwnerType.owner,
                                 docStatus: DocStatus.Ok,
@@ -515,7 +515,7 @@ describe(`Action ${ProcessUserDocumentsAction.name}`, () => {
                             },
                             {
                                 userIdentifier,
-                                documentType: DocumentType.InternalPassport,
+                                documentType: 'internal-passport',
                                 documentIdentifier: randomUUID(),
                                 ownerType: OwnerType.owner,
                                 docStatus: DocStatus.Ok,
@@ -530,7 +530,7 @@ describe(`Action ${ProcessUserDocumentsAction.name}`, () => {
                         // Act
                         await processUserDocumentsAction.handler({
                             headers: testKit.session.getHeaders(),
-                            params: { userIdentifier, documentTypes: [DocumentType.InternalPassport] },
+                            params: { userIdentifier, documentTypes: ['internal-passport'] },
                         })
 
                         // Assert
@@ -548,7 +548,7 @@ describe(`Action ${ProcessUserDocumentsAction.name}`, () => {
                         const [driverLicense, internalPassport]: UserDocument[] = [
                             {
                                 userIdentifier,
-                                documentType: DocumentType.DriverLicense,
+                                documentType: 'driver-license',
                                 documentIdentifier: randomUUID(),
                                 ownerType: OwnerType.owner,
                                 docStatus: DocStatus.Ok,
@@ -557,7 +557,7 @@ describe(`Action ${ProcessUserDocumentsAction.name}`, () => {
                             },
                             {
                                 userIdentifier,
-                                documentType: DocumentType.InternalPassport,
+                                documentType: 'internal-passport',
                                 documentIdentifier: randomUUID(),
                                 ownerType: OwnerType.owner,
                                 docStatus: DocStatus.Ok,
@@ -571,7 +571,7 @@ describe(`Action ${ProcessUserDocumentsAction.name}`, () => {
                         // Act
                         await processUserDocumentsAction.handler({
                             headers: testKit.session.getHeaders(),
-                            params: { userIdentifier, documentTypes: [DocumentType.InternalPassport] },
+                            params: { userIdentifier, documentTypes: ['internal-passport'] },
                         })
 
                         // Assert

@@ -1,7 +1,7 @@
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
 import DiiaLogger from '@diia-inhouse/diia-logger'
-import { ExternalCommunicator, ExternalEvent } from '@diia-inhouse/diia-queue'
+import { ExternalCommunicator } from '@diia-inhouse/diia-queue'
 import { ServiceUnavailableError } from '@diia-inhouse/errors'
 import TestKit, { mockInstance } from '@diia-inhouse/test'
 import { HttpStatusCode } from '@diia-inhouse/types'
@@ -10,6 +10,7 @@ import UbchProvider from '@providers/creditHistory/ubch'
 
 import { AppConfig } from '@interfaces/config'
 import { OperationState, SubscribeRequestLng } from '@interfaces/providers/creditHistory/ubch'
+import { ExternalEvent } from '@interfaces/queue'
 
 describe('UbchProvider', () => {
     const testKit = new TestKit()
