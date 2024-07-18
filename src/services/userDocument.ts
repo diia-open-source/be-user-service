@@ -122,7 +122,7 @@ export default class UserDocumentService {
                 mobileUid,
                 headers,
             ),
-            ...this.getUpdateStoredDocumentsOperations(documentsToUpdate, documentType),
+            ...this.getUpdateStoredDocumentsOperations(documentsToUpdate, documentType, userIdentifier),
             ...(removeMissingDocuments
                 ? this.getDeleteStoredDocumentsOperations(missingDocuments, documentType, userIdentifier, headers)
                 : this.getUpdateStoredDocumentsDocStatusOperations(missingDocuments)),
@@ -925,6 +925,7 @@ export default class UserDocumentService {
     private getUpdateStoredDocumentsOperations(
         documents: UserProfileDocument[],
         documentType: string,
+        userIdentifier: string,
     ): AnyBulkWriteOperation<UserDocument>[] {
         return documents.map((document) => {
             const {
@@ -954,7 +955,7 @@ export default class UserDocumentService {
 
             return {
                 updateMany: <UpdateManyModel<UserDocument>>{
-                    filter: { documentIdentifier, documentType },
+                    filter: { userIdentifier, documentIdentifier, documentType },
                     update: { $set },
                 },
             }

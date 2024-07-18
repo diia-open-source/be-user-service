@@ -1,0 +1,13 @@
+on:
+    workflow_dispatch:
+        inputs:
+            pr_number:
+                description: Number of accepted PR
+                required: true
+
+jobs:
+    accept-contribution:
+        with:
+            pr_number: ${{ inputs.pr_number }}
+        uses: diia-open-source/reusable-workflows/.github/workflows/accept-contribution-be.yml@main
+        secrets: inherit

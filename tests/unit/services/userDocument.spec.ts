@@ -348,7 +348,7 @@ describe(`Service ${UserDocumentService.name}`, () => {
             expect(userDocumentsBulkWriteSpy).toHaveBeenCalledWith([
                 {
                     updateMany: {
-                        filter: { documentIdentifier, documentType },
+                        filter: { userIdentifier, documentIdentifier, documentType },
                         update: {
                             $set: {
                                 documentSubType,

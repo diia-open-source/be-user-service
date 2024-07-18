@@ -55,7 +55,7 @@ const userSigningHistoryItemSchema = new Schema<UserSigningHistoryItem>(
     {
         userIdentifier: { type: String, index: true, required: true },
         sessionId: { type: String, index: true, required: true },
-        resourceId: { type: String, required: true },
+        resourceId: { type: String, index: true, required: true },
         platformType: { type: String },
         platformVersion: { type: String },
         action: { type: String },
@@ -67,7 +67,7 @@ const userSigningHistoryItemSchema = new Schema<UserSigningHistoryItem>(
         offer: { type: offerSchema },
         recipient: { type: recipientSchema },
         publicService: { type: String },
-        applicationId: { type: String, index: true },
+        applicationId: { type: String },
         signAlgo: { type: String, enum: Object.values(SignAlgo), default: SignAlgo.DSTU },
         noSigningTime: { type: Boolean },
         noContentTimestamp: { type: Boolean },
@@ -76,9 +76,5 @@ const userSigningHistoryItemSchema = new Schema<UserSigningHistoryItem>(
         timestamps: true,
     },
 )
-
-// userSigningHistoryItemSchema.index({ resourceId: 1, userIdentifier: 1 }, { unique: true })
-
-export const skipSyncIndexes = true
 
 export default <Model<UserSigningHistoryItem>>models.UserSigningHistoryItem || model('UserSigningHistoryItem', userSigningHistoryItemSchema)
