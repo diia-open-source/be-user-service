@@ -58,7 +58,7 @@ export default class UserSharingHistoryService {
         return { history, total }
     }
 
-    async countHistory(userIdentifier: string, sessionId: string | undefined): Promise<number> {
+    async countHistory(userIdentifier: string, sessionId?: string | undefined): Promise<number> {
         const query: FilterQuery<UserSharingHistoryItemModel> = { userIdentifier }
         if (sessionId) {
             query.sessionId = sessionId
@@ -79,19 +79,25 @@ export default class UserSharingHistoryService {
         itemId: string,
         userIdentifier: string,
         action: UserHistoryCode,
-        navigationPanelLabel: string,
-        sessionId: string,
+        navigationPanelLabel?: string,
+        sessionId?: string,
     ): Promise<HistoryItemResponse> {
-        const query: FilterQuery<UserSharingHistoryItemModel> = { sharingId: itemId, userIdentifier, sessionId }
+        const query: FilterQuery<UserSharingHistoryItemModel> = { sharingId: itemId, userIdentifier }
+        if (sessionId) {
+            query.sessionId = sessionId
+        }
+
         const sharingHistoryItem = await userSharingHistoryItemModel.findOne(query)
         if (!sharingHistoryItem) {
-            throw new NotFoundError('Sharing history item with provided sharingId and sessionId not found for current user')
+            throw new NotFoundError('Sharing history item with provided sharingId not found for current user')
         }
 
         const { documents } = sharingHistoryItem
+
         const documentsNames = await this.documentsService.getDocumentNames(documents)
         const body = this.userSharingHistoryDataMapper.getHistoryItem(sharingHistoryItem, documentsNames, action)
         const navigationPanelMlc = this.userHistoryDataMapper.getHistoryScreenNavigationPanelMlc(navigationPanelLabel)
+
         const response: HistoryItemResponse = {
             topGroup: [
                 {
@@ -115,13 +121,21 @@ export default class UserSharingHistoryService {
     ): Promise<HistoryResponseByCode> {
         const query: FilterQuery<UserSharingHistoryItemModel> = { userIdentifier, sessionId }
 
-        const [items, total]: [UserSharingHistoryItemModel[], number] = await Promise.all([
+        const [items, total] = await Promise.all([
             userSharingHistoryItemModel.find(query).skip(skip).limit(limit).sort({ _id: -1 }),
             userSharingHistoryItemModel.countDocuments(query),
         ])
 
         return {
-            body: items.map((item) => ({ cardMlc: this.userSharingHistoryDataMapper.toHistoryItemEntity(item, action) })),
+            body: [
+                {
+                    paginationListOrg: {
+                        componentId: 'pagination_list_org',
+                        items: items.map((item) => ({ cardMlc: this.userSharingHistoryDataMapper.toHistoryItemEntity(item, action) })),
+                        limit: 20,
+                    },
+                },
+            ],
             total,
         }
     }

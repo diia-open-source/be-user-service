@@ -33,11 +33,11 @@ describe(`Action ${GetHistoryByActionAction.name}`, () => {
                 total: 10,
             }
 
-            jest.spyOn(userHistoryService, 'getSigningHistoryByCodeV1').mockResolvedValueOnce(response)
+            jest.spyOn(userHistoryService, 'getHistoryItemsV1').mockResolvedValueOnce(response)
 
             expect(await action.handler(args)).toMatchObject(response)
 
-            expect(userHistoryService.getSigningHistoryByCodeV1).toHaveBeenCalledWith(
+            expect(userHistoryService.getHistoryItemsV1).toHaveBeenCalledWith(
                 args.params.action,
                 args.session.user.identifier,
                 args.params.skip,

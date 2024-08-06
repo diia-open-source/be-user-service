@@ -3,15 +3,15 @@ import { ContentType } from '@diia-inhouse/types'
 
 import GetHistoryItemByIdAction from '@actions/v2/userHistory/getHistoryItemById'
 
-import UserSigningHistoryService from '@services/userSigningHistory'
+import UserHistoryService from '@services/userHistory'
 
 import { UserHistoryCode } from '@interfaces/services/userHistory'
 
 describe(`Action ${GetHistoryItemByIdAction.name}`, () => {
     const testKit = new TestKit()
-    const userSigningHistoryService = mockInstance(UserSigningHistoryService)
+    const userHistoryService = mockInstance(UserHistoryService)
 
-    const action = new GetHistoryItemByIdAction(userSigningHistoryService)
+    const action = new GetHistoryItemByIdAction(userHistoryService)
 
     describe('Method `handler`', () => {
         it('should return signing history item by id', async () => {
@@ -44,13 +44,13 @@ describe(`Action ${GetHistoryItemByIdAction.name}`, () => {
                 ],
             }
 
-            jest.spyOn(userSigningHistoryService, 'getSigningHistoryItemById').mockResolvedValueOnce(response)
+            jest.spyOn(userHistoryService, 'getHistoryItemById').mockResolvedValueOnce(response)
 
             expect(await action.handler(args)).toMatchObject(response)
 
-            expect(userSigningHistoryService.getSigningHistoryItemById).toHaveBeenCalledWith(
-                args.params.itemId,
+            expect(userHistoryService.getHistoryItemById).toHaveBeenCalledWith(
                 args.session.user.identifier,
+                args.params.itemId,
                 args.params.actionCode,
             )
         })

@@ -23,18 +23,21 @@ import { GetHistoryItemBodyPayload, UserHistoryCode, UserHistoryItemStatus } fro
 
 describe(`Action ${GetSessionHistoryItemByIdAction.name}`, () => {
     let app: Awaited<ReturnType<typeof getApp>>
+
     let getSharingHistoryItemByIdAction: GetSessionHistoryItemByIdAction
-    let testKit: TestKit
     let authService: AuthService
+    let documentsService: DocumentsService
     let userHistoryDataMapper: UserHistoryDataMapper
     let userSigningHistoryDataMapper: UserSigningHistoryDataMapper
+
+    const testKit = new TestKit()
 
     beforeAll(async () => {
         app = await getApp()
 
         getSharingHistoryItemByIdAction = app.container.build(GetSessionHistoryItemByIdAction)
-        testKit = app.container.resolve('testKit')
         authService = app.container.resolve<AuthService>('authService')
+        documentsService = app.container.resolve<DocumentsService>('documentsService')
         userHistoryDataMapper = app.container.resolve<UserHistoryDataMapper>('userHistoryDataMapper')
         userSigningHistoryDataMapper = app.container.resolve<UserSigningHistoryDataMapper>('userSigningHistoryDataMapper')
 
@@ -45,7 +48,7 @@ describe(`Action ${GetSessionHistoryItemByIdAction.name}`, () => {
         await app.stop()
     })
 
-    it('should return sharing history item by provided id and sessionId', async () => {
+    it(`should return ${UserHistoryCode.Sharing} history item by provided id and sessionId`, async () => {
         // Arrange
         const headers = testKit.session.getHeaders()
         const session = testKit.session.getUserSession()
@@ -56,9 +59,7 @@ describe(`Action ${GetSessionHistoryItemByIdAction.name}`, () => {
             platformVersion: '14.4.2',
             appVersion: '3.0.0',
         })
-        jest.spyOn(app.container.resolve<DocumentsService>('documentsService'), 'getDocumentNames').mockResolvedValueOnce([
-            'driver-license-name',
-        ])
+        jest.spyOn(documentsService, 'getDocumentNames').mockResolvedValueOnce(['driver-license-name'])
 
         const {
             user: { identifier: userIdentifier },
@@ -87,7 +88,7 @@ describe(`Action ${GetSessionHistoryItemByIdAction.name}`, () => {
             },
         ]
 
-        const createdSharingHistoryItems = await userSharingHistoryItemModel.insertMany(sharingHistoryItems)
+        await userSharingHistoryItemModel.insertMany(sharingHistoryItems)
         const navigationPanelMlc = userHistoryDataMapper.getHistoryScreenNavigationPanelMlc('IOS 14.4.2')
 
         // Act
@@ -137,14 +138,9 @@ describe(`Action ${GetSessionHistoryItemByIdAction.name}`, () => {
                 },
             ],
         })
-
-        // Cleanup
-        const createdSharingHistoryItemsIds = createdSharingHistoryItems.map((item) => item._id)
-
-        await userSharingHistoryItemModel.deleteMany({ _id: { $in: createdSharingHistoryItemsIds } })
     })
 
-    it('should return signing history item by provided id and sessionId', async () => {
+    it(`should return ${UserHistoryCode.Signing} history item by provided id and sessionId`, async () => {
         // Arrange
         const headers = testKit.session.getHeaders()
         const session = testKit.session.getUserSession()
@@ -202,7 +198,7 @@ describe(`Action ${GetSessionHistoryItemByIdAction.name}`, () => {
 
         const textLabelMlc = userSigningHistoryDataMapper.getHistoryItemTextLabelMlcByAction(action, address, payload)
 
-        const createdSigningHistoryItems = await userSigningHistoryItemModel.insertMany(signingHistoryItems)
+        await userSigningHistoryItemModel.insertMany(signingHistoryItems)
 
         // Act
         const result = await getSharingHistoryItemByIdAction.handler({
@@ -216,7 +212,6 @@ describe(`Action ${GetSessionHistoryItemByIdAction.name}`, () => {
         })
 
         // Assert
-
         expect(result).toEqual<ActionResult>({
             topGroup: [
                 {
@@ -247,14 +242,9 @@ describe(`Action ${GetSessionHistoryItemByIdAction.name}`, () => {
                 { textLabelMlc },
             ],
         })
-
-        // Cleanup
-        const createdSigningHistoryItemsIds = createdSigningHistoryItems.map((item) => item._id)
-
-        await userSigningHistoryItemModel.deleteMany({ _id: { $in: createdSigningHistoryItemsIds } })
     })
 
-    it('should return authorization history item by provided id and sessionId', async () => {
+    it(`should return ${UserHistoryCode.Authorization} history item by provided id and sessionId`, async () => {
         // Arrange
         const headers = testKit.session.getHeaders()
         const session = testKit.session.getUserSession()
@@ -312,7 +302,7 @@ describe(`Action ${GetSessionHistoryItemByIdAction.name}`, () => {
 
         const textLabelMlc = userSigningHistoryDataMapper.getHistoryItemTextLabelMlcByAction(action, address, payload)
 
-        const createdSigningHistoryItems = await userSigningHistoryItemModel.insertMany(signingHistoryItems)
+        await userSigningHistoryItemModel.insertMany(signingHistoryItems)
 
         // Act
         const result = await getSharingHistoryItemByIdAction.handler({
@@ -326,7 +316,6 @@ describe(`Action ${GetSessionHistoryItemByIdAction.name}`, () => {
         })
 
         // Assert
-
         expect(result).toEqual<ActionResult>({
             topGroup: [
                 {
@@ -357,10 +346,5 @@ describe(`Action ${GetSessionHistoryItemByIdAction.name}`, () => {
                 { textLabelMlc },
             ],
         })
-
-        // Cleanup
-        const createdSigningHistoryItemsIds = createdSigningHistoryItems.map((item) => item._id)
-
-        await userSigningHistoryItemModel.deleteMany({ _id: { $in: createdSigningHistoryItemsIds } })
     })
 })

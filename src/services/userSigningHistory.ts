@@ -111,18 +111,26 @@ export default class UserSigningHistoryService {
             query.sessionId = sessionId
         }
 
-        const [items, total]: [UserSigningHistoryItemModel[], number] = await Promise.all([
+        const [items, total] = await Promise.all([
             userSigningHistoryItemModel.find(query).skip(skip).limit(limit).sort({ _id: -1 }),
             userSigningHistoryItemModel.countDocuments(query),
         ])
 
         return {
-            body: items.map((item) => ({ cardMlc: this.userSigningHistoryDataMapper.toHistoryItemEntity(item, action) })),
+            body: [
+                {
+                    paginationListOrg: {
+                        componentId: 'pagination_list_org',
+                        items: items.map((item) => ({ cardMlc: this.userSigningHistoryDataMapper.toHistoryItemEntity(item, action) })),
+                        limit: 20,
+                    },
+                },
+            ],
             total,
         }
     }
 
-    async getHistoryScreenCounts(userIdentifier: string, sessionId?: string): Promise<Partial<Record<UserHistoryCode, number>>> {
+    async getHistoryScreenCounts(userIdentifier: string, sessionId?: string): Promise<{ authorization: number; signing: number }> {
         const queryAuthorizationCount: FilterQuery<UserSigningHistoryItemModel> = { userIdentifier, action: 'authDiiaId' }
         const querySigningCount: FilterQuery<UserSigningHistoryItemModel> = { userIdentifier, action: { $ne: 'authDiiaId' } }
 

@@ -1,9 +1,9 @@
 import { RatingForm } from '@diia-inhouse/analytics'
 import {
     AttentionMessage,
-    CardMlc,
     MessageBodyItem,
     NavigationPanel,
+    PaginationListOrg,
     StatusMessageMlc,
     StubMessageMlc,
     SubtitleLabelMlc,
@@ -106,7 +106,7 @@ export interface HistoryResponseByCodeV1 {
 
 export interface HistoryResponseByCodeBodyItem {
     stubMessageMlc?: StubMessageMlc
-    cardMlc?: CardMlc
+    paginationListOrg?: PaginationListOrg
 }
 
 export interface HistoryResponseByCode {

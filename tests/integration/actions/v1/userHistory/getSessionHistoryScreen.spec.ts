@@ -19,15 +19,16 @@ import { UserHistoryCode, UserHistoryItemStatus } from '@interfaces/services/use
 
 describe(`Action ${GetSessionHistoryScreenAction.name}`, () => {
     let app: Awaited<ReturnType<typeof getApp>>
+
     let getSharingHistoryScreenAction: GetSessionHistoryScreenAction
-    let testKit: TestKit
     let authService: AuthService
+
+    const testKit = new TestKit()
 
     beforeAll(async () => {
         app = await getApp()
 
         getSharingHistoryScreenAction = app.container.build(GetSessionHistoryScreenAction)
-        testKit = app.container.resolve('testKit')
         authService = app.container.resolve<AuthService>('authService')
 
         await app.start()
@@ -37,7 +38,7 @@ describe(`Action ${GetSessionHistoryScreenAction.name}`, () => {
         await app.stop()
     })
 
-    it('should return sharing history screen with counts', async () => {
+    it('should return session history screen with tabs and counts', async () => {
         // Arrange
         const headers = testKit.session.getHeaders()
         const session = testKit.session.getUserSession()
@@ -111,8 +112,8 @@ describe(`Action ${GetSessionHistoryScreenAction.name}`, () => {
             },
         }
 
-        const createdSigningHistoryItems = await userSigningHistoryItemModel.insertMany(signingHistoryItems)
-        const createdSharingHistoryItem = await userSharingHistoryItemModel.create(sharingHistoryItem)
+        await userSigningHistoryItemModel.insertMany(signingHistoryItems)
+        await userSharingHistoryItemModel.create(sharingHistoryItem)
 
         // Act
         const result = await getSharingHistoryScreenAction.handler({ session, headers, params: { sessionId } })
@@ -129,22 +130,31 @@ describe(`Action ${GetSessionHistoryScreenAction.name}`, () => {
                         chipTabsOrg: {
                             items: [
                                 {
-                                    code: UserHistoryCode.Authorization,
-                                    count: authorizationCount,
-                                    label: 'Авторизації',
-                                    chipMlc: { code: UserHistoryCode.Authorization, label: 'Авторизації' },
+                                    chipMlc: {
+                                        code: UserHistoryCode.Authorization,
+                                        label: 'Авторизації',
+                                        badgeCounterAtm: {
+                                            count: authorizationCount,
+                                        },
+                                    },
                                 },
                                 {
-                                    code: UserHistoryCode.Signing,
-                                    count: signingCount,
-                                    label: 'Підписання',
-                                    chipMlc: { code: UserHistoryCode.Signing, label: 'Підписання' },
+                                    chipMlc: {
+                                        code: UserHistoryCode.Signing,
+                                        label: 'Підписання',
+                                        badgeCounterAtm: {
+                                            count: signingCount,
+                                        },
+                                    },
                                 },
                                 {
-                                    code: UserHistoryCode.Sharing,
-                                    count: sharingCount,
-                                    label: 'Шеринг документів',
-                                    chipMlc: { code: UserHistoryCode.Sharing, label: 'Шеринг документів' },
+                                    chipMlc: {
+                                        code: UserHistoryCode.Sharing,
+                                        label: 'Копії документів',
+                                        badgeCounterAtm: {
+                                            count: sharingCount,
+                                        },
+                                    },
                                 },
                             ],
                             preselectedCode: UserHistoryCode.Authorization,
@@ -153,11 +163,5 @@ describe(`Action ${GetSessionHistoryScreenAction.name}`, () => {
                 },
             ],
         })
-
-        // Cleanup
-        const createdSigningHistoryItemsIds = createdSigningHistoryItems.map((item) => item._id)
-
-        await userSigningHistoryItemModel.deleteMany({ _id: { $in: createdSigningHistoryItemsIds } })
-        await userSharingHistoryItemModel.deleteOne({ _id: createdSharingHistoryItem._id })
     })
 })

@@ -31,6 +31,6 @@ export default class GetHistoryByActionAction implements AppAction {
             },
         } = args
 
-        return await this.userHistoryService.getSigningHistoryByCodeV1(action, userIdentifier, skip, limit)
+        return await this.userHistoryService.getHistoryItemsV1(action, userIdentifier, skip, limit)
     }
 }

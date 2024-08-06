@@ -21,15 +21,16 @@ import { UserHistoryCode, UserHistoryItemStatus } from '@interfaces/services/use
 
 describe(`Action ${GetHistoryByActionAction.name}`, () => {
     let app: Awaited<ReturnType<typeof getApp>>
+
     let getHistoryByActionAction: GetHistoryByActionAction
-    let testKit: TestKit
     let userHistoryDataMapper: UserHistoryDataMapper
+
+    const testKit = new TestKit()
 
     beforeAll(async () => {
         app = await getApp()
 
         getHistoryByActionAction = app.container.build(GetHistoryByActionAction)
-        testKit = app.container.resolve('testKit')
         userHistoryDataMapper = app.container.resolve('userHistoryDataMapper')
 
         await app.start()
@@ -39,185 +40,326 @@ describe(`Action ${GetHistoryByActionAction.name}`, () => {
         await app.stop()
     })
 
-    it('should return stubMessageMlc if no signing done', async () => {
-        // Arrange
-        const headers = testKit.session.getHeaders()
-        const session = testKit.session.getUserSession()
-
+    describe(`${UserHistoryCode.Signing}`, () => {
         const action = UserHistoryCode.Signing
 
-        // Act
-        const result = await getHistoryByActionAction.handler({
-            session,
-            headers,
-            params: {
-                action,
-            },
+        it('should return stub message if no items', async () => {
+            // Arrange
+            const headers = testKit.session.getHeaders()
+            const session = testKit.session.getUserSession()
+
+            // Act
+            const result = await getHistoryByActionAction.handler({
+                session,
+                headers,
+                params: {
+                    action,
+                },
+            })
+
+            // Assert
+            expect(result).toEqual<ActionResult>({
+                body: [{ stubMessageMlc: userHistoryDataMapper.getStubMessageByAction(action) }],
+                total: 0,
+            })
         })
 
-        // Assert
-        expect(result).toEqual<ActionResult>({
-            body: [{ stubMessageMlc: userHistoryDataMapper.getStubMessageByAction(action) }],
-            total: 0,
-        })
-    })
+        it('should return cards', async () => {
+            // Arrange
+            const headers = testKit.session.getHeaders()
+            const session = testKit.session.getUserSession()
 
-    it('should return cardMlc for signing item', async () => {
-        // Arrange
-        const headers = testKit.session.getHeaders()
-        const session = testKit.session.getUserSession()
+            const {
+                user: { identifier: userIdentifier },
+            } = session
 
-        const {
-            user: { identifier: userIdentifier },
-        } = session
+            const { platformType, platformVersion } = headers
 
-        const { platformType, platformVersion } = headers
+            const status = UserHistoryItemStatus.Done
 
-        const status = UserHistoryItemStatus.Done
-        const action = UserHistoryCode.Signing
+            const signingHistoryItems: UserSigningHistoryItem[] = [
+                {
+                    userIdentifier,
+                    sessionId: randomUUID(),
+                    resourceId: randomUUID(),
+                    platformType,
+                    platformVersion,
+                    action: 'hashedFilesSigningDiiaId',
+                    status,
+                    statusHistory: [
+                        {
+                            status,
+                            date: new Date(),
+                        },
+                    ],
+                    documents: ['someDocument'],
+                    recipient: {
+                        name: 'recipientName',
+                        address: 'recipientAddress',
+                    },
+                    date: new Date(),
+                },
+            ]
 
-        const signingHistoryItems: UserSigningHistoryItem[] = [
-            {
-                userIdentifier,
-                sessionId: randomUUID(),
-                resourceId: randomUUID(),
-                platformType,
-                platformVersion,
-                action: 'hashedFilesSigningDiiaId',
-                status,
-                statusHistory: [
+            await userSigningHistoryItemModel.insertMany(signingHistoryItems)
+
+            // Act
+            const result = await getHistoryByActionAction.handler({
+                session,
+                headers,
+                params: {
+                    action,
+                },
+            })
+
+            // Assert
+            expect(result).toEqual<ActionResult>({
+                body: [
                     {
-                        status,
-                        date: new Date(),
+                        paginationListOrg: {
+                            componentId: 'pagination_list_org',
+                            items: [
+                                {
+                                    cardMlc: {
+                                        id: signingHistoryItems[0].resourceId,
+                                        chipStatusAtm: {
+                                            code: UserHistoryItemStatus.Done,
+                                            name: userHistoryDataMapper.getHistoryItemStatusNameByActionAndStatus(action, status),
+                                            type: userHistoryDataMapper.getHistoryStatusChipTypeByStatus(status),
+                                        },
+                                        title: signingHistoryItems[0].recipient!.name,
+                                        subtitles: [],
+                                        description: signingHistoryItems[0].recipient!.address,
+                                        botLabel: utils.formatDate(signingHistoryItems[0].date, userHistoryDataMapper.dateFormat),
+                                        btnPrimaryAdditionalAtm: {
+                                            label: 'Детальніше',
+                                            state: ButtonState.enabled,
+                                            action: {
+                                                type: 'historyItemsStatus',
+                                            },
+                                        },
+                                    },
+                                },
+                            ],
+                            limit: 20,
+                        },
                     },
                 ],
-                documents: ['someDocument'],
-                recipient: {
-                    name: 'recipientName',
-                    address: 'recipientAddress',
-                },
-                date: new Date(),
-            },
-        ]
-
-        const createdSigningHistoryItems = await userSigningHistoryItemModel.insertMany(signingHistoryItems)
-
-        // Act
-        const result = await getHistoryByActionAction.handler({
-            session,
-            headers,
-            params: {
-                action,
-            },
+                total: 1,
+            })
         })
-
-        // Assert
-        expect(result).toEqual<ActionResult>({
-            body: [
-                {
-                    cardMlc: {
-                        id: signingHistoryItems[0].resourceId,
-                        chipStatusAtm: {
-                            code: UserHistoryItemStatus.Done,
-                            name: userHistoryDataMapper.getHistoryItemStatusNameByActionAndStatus(action, status),
-                            type: userHistoryDataMapper.getHistoryStatusChipTypeByStatus(status),
-                        },
-                        title: signingHistoryItems[0].recipient!.name,
-                        subtitles: [],
-                        description: signingHistoryItems[0].recipient!.address,
-                        botLabel: utils.formatDate(signingHistoryItems[0].date, userHistoryDataMapper.dateFormat),
-                        btnPrimaryAdditionalAtm: {
-                            label: 'Детальніше',
-                            state: ButtonState.enabled,
-                            action: {
-                                type: 'historyItemsStatus',
-                            },
-                        },
-                    },
-                },
-            ],
-            total: 1,
-        })
-
-        // Cleanup
-        const createdSigningHistoryItemsIds = createdSigningHistoryItems.map((item) => item._id)
-
-        await userSigningHistoryItemModel.deleteMany({ _id: { $in: createdSigningHistoryItemsIds } })
     })
 
-    it('should return cardMlc for sharing item', async () => {
-        // Arrange
-        const headers = testKit.session.getHeaders()
-        const session = testKit.session.getUserSession()
+    describe(`${UserHistoryCode.Authorization}`, () => {
+        const action = UserHistoryCode.Authorization
 
-        const {
-            user: { identifier: userIdentifier },
-        } = session
+        it('should return stub message if no items', async () => {
+            // Arrange
+            const headers = testKit.session.getHeaders()
+            const session = testKit.session.getUserSession()
 
-        const status = UserHistoryItemStatus.Done
-        const action = UserHistoryCode.Sharing
-        const sessionId = randomUUID()
-
-        const sharingHistoryItems: UserSharingHistoryItem[] = [
-            {
-                userIdentifier,
-                sessionId,
-                sharingId: randomUUID(),
-                status,
-                statusHistory: [{ status, date: new Date() }],
-                documents: [],
-                date: new Date(),
-                acquirer: {
-                    id: new mongo.ObjectId(),
-                    name: 'name',
-                    address: 'address',
+            // Act
+            const result = await getHistoryByActionAction.handler({
+                session,
+                headers,
+                params: {
+                    action,
                 },
-            },
-        ]
+            })
 
-        const createdSharingHistoryItems = await userSharingHistoryItemModel.insertMany(sharingHistoryItems)
-
-        // Act
-        const result = await getHistoryByActionAction.handler({
-            session,
-            headers,
-            params: {
-                action,
-                session: sessionId,
-            },
+            // Assert
+            expect(result).toEqual<ActionResult>({
+                body: [{ stubMessageMlc: userHistoryDataMapper.getStubMessageByAction(action) }],
+                total: 0,
+            })
         })
 
-        // Assert
-        expect(result).toEqual<ActionResult>({
-            body: [
+        it('should return cards', async () => {
+            // Arrange
+            const headers = testKit.session.getHeaders()
+            const session = testKit.session.getUserSession()
+
+            const {
+                user: { identifier: userIdentifier },
+            } = session
+
+            const { platformType, platformVersion } = headers
+
+            const status = UserHistoryItemStatus.Done
+
+            const signingHistoryItems: UserSigningHistoryItem[] = [
                 {
-                    cardMlc: {
-                        id: sharingHistoryItems[0].sharingId,
-                        chipStatusAtm: {
-                            code: UserHistoryItemStatus.Done,
-                            name: userHistoryDataMapper.getHistoryItemStatusNameByActionAndStatus(action, status),
-                            type: userHistoryDataMapper.getHistoryStatusChipTypeByStatus(status),
+                    userIdentifier,
+                    sessionId: randomUUID(),
+                    resourceId: randomUUID(),
+                    platformType,
+                    platformVersion,
+                    action: 'authDiiaId',
+                    status,
+                    statusHistory: [
+                        {
+                            status,
+                            date: new Date(),
                         },
-                        title: sharingHistoryItems[0].acquirer.name,
-                        subtitles: [],
-                        description: sharingHistoryItems[0].acquirer.address,
-                        botLabel: utils.formatDate(sharingHistoryItems[0].date, userHistoryDataMapper.dateFormat),
-                        btnPrimaryAdditionalAtm: {
-                            label: 'Детальніше',
-                            state: ButtonState.enabled,
-                            action: {
-                                type: 'historyItemsStatus',
-                            },
+                    ],
+                    documents: ['someDocument'],
+                    recipient: {
+                        name: 'recipientName',
+                        address: 'recipientAddress',
+                    },
+                    date: new Date(),
+                },
+            ]
+
+            await userSigningHistoryItemModel.insertMany(signingHistoryItems)
+
+            // Act
+            const result = await getHistoryByActionAction.handler({
+                session,
+                headers,
+                params: {
+                    action,
+                },
+            })
+
+            // Assert
+            expect(result).toEqual<ActionResult>({
+                body: [
+                    {
+                        paginationListOrg: {
+                            componentId: 'pagination_list_org',
+                            items: [
+                                {
+                                    cardMlc: {
+                                        id: signingHistoryItems[0].resourceId,
+                                        chipStatusAtm: {
+                                            code: UserHistoryItemStatus.Done,
+                                            name: userHistoryDataMapper.getHistoryItemStatusNameByActionAndStatus(action, status),
+                                            type: userHistoryDataMapper.getHistoryStatusChipTypeByStatus(status),
+                                        },
+                                        title: signingHistoryItems[0].recipient!.name,
+                                        subtitles: [],
+                                        description: signingHistoryItems[0].recipient!.address,
+                                        botLabel: utils.formatDate(signingHistoryItems[0].date, userHistoryDataMapper.dateFormat),
+                                        btnPrimaryAdditionalAtm: {
+                                            label: 'Детальніше',
+                                            state: ButtonState.enabled,
+                                            action: {
+                                                type: 'historyItemsStatus',
+                                            },
+                                        },
+                                    },
+                                },
+                            ],
+                            limit: 20,
                         },
                     },
+                ],
+                total: 1,
+            })
+        })
+    })
+
+    describe(`${UserHistoryCode.Sharing}`, () => {
+        const action = UserHistoryCode.Sharing
+
+        it('should return stub message if no items', async () => {
+            // Arrange
+            const headers = testKit.session.getHeaders()
+            const session = testKit.session.getUserSession()
+
+            // Act
+            const result = await getHistoryByActionAction.handler({
+                session,
+                headers,
+                params: {
+                    action,
                 },
-            ],
-            total: 1,
+            })
+
+            // Assert
+            expect(result).toEqual<ActionResult>({
+                body: [{ stubMessageMlc: userHistoryDataMapper.getStubMessageByAction(action) }],
+                total: 0,
+            })
         })
 
-        // Cleanup
-        const createdSharingHistoryItemsIds = createdSharingHistoryItems.map((item) => item._id)
+        it('should return cards by sessionId', async () => {
+            // Arrange
+            const headers = testKit.session.getHeaders()
+            const session = testKit.session.getUserSession()
 
-        await userSharingHistoryItemModel.deleteMany({ _id: { $in: createdSharingHistoryItemsIds } })
+            const {
+                user: { identifier: userIdentifier },
+            } = session
+
+            const status = UserHistoryItemStatus.Done
+            const sessionId = randomUUID()
+
+            const sharingHistoryItems: UserSharingHistoryItem[] = [
+                {
+                    userIdentifier,
+                    sessionId,
+                    sharingId: randomUUID(),
+                    status,
+                    statusHistory: [{ status, date: new Date() }],
+                    documents: [],
+                    date: new Date(),
+                    acquirer: {
+                        id: new mongo.ObjectId(),
+                        name: 'name',
+                        address: 'address',
+                    },
+                },
+            ]
+
+            await userSharingHistoryItemModel.insertMany(sharingHistoryItems)
+
+            // Act
+            const result = await getHistoryByActionAction.handler({
+                session,
+                headers,
+                params: {
+                    action,
+                    session: sessionId,
+                },
+            })
+
+            // Assert
+            expect(result).toEqual<ActionResult>({
+                body: [
+                    {
+                        paginationListOrg: {
+                            componentId: 'pagination_list_org',
+                            items: [
+                                {
+                                    cardMlc: {
+                                        id: sharingHistoryItems[0].sharingId,
+                                        chipStatusAtm: {
+                                            code: UserHistoryItemStatus.Done,
+                                            name: userHistoryDataMapper.getHistoryItemStatusNameByActionAndStatus(action, status),
+                                            type: userHistoryDataMapper.getHistoryStatusChipTypeByStatus(status),
+                                        },
+                                        title: sharingHistoryItems[0].acquirer.name,
+                                        subtitles: [],
+                                        description: sharingHistoryItems[0].acquirer.address,
+                                        botLabel: utils.formatDate(sharingHistoryItems[0].date, userHistoryDataMapper.dateFormat),
+                                        btnPrimaryAdditionalAtm: {
+                                            label: 'Детальніше',
+                                            state: ButtonState.enabled,
+                                            action: {
+                                                type: 'historyItemsStatus',
+                                            },
+                                        },
+                                    },
+                                },
+                            ],
+                            limit: 20,
+                        },
+                    },
+                ],
+                total: 1,
+            })
+        })
     })
 })

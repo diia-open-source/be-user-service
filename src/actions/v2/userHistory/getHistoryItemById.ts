@@ -3,13 +3,13 @@ import { AppAction } from '@diia-inhouse/diia-app'
 import { ActionVersion, SessionType } from '@diia-inhouse/types'
 import { ValidationSchema } from '@diia-inhouse/validators'
 
-import UserSigningHistoryService from '@services/userSigningHistory'
+import UserHistoryService from '@services/userHistory'
 
 import { ActionResult, CustomActionArguments } from '@interfaces/actions/v2/userHistory/getHistoryItemById'
 import { UserHistoryCode } from '@interfaces/services/userHistory'
 
 export default class GetHistoryItemByIdAction implements AppAction {
-    constructor(private readonly userSigningHistoryService: UserSigningHistoryService) {}
+    constructor(private readonly userHistoryService: UserHistoryService) {}
 
     readonly sessionType: SessionType = SessionType.User
 
@@ -30,6 +30,6 @@ export default class GetHistoryItemByIdAction implements AppAction {
             },
         } = args
 
-        return await this.userSigningHistoryService.getSigningHistoryItemById(itemId, userIdentifier, actionCode)
+        return await this.userHistoryService.getHistoryItemById(userIdentifier, itemId, actionCode)
     }
 }

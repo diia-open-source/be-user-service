@@ -31,6 +31,6 @@ export default class GetSessionHistoryItemByIdAction implements AppAction {
             },
         } = args
 
-        return await this.userHistoryService.getSessionHistoryItemById(userIdentifier, itemId, actionCode, sessionId)
+        return await this.userHistoryService.getHistoryItemById(userIdentifier, itemId, actionCode, sessionId)
     }
 }

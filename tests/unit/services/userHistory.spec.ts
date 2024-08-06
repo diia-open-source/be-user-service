@@ -11,7 +11,13 @@ import UserSigningHistoryService from '@services/userSigningHistory'
 
 import UserHistoryDataMapper from '@dataMappers/userHistoryDataMapper'
 
-import { HistoryAction, HistoryItemResponse, UserHistoryCode, UserHistoryItemStatus } from '@interfaces/services/userHistory'
+import {
+    HistoryAction,
+    HistoryItemResponse,
+    HistoryScreenResponse,
+    UserHistoryCode,
+    UserHistoryItemStatus,
+} from '@interfaces/services/userHistory'
 
 describe(`Service ${UserHistoryService.name}`, () => {
     const testKit = new TestKit()
@@ -86,7 +92,7 @@ describe(`Service ${UserHistoryService.name}`, () => {
         })
     })
 
-    describe(`method ${userHistoryService.getSigningHistoryByCodeV1.name}`, () => {
+    describe(`method ${userHistoryService.getHistoryItemsV1.name}`, () => {
         it('should return empty array with message if signing history not found', async () => {
             const historyResponse = {
                 items: [],
@@ -102,9 +108,7 @@ describe(`Service ${UserHistoryService.name}`, () => {
 
             jest.spyOn(userSigningHistoryService, 'getSigningHistoryByActionV1').mockResolvedValueOnce(historyResponse)
 
-            expect(await userHistoryService.getSigningHistoryByCodeV1(UserHistoryCode.Signing, user.identifier, 1, 10)).toMatchObject(
-                response,
-            )
+            expect(await userHistoryService.getHistoryItemsV1(UserHistoryCode.Signing, user.identifier, 1, 10)).toMatchObject(response)
             expect(userSigningHistoryService.getSigningHistoryByActionV1).toHaveBeenCalledWith(
                 UserHistoryCode.Signing,
                 user.identifier,
@@ -130,7 +134,7 @@ describe(`Service ${UserHistoryService.name}`, () => {
 
             jest.spyOn(userSigningHistoryService, 'getSigningHistoryByActionV1').mockResolvedValueOnce(historyResponse)
 
-            expect(await userHistoryService.getSigningHistoryByCodeV1(UserHistoryCode.Signing, user.identifier, 1, 10)).toMatchObject(
+            expect(await userHistoryService.getHistoryItemsV1(UserHistoryCode.Signing, user.identifier, 1, 10)).toMatchObject(
                 historyResponse,
             )
 
@@ -166,9 +170,10 @@ describe(`Service ${UserHistoryService.name}`, () => {
             }
 
             jest.spyOn(userSigningHistoryService, 'getHistoryScreenCounts').mockResolvedValueOnce(mockData)
+            jest.spyOn(userSharingHistoryService, 'countHistory').mockResolvedValueOnce(mockData[UserHistoryCode.Sharing])
             jest.spyOn(userHistoryDataMapper, 'getHistoryScreenNavigationPanelMlc').mockReturnValueOnce(historyScreenNavigationPanelMlc)
 
-            const response = {
+            const expected: HistoryScreenResponse = {
                 topGroup: [
                     {
                         topGroupOrg: {
@@ -176,14 +181,31 @@ describe(`Service ${UserHistoryService.name}`, () => {
                             chipTabsOrg: {
                                 items: [
                                     {
-                                        code: UserHistoryCode.Authorization,
-                                        label: 'Авторизації',
-                                        count: mockData[UserHistoryCode.Authorization],
+                                        chipMlc: {
+                                            code: UserHistoryCode.Authorization,
+                                            label: 'Авторизації',
+                                            badgeCounterAtm: {
+                                                count: mockData[UserHistoryCode.Authorization],
+                                            },
+                                        },
                                     },
                                     {
-                                        code: UserHistoryCode.Signing,
-                                        label: 'Підписання',
-                                        count: mockData[UserHistoryCode.Signing],
+                                        chipMlc: {
+                                            code: UserHistoryCode.Signing,
+                                            label: 'Підписання',
+                                            badgeCounterAtm: {
+                                                count: mockData[UserHistoryCode.Signing],
+                                            },
+                                        },
+                                    },
+                                    {
+                                        chipMlc: {
+                                            code: UserHistoryCode.Sharing,
+                                            label: 'Копії документів',
+                                            badgeCounterAtm: {
+                                                count: mockData[UserHistoryCode.Sharing],
+                                            },
+                                        },
                                     },
                                 ],
                                 preselectedCode: UserHistoryCode.Authorization,
@@ -193,9 +215,78 @@ describe(`Service ${UserHistoryService.name}`, () => {
                 ],
             }
 
-            expect(await userHistoryService.getHistoryScreen(user.identifier)).toMatchObject(response)
-            expect(userSigningHistoryService.getHistoryScreenCounts).toHaveBeenCalledWith(user.identifier)
-            expect(userHistoryDataMapper.getHistoryScreenNavigationPanelMlc).toHaveBeenCalledWith()
+            const result = await userHistoryService.getHistoryScreen(user.identifier)
+
+            expect(result).toEqual(expected)
+        })
+
+        it('should return session history screen', async () => {
+            jest.spyOn(userSigningHistoryService, 'getHistoryScreenCounts').mockResolvedValueOnce({ authorization: 10, signing: 10 })
+            jest.spyOn(userSharingHistoryService, 'countHistory').mockResolvedValueOnce(10)
+            jest.spyOn(authService, 'getSessionById').mockResolvedValueOnce(<SessionByIdResponse>{})
+
+            const panelMlc = {
+                label: 'Історія підписань',
+                ellipseMenu: [
+                    {
+                        type: PublicServiceContextMenuType.faqCategory,
+                        name: 'Питання та відповіді',
+                        code: 'diiaId',
+                    },
+                    {
+                        type: PublicServiceContextMenuType.supportServiceScreen,
+                        name: 'Служба підтримки',
+                    },
+                ],
+            }
+
+            jest.spyOn(userHistoryDataMapper, 'getHistoryScreenNavigationPanelMlc').mockReturnValueOnce(panelMlc)
+
+            const expected: HistoryScreenResponse = {
+                topGroup: [
+                    {
+                        topGroupOrg: {
+                            navigationPanelMlc: panelMlc,
+                            chipTabsOrg: {
+                                items: [
+                                    {
+                                        chipMlc: {
+                                            code: UserHistoryCode.Authorization,
+                                            label: 'Авторизації',
+                                            badgeCounterAtm: {
+                                                count: 10,
+                                            },
+                                        },
+                                    },
+                                    {
+                                        chipMlc: {
+                                            code: UserHistoryCode.Signing,
+                                            label: 'Підписання',
+                                            badgeCounterAtm: {
+                                                count: 10,
+                                            },
+                                        },
+                                    },
+                                    {
+                                        chipMlc: {
+                                            code: UserHistoryCode.Sharing,
+                                            label: 'Копії документів',
+                                            badgeCounterAtm: {
+                                                count: 10,
+                                            },
+                                        },
+                                    },
+                                ],
+                                preselectedCode: UserHistoryCode.Authorization,
+                            },
+                        },
+                    },
+                ],
+            }
+
+            const result = await userHistoryService.getHistoryScreen(user.identifier, 'sessionId')
+
+            expect(result).toEqual(expected)
         })
     })
 
@@ -223,7 +314,7 @@ describe(`Service ${UserHistoryService.name}`, () => {
         })
     })
 
-    describe(`method ${userHistoryService.getSigningHistoryByCode.name}`, () => {
+    describe(`method ${userHistoryService.getHistoryItems.name}`, () => {
         it('should return signing history by code with sharing code', async () => {
             const historyResponse = {
                 body: [
@@ -248,9 +339,9 @@ describe(`Service ${UserHistoryService.name}`, () => {
             }
 
             jest.spyOn(userSharingHistoryService, 'getSharingHistoryByAction').mockResolvedValueOnce(historyResponse)
-            expect(
-                await userHistoryService.getSigningHistoryByCode(UserHistoryCode.Sharing, user.identifier, 1, 1, 'session'),
-            ).toMatchObject(historyResponse)
+            expect(await userHistoryService.getHistoryItems(UserHistoryCode.Sharing, user.identifier, 1, 1, 'session')).toMatchObject(
+                historyResponse,
+            )
         })
 
         it('should return signing history by code with signing code', async () => {
@@ -272,9 +363,10 @@ describe(`Service ${UserHistoryService.name}`, () => {
             jest.spyOn(userSigningHistoryService, 'getSigningHistoryByAction').mockResolvedValueOnce({ body: [], total: 0 })
             jest.spyOn(userHistoryDataMapper, 'getStubMessageByAction').mockReturnValueOnce(stubMessageMlc)
 
-            expect(
-                await userHistoryService.getSigningHistoryByCode(UserHistoryCode.Signing, user.identifier, 1, 1, 'session'),
-            ).toMatchObject({ body: [{ stubMessageMlc }], total: 0 })
+            expect(await userHistoryService.getHistoryItems(UserHistoryCode.Signing, user.identifier, 1, 1, 'session')).toMatchObject({
+                body: [{ stubMessageMlc }],
+                total: 0,
+            })
         })
     })
 
@@ -319,64 +411,7 @@ describe(`Service ${UserHistoryService.name}`, () => {
         })
     })
 
-    describe(`method ${userHistoryService.getSessionHistoryScreen.name}`, () => {
-        it('should return session history screen', async () => {
-            jest.spyOn(userSigningHistoryService, 'getHistoryScreenCounts').mockResolvedValueOnce({ authorization: 10, signing: 10 })
-            jest.spyOn(userSharingHistoryService, 'countHistory').mockResolvedValueOnce(10)
-            jest.spyOn(authService, 'getSessionById').mockResolvedValueOnce(<SessionByIdResponse>{})
-
-            const panelMlc = {
-                label: 'Історія підписань',
-                ellipseMenu: [
-                    {
-                        type: PublicServiceContextMenuType.faqCategory,
-                        name: 'Питання та відповіді',
-                        code: 'diiaId',
-                    },
-                    {
-                        type: PublicServiceContextMenuType.supportServiceScreen,
-                        name: 'Служба підтримки',
-                    },
-                ],
-            }
-
-            jest.spyOn(userHistoryDataMapper, 'getHistoryScreenNavigationPanelMlc').mockReturnValueOnce(panelMlc)
-
-            const result = {
-                topGroup: [
-                    {
-                        topGroupOrg: {
-                            navigationPanelMlc: panelMlc,
-                            chipTabsOrg: {
-                                items: [
-                                    {
-                                        code: UserHistoryCode.Authorization,
-                                        label: 'Авторизації',
-                                        count: 10,
-                                    },
-                                    {
-                                        code: UserHistoryCode.Signing,
-                                        label: 'Підписання',
-                                        count: 10,
-                                    },
-                                    {
-                                        code: UserHistoryCode.Sharing,
-                                        label: 'Шеринг документів',
-                                        count: 10,
-                                    },
-                                ],
-                                preselectedCode: UserHistoryCode.Authorization,
-                            },
-                        },
-                    },
-                ],
-            }
-
-            expect(await userHistoryService.getSessionHistoryScreen(user.identifier, 'sessionId')).toMatchObject(result)
-        })
-    })
-
-    describe(`method ${userHistoryService.getSessionHistoryItemById.name}`, () => {
+    describe(`method ${userHistoryService.getHistoryItemById.name}`, () => {
         const navigationPanelMlc = {
             label: 'Історія підписань',
             ellipseMenu: [
@@ -446,7 +481,7 @@ describe(`Service ${UserHistoryService.name}`, () => {
             })
             jest.spyOn(userSharingHistoryService, 'getSharingHistoryItemById').mockResolvedValueOnce(response)
             expect(
-                await userHistoryService.getSessionHistoryItemById(user.identifier, 'itemId', UserHistoryCode.Sharing, sessionId),
+                await userHistoryService.getHistoryItemById(user.identifier, 'itemId', UserHistoryCode.Sharing, sessionId),
             ).toMatchObject(response)
         })
 
@@ -482,7 +517,7 @@ describe(`Service ${UserHistoryService.name}`, () => {
             })
             jest.spyOn(userSigningHistoryService, 'getSigningHistoryItemById').mockResolvedValueOnce(response)
             expect(
-                await userHistoryService.getSessionHistoryItemById(user.identifier, 'itemId', UserHistoryCode.Signing, sessionId),
+                await userHistoryService.getHistoryItemById(user.identifier, 'itemId', UserHistoryCode.Signing, sessionId),
             ).toMatchObject(response)
         })
     })

@@ -30,7 +30,6 @@ import {
     MessageBodyItemType,
     PlatformType,
     PublicServiceContextMenuType,
-    StatusType,
 } from '@diia-inhouse/types'
 
 import RatingSigningHistoryService from '@services/rating/signingHistory'
@@ -41,7 +40,7 @@ import UserSigningHistoryDataMapper from '@dataMappers/userSigningHistoryDataMap
 
 import { PublicServiceCode } from '@interfaces/models/subscription'
 import { UserSigningHistoryItem, UserSigningHistoryItemModel } from '@interfaces/models/userSigningHistoryItem'
-import { UserHistoryCode, UserHistoryItemStatus } from '@interfaces/services/userHistory'
+import { HistoryResponseByCode, UserHistoryCode, UserHistoryItemStatus } from '@interfaces/services/userHistory'
 import { UpsertItemParams } from '@interfaces/services/userSigningHistory'
 
 const undefinedValue = undefined
@@ -527,27 +526,35 @@ describe(`Service ${UserSigningHistoryService.name}`, () => {
                 10,
                 10,
                 undefined,
-                {
+                <HistoryResponseByCode>{
                     body: [
                         {
-                            cardMlc: {
-                                id: 'id',
-                                chipStatusAtm: {
-                                    code: 'code',
-                                    name: 'name',
-                                    type: StatusType.success,
-                                },
-                                title: 'title',
-                                subtitles: [],
-                                description: 'description',
-                                botLabel: 'botLabel',
-                                btnPrimaryAdditionalAtm: {
-                                    label: 'label',
-                                    state: ButtonState.enabled,
-                                    action: {
-                                        type: 'type',
+                            paginationListOrg: {
+                                componentId: 'pagination_list_org',
+                                items: [
+                                    {
+                                        cardMlc: {
+                                            id: 'id',
+                                            chipStatusAtm: {
+                                                code: 'code',
+                                                name: 'name',
+                                                type: ChipStatusAtmType.success,
+                                            },
+                                            title: 'title',
+                                            subtitles: [],
+                                            description: 'description',
+                                            botLabel: 'botLabel',
+                                            btnPrimaryAdditionalAtm: {
+                                                label: 'label',
+                                                state: ButtonState.enabled,
+                                                action: {
+                                                    type: 'type',
+                                                },
+                                            },
+                                        },
                                     },
-                                },
+                                ],
+                                limit: 20,
                             },
                         },
                     ],
@@ -556,33 +563,41 @@ describe(`Service ${UserSigningHistoryService.name}`, () => {
                 { action: 'authDiiaId' },
             ],
             [
-                'sharing',
+                'signing',
                 UserHistoryCode.Sharing,
                 user.identifier,
                 10,
                 10,
                 randomUUID(),
-                {
+                <HistoryResponseByCode>{
                     body: [
                         {
-                            cardMlc: {
-                                id: 'id',
-                                chipStatusAtm: {
-                                    code: 'code',
-                                    name: 'name',
-                                    type: StatusType.success,
-                                },
-                                title: 'title',
-                                subtitles: [],
-                                description: 'description',
-                                botLabel: 'botLabel',
-                                btnPrimaryAdditionalAtm: {
-                                    label: 'label',
-                                    state: ButtonState.enabled,
-                                    action: {
-                                        type: 'type',
+                            paginationListOrg: {
+                                componentId: 'pagination_list_org',
+                                items: [
+                                    {
+                                        cardMlc: {
+                                            id: 'id',
+                                            chipStatusAtm: {
+                                                code: 'code',
+                                                name: 'name',
+                                                type: ChipStatusAtmType.success,
+                                            },
+                                            title: 'title',
+                                            subtitles: [],
+                                            description: 'description',
+                                            botLabel: 'botLabel',
+                                            btnPrimaryAdditionalAtm: {
+                                                label: 'label',
+                                                state: ButtonState.enabled,
+                                                action: {
+                                                    type: 'type',
+                                                },
+                                            },
+                                        },
                                     },
-                                },
+                                ],
+                                limit: 20,
                             },
                         },
                     ],

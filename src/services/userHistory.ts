@@ -45,7 +45,7 @@ export default class UserHistoryService {
         }
     }
 
-    async getSigningHistoryByCodeV1(
+    async getHistoryItemsV1(
         action: UserHistoryCode,
         userIdentifier: string,
         skip: number,
@@ -62,17 +62,17 @@ export default class UserHistoryService {
         return response
     }
 
-    async getSigningHistoryByCode(
+    async getHistoryItems(
         action: UserHistoryCode,
         userIdentifier: string,
         skip: number,
         limit: number,
-        session: string | undefined,
+        sessionId?: string,
     ): Promise<HistoryResponseByCode> {
         const response =
             action === UserHistoryCode.Sharing
-                ? await this.userSharingHistoryService.getSharingHistoryByAction(action, userIdentifier, skip, limit, session)
-                : await this.userSigningHistoryService.getSigningHistoryByAction(action, userIdentifier, skip, limit, session)
+                ? await this.userSharingHistoryService.getSharingHistoryByAction(action, userIdentifier, skip, limit, sessionId)
+                : await this.userSigningHistoryService.getSigningHistoryByAction(action, userIdentifier, skip, limit, sessionId)
 
         const { total } = response
 
@@ -111,47 +111,12 @@ export default class UserHistoryService {
         }
     }
 
-    async getHistoryScreen(userIdentifier: string): Promise<HistoryScreenResponse> {
-        const { authorization, signing } = await this.userSigningHistoryService.getHistoryScreenCounts(userIdentifier)
-
-        return {
-            topGroup: [
-                {
-                    topGroupOrg: {
-                        navigationPanelMlc: this.userHistoryDataMapper.getHistoryScreenNavigationPanelMlc(),
-                        chipTabsOrg: {
-                            items: [
-                                {
-                                    code: UserHistoryCode.Authorization,
-                                    label: 'Авторизації',
-                                    count: authorization,
-                                    chipMlc: { code: UserHistoryCode.Authorization, label: 'Авторизації' },
-                                },
-                                {
-                                    code: UserHistoryCode.Signing,
-                                    label: 'Підписання',
-                                    count: signing,
-                                    chipMlc: { code: UserHistoryCode.Signing, label: 'Підписання' },
-                                },
-                            ],
-                            preselectedCode: UserHistoryCode.Authorization,
-                        },
-                    },
-                },
-            ],
-        }
-    }
-
-    async getSessionHistoryScreen(userIdentifier: string, sessionId: string): Promise<HistoryScreenResponse> {
-        const [{ authorization, signing }, sharing, session] = await Promise.all([
+    async getHistoryScreen(userIdentifier: string, sessionId?: string): Promise<HistoryScreenResponse> {
+        const [{ authorization, signing }, sharing, navigationPanelLabel] = await Promise.all([
             this.userSigningHistoryService.getHistoryScreenCounts(userIdentifier, sessionId),
             this.userSharingHistoryService.countHistory(userIdentifier, sessionId),
-            this.authService.getSessionById(sessionId, userIdentifier),
+            sessionId && this.getSessionNavigationPanelLabel(userIdentifier, sessionId),
         ])
-
-        const { platformType, platformVersion } = session
-
-        const navigationPanelLabel = `${platformType} ${platformVersion}`
 
         return {
             topGroup: [
@@ -161,22 +126,31 @@ export default class UserHistoryService {
                         chipTabsOrg: {
                             items: [
                                 {
-                                    code: UserHistoryCode.Authorization,
-                                    label: 'Авторизації',
-                                    count: authorization,
-                                    chipMlc: { code: UserHistoryCode.Authorization, label: 'Авторизації' },
+                                    chipMlc: {
+                                        code: UserHistoryCode.Authorization,
+                                        label: 'Авторизації',
+                                        badgeCounterAtm: {
+                                            count: authorization,
+                                        },
+                                    },
                                 },
                                 {
-                                    code: UserHistoryCode.Signing,
-                                    label: 'Підписання',
-                                    count: signing,
-                                    chipMlc: { code: UserHistoryCode.Signing, label: 'Підписання' },
+                                    chipMlc: {
+                                        code: UserHistoryCode.Signing,
+                                        label: 'Підписання',
+                                        badgeCounterAtm: {
+                                            count: signing,
+                                        },
+                                    },
                                 },
                                 {
-                                    code: UserHistoryCode.Sharing,
-                                    label: 'Шеринг документів',
-                                    count: sharing,
-                                    chipMlc: { code: UserHistoryCode.Sharing, label: 'Шеринг документів' },
+                                    chipMlc: {
+                                        code: UserHistoryCode.Sharing,
+                                        label: 'Копії документів',
+                                        badgeCounterAtm: {
+                                            count: sharing,
+                                        },
+                                    },
                                 },
                             ],
                             preselectedCode: UserHistoryCode.Authorization,
@@ -203,17 +177,13 @@ export default class UserHistoryService {
         }
     }
 
-    async getSessionHistoryItemById(
+    async getHistoryItemById(
         userIdentifier: string,
         itemId: string,
         action: UserHistoryCode,
-        sessionId: string,
+        sessionId?: string,
     ): Promise<HistoryItemResponse> {
-        const session = await this.authService.getSessionById(sessionId, userIdentifier)
-
-        const { platformType, platformVersion } = session
-
-        const navigationPanelLabel = `${platformType} ${platformVersion}`
+        const navigationPanelLabel = sessionId && (await this.getSessionNavigationPanelLabel(userIdentifier, sessionId))
 
         if (action === UserHistoryCode.Sharing) {
             return await this.userSharingHistoryService.getSharingHistoryItemById(
@@ -232,5 +202,13 @@ export default class UserHistoryService {
             navigationPanelLabel,
             sessionId,
         )
+    }
+
+    async getSessionNavigationPanelLabel(userIdentifier: string, sessionId: string): Promise<string> {
+        const session = await this.authService.getSessionById(sessionId, userIdentifier)
+
+        const { platformType, platformVersion } = session
+
+        return `${platformType} ${platformVersion}`
     }
 }

@@ -28,6 +28,6 @@ export default class GetSessionHistoryScreenAction implements AppAction {
             },
         } = args
 
-        return await this.userHistoryService.getSessionHistoryScreen(userIdentifier, sessionId)
+        return await this.userHistoryService.getHistoryScreen(userIdentifier, sessionId)
     }
 }
